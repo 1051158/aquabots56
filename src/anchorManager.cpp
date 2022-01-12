@@ -70,11 +70,14 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rx
 }
 
 static void outputDataJson(){
-    Serial.println("[");
+    Serial.print("[");
     for (int i = 0; i < MAX_ANCHORS; i++)
     {
         if (anchors[i].ID != 0){
-            Serial.printf("{\"ID\": %u, \"x\": %f, \"y\": %f, \"distance\": %f, \"active\": %s},",
+            if(i > 0){
+                Serial.print(", ");
+            }
+            Serial.printf("{\"ID\": %u, \"x\": %f, \"y\": %f, \"distance\": %f, \"active\": %d}",
                              anchors[i].ID,
                              anchors[i].x,
                              anchors[i].y,
