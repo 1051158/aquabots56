@@ -6,10 +6,11 @@
 
 ///////////////////////////Device configuration/////////////////////////////////////
 
-//Choose whether debug output should be printed
+////Choose whether debug output should be printed
 #define DEBUG_MAIN
 
-//Choose if Serial output is required and interval in microseconds of output (comment out if not needed)
+////Choose if Serial output is required and interval in microseconds of output 
+////(comment out if not needed)
 #define USE_SERIAL
 int outputInterval = 1000;
 
@@ -36,7 +37,7 @@ int outputInterval = 1000;
     //    X(double) coordinate in meters
     //    Y(double) coordinate in meters
 
-    //Note addAnchor takes the hex of the first four characters of the UNIQUE_ADRESS
+    //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
     addAnchor(4369, 0.0, 0.0);
     addAnchor(8738, 10.0, 0.0);
     addAnchor(13107, 0.0, 10.0);
@@ -74,11 +75,13 @@ void newRange()
       Serial.println(" dBm");
     #endif
 
-    // if new range is found by Tag it should store the distance in
+    // if new range is found by Tag it should store the distance in the anchorManager
     #ifdef TYPE_TAG
-      setDistanceIfRegisterdAnchor( DW1000Ranging.getDistantDevice()->getShortAddress(), 
-                                    DW1000Ranging.getDistantDevice()->getRange(),
-                                    DW1000Ranging.getDistantDevice()->getRXPower());
+      setDistanceIfRegisterdAnchor( 
+        DW1000Ranging.getDistantDevice()->getShortAddress(), 
+        DW1000Ranging.getDistantDevice()->getRange(),
+        DW1000Ranging.getDistantDevice()->getRXPower()
+      );
 
 
       #ifdef USE_SERIAL
