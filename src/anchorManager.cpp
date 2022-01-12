@@ -97,7 +97,7 @@ static void outputDataJson(){
                              anchors[i].active);
         }
     }
-    Serial.println("]");
+    Serial.println("]\n");
 }
 
 
