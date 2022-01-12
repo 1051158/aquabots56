@@ -2,21 +2,23 @@
 #include <stdint.h>
 #include <Arduino.h>
 
-#define MAX_ANCHORS 32
+#define MAX_ANCHORS 6
 
 struct anchor{
     uint16_t ID;
     double x;
     double y;
     double distance;
+    double rxPower;
+    bool active;
 };
 
-static anchor anchors[MAX_ANCHORS] = {0, 0.0, 0.0, 0.0};
+static anchor anchors[MAX_ANCHORS] = {0, 0.0, 0.0, 0.0, 0.0, false};
 static int anchorCount = 0;
 
 static void addAnchor(uint16_t ID, double XCoordInMtr, double YCoordInMtr){
     if(anchorCount < MAX_ANCHORS){
-        anchors[anchorCount] = {ID, XCoordInMtr, YCoordInMtr};
+        anchors[anchorCount] = {ID, XCoordInMtr, YCoordInMtr, 0.0, 0.0, false};
         anchorCount++;
     }
 }
@@ -32,19 +34,57 @@ static void printAnchorArray(){
     Serial.println("\n\n");
 }
 
-static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance){
+static void setAnchorActive(uint16_t ID, bool isActive){
+    for (int i = 0; i < MAX_ANCHORS; i++)
+    {
+        if (anchors[i].ID == ID){
+            anchors[i].active = isActive;
+            if (isActive){
+                Serial.printf("activated anchor %u\n", ID);
+            }else{
+                Serial.printf("deactivated anchor %u\n", ID);
+            }
+            return;
+        }
+    }
+    Serial.printf("anchor %u not registrerd\n", ID);
+}
+
+static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rxPower){
     for (int i = 0; i < MAX_ANCHORS; i++)
     {
         if (anchors[i].ID == ID){
             anchors[i].distance = distance;
-            break;
+            anchors[i].rxPower = rxPower;
+            Serial.print("Set distance of ");
+            Serial.print(ID);
+            Serial.print(" to ");
+            Serial.print(distance);
+            Serial.print(" at rxPower ");
+            Serial.print(rxPower);
+            Serial.print("\n");
+            return;
         }
     }
-    Serial.print("Set distance of ");
-    Serial.print(ID);
-    Serial.print(" to ");
-    Serial.print(distance);
-    Serial.print("\n");
+    Serial.printf("anchor %u not registered\n", ID);
 }
+
+static void outputDataJson(){
+    Serial.println("[");
+    for (int i = 0; i < MAX_ANCHORS; i++)
+    {
+        if (anchors[i].ID != 0){
+            Serial.printf("{\"ID\": %u, \"x\": %f, \"y\": %f, \"distance\": %f, \"active\": %s},",
+                             anchors[i].ID,
+                             anchors[i].x,
+                             anchors[i].y,
+                             anchors[i].distance,
+                             anchors[i].active);
+        }
+    }
+    Serial.println("]");
+}
+
+
 
 

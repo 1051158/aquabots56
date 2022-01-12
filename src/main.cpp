@@ -6,6 +6,10 @@
 
 ///////////////////////////Device configuration/////////////////////////////////////
 
+//Choose if Serial output is required
+#define USE_SERIAL
+
+
 ////Choose type of device
 //#define TYPE_ANCHOR
 #define TYPE_TAG
@@ -21,15 +25,16 @@
 #ifdef TYPE_TAG
   static void initializeAnchors(){
     // define all anchors this tag should consider
-    // system supports up to 32 anchors by default, 
+    // system supports up to 6 anchors by default, 
     // change MAX_ANCHORS in anchorManager.cpp if more are needed
     // addAnchor takes 3 parameters:
-    //    ID(int) (takes first four characters of the UNIQUE_ADRESS)
+    //    ID(int) (takes the HEX first four characters of the UNIQUE_ADRESS)
     //    X(double) coordinate in meters
     //    Y(double) coordinate in meters
 
-    addAnchor(1111, 0.0, 0.0);
-    addAnchor(2222, 10.0, 0.0);
+    //Note addAnchor takes the hex of the first four characters of the UNIQUE_ADRESS
+    addAnchor(4369, 0.0, 0.0);
+    addAnchor(8738, 10.0, 0.0);
     addAnchor(3333, 0.0, 10.0);
     addAnchor(4444, 10.0, 10.0);
     // keep adding anchors this way to your liking
@@ -51,18 +56,26 @@ const uint8_t PIN_SS = 4;   // spi select pin
 
 void newRange()
 {
-    Serial.print("from: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
-    Serial.print("\t Range: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getRange());
-    Serial.print(" m");
-    Serial.print("\t RX power: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
-    Serial.println(" dBm");
+    #ifdef TYPE_ANCHOR
+      Serial.print("from: ");
+      Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
+      Serial.print("\t Range: ");
+      Serial.print(DW1000Ranging.getDistantDevice()->getRange());
+      Serial.print(" m");
+      Serial.print("\t RX power: ");
+      Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
+      Serial.println(" dBm");
+    #endif
 
     // if new range is found by Tag it should store the distance in
     #ifdef TYPE_TAG
-      setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(), DW1000Ranging.getDistantDevice()->getRange());
+      setDistanceIfRegisterdAnchor( DW1000Ranging.getDistantDevice()->getShortAddress(), 
+                                    DW1000Ranging.getDistantDevice()->getRange(),
+                                    DW1000Ranging.getDistantDevice()->getRXPower());
+
+      #ifdef USE_SERIAL
+        outputDataJson();
+      #endif
     #endif
 
 
@@ -73,12 +86,23 @@ void newDevice(DW1000Device *device)
     Serial.print("ranging init; 1 device added ! -> ");
     Serial.print(" short:");
     Serial.println(device->getShortAddress(), HEX);
+
+    // TODO log activeness in manager 
+    #ifdef TYPE_TAG
+      setAnchorActive(device->getShortAddress(), true);
+    #endif
 }
 
 void inactiveDevice(DW1000Device *device)
 {
-    Serial.print("delete inactive device: ");
-    Serial.println(device->getShortAddress(), HEX);
+    #ifdef TYPE_ANCHOR
+      Serial.print("delete inactive device: ");
+      Serial.println(device->getShortAddress(), HEX);
+    #endif
+
+    #ifdef TYPE_TAG
+      setAnchorActive(device->getShortAddress(), false);
+    #endif 
 }
 
 void newBlink(DW1000Device *device)
