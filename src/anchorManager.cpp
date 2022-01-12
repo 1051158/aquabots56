@@ -2,6 +2,10 @@
 #include <stdint.h>
 #include <Arduino.h>
 
+//Choose whether debug messages of the anchorManager should be printed
+//#define DEBUG_ANCHOR_MANAGER
+
+//Choose the amount of anchors supported
 #define MAX_ANCHORS 6
 
 struct anchor{
@@ -39,15 +43,19 @@ static void setAnchorActive(uint16_t ID, bool isActive){
     {
         if (anchors[i].ID == ID){
             anchors[i].active = isActive;
-            if (isActive){
-                Serial.printf("activated anchor %u\n", ID);
-            }else{
-                Serial.printf("deactivated anchor %u\n", ID);
-            }
-            return;
+            #ifdef DEBUG_ANCHOR_MANAGER
+                if (isActive){
+                    Serial.printf("activated anchor %u\n", ID);
+                }else{
+                    Serial.printf("deactivated anchor %u\n", ID);
+                }
+                return;
+            #endif
         }
     }
-    Serial.printf("anchor %u not registrerd\n", ID);
+    #ifdef DEBUG_ANCHOR_MANAGER
+        Serial.printf("anchor %u not registrerd\n", ID);
+    #endif
 }
 
 static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rxPower){
@@ -56,17 +64,21 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rx
         if (anchors[i].ID == ID){
             anchors[i].distance = distance;
             anchors[i].rxPower = rxPower;
-            Serial.print("Set distance of ");
-            Serial.print(ID);
-            Serial.print(" to ");
-            Serial.print(distance);
-            Serial.print(" at rxPower ");
-            Serial.print(rxPower);
-            Serial.print("\n");
+            #ifdef DEBUG_ANCHOR_MANAGER
+                Serial.print("Set distance of ");
+                Serial.print(ID);
+                Serial.print(" to ");
+                Serial.print(distance);
+                Serial.print(" at rxPower ");
+                Serial.print(rxPower);
+                Serial.print("\n");
+            #endif
             return;
         }
     }
-    Serial.printf("anchor %u not registered\n", ID);
+    #ifdef DEBUG_ANCHOR_MANAGER
+        Serial.printf("anchor %u not registered\n", ID);
+    #endif
 }
 
 static void outputDataJson(){

@@ -6,8 +6,12 @@
 
 ///////////////////////////Device configuration/////////////////////////////////////
 
-//Choose if Serial output is required
+//Choose whether debug output should be printed
+#define DEBUG_MAIN
+
+//Choose if Serial output is required and interval in microseconds of output (comment out if not needed)
 #define USE_SERIAL
+int outputInterval = 1000;
 
 
 ////Choose type of device
@@ -35,8 +39,8 @@
     //Note addAnchor takes the hex of the first four characters of the UNIQUE_ADRESS
     addAnchor(4369, 0.0, 0.0);
     addAnchor(8738, 10.0, 0.0);
-    addAnchor(3333, 0.0, 10.0);
-    addAnchor(4444, 10.0, 10.0);
+    addAnchor(13107, 0.0, 10.0);
+    addAnchor(17476, 10.0, 10.0);
     // keep adding anchors this way to your liking
   }
 #endif
@@ -53,6 +57,9 @@
 const uint8_t PIN_RST = 27; // reset pin
 const uint8_t PIN_IRQ = 34; // irq pin
 const uint8_t PIN_SS = 4;   // spi select pin
+
+// timing variable
+unsigned long lastTimestamp = millis();
 
 void newRange()
 {
@@ -73,8 +80,12 @@ void newRange()
                                     DW1000Ranging.getDistantDevice()->getRange(),
                                     DW1000Ranging.getDistantDevice()->getRXPower());
 
+
       #ifdef USE_SERIAL
-        outputDataJson();
+        if(millis() - lastTimestamp > outputInterval){
+          outputDataJson();
+          lastTimestamp = millis();
+        }
       #endif
     #endif
 
@@ -83,9 +94,11 @@ void newRange()
 
 void newDevice(DW1000Device *device)
 {
-    Serial.print("ranging init; 1 device added ! -> ");
-    Serial.print(" short:");
-    Serial.println(device->getShortAddress(), HEX);
+    #ifdef DEBUG_MAIN
+      Serial.print("ranging init; 1 device added ! -> ");
+      Serial.print(" short:");
+      Serial.println(device->getShortAddress(), HEX);
+    #endif
 
     // TODO log activeness in manager 
     #ifdef TYPE_TAG
