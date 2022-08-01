@@ -9,7 +9,7 @@
 ////Choose whether debug output should be printed
 #define DEBUG_MAIN
 
-////Choose if Serial output is required and interval in microseconds of output 
+////Choose if Serial output is required and interval in microseconds of output
 ////(comment out if not needed)
 #define USE_SERIAL
 int outputInterval = 1000;
@@ -30,7 +30,7 @@ int outputInterval = 1000;
 #ifdef TYPE_TAG
   static void initializeAnchors(){
     // define all anchors this tag should consider
-    // system supports up to 6 anchors by default, 
+    // system supports up to 6 anchors by default,
     // change MAX_ANCHORS in anchorManager.cpp if more are needed
     // addAnchor takes 3 parameters:
     //    ID(int) (takes the HEX first four characters of the UNIQUE_ADRESS)
@@ -77,8 +77,8 @@ void newRange()
 
     // if new range is found by Tag it should store the distance in the anchorManager
     #ifdef TYPE_TAG
-      setDistanceIfRegisterdAnchor( 
-        DW1000Ranging.getDistantDevice()->getShortAddress(), 
+      setDistanceIfRegisterdAnchor(
+        DW1000Ranging.getDistantDevice()->getShortAddress(),
         DW1000Ranging.getDistantDevice()->getRange(),
         DW1000Ranging.getDistantDevice()->getRXPower()
       );
@@ -103,7 +103,7 @@ void newDevice(DW1000Device *device)
       Serial.println(device->getShortAddress(), HEX);
     #endif
 
-    // TODO log activeness in manager 
+    // TODO log activeness in manager
     #ifdef TYPE_TAG
       setAnchorActive(device->getShortAddress(), true);
     #endif
@@ -118,7 +118,7 @@ void inactiveDevice(DW1000Device *device)
 
     #ifdef TYPE_TAG
       setAnchorActive(device->getShortAddress(), false);
-    #endif 
+    #endif
 }
 
 void newBlink(DW1000Device *device)
@@ -133,20 +133,20 @@ void setup() {
   Serial.begin(115200);
   delay(3000);
 
-  
+
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
   DW1000Ranging.attachNewRange(newRange);
-  DW1000Ranging.attachInactiveDevice(inactiveDevice); 
+  DW1000Ranging.attachInactiveDevice(inactiveDevice);
 
   #ifdef TYPE_TAG
     Serial.println("\n\nTAG starting");
-    
+
     //initialize all anchors
     initializeAnchors();
     printAnchorArray();
-    
+
     DW1000Ranging.attachNewDevice(newDevice);
     DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
   #endif
@@ -155,7 +155,7 @@ void setup() {
     DW1000Ranging.attachBlinkDevice(newBlink);
     DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
   #endif
-  
+
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif

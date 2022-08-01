@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include <Arduino.h>
 
@@ -99,7 +98,3 @@ static void outputDataJson(){
     }
     Serial.println("]\n");
 }
-
-
-
-
