@@ -7,16 +7,19 @@
 //Choose the amount of anchors supported
 #define MAX_ANCHORS 6
 
+
 struct anchor{
     uint16_t ID;
     double x;
     double y;
     double distance;
+    double average_distance;
+    uint8_t distance_counter;
     double rxPower;
     bool active;
 };
 
-static anchor anchors[MAX_ANCHORS] = {0, 0.0, 0.0, 0.0, 0.0, false};
+static anchor anchors[MAX_ANCHORS] = {0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, false};
 static int anchorCount = 0;
 
 static void addAnchor(uint16_t ID, double XCoordInMtr, double YCoordInMtr){
@@ -60,8 +63,11 @@ static void setAnchorActive(uint16_t ID, bool isActive){
 static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rxPower){
     for (int i = 0; i < MAX_ANCHORS; i++)
     {
+        
         if (anchors[i].ID == ID){
             anchors[i].distance = distance;
+            anchors[i].average_distance += distance;
+            anchors[i].distance_counter++;
             anchors[i].rxPower = rxPower;
             #ifdef DEBUG_ANCHOR_MANAGER
                 Serial.print("Set distance of ");
@@ -72,6 +78,14 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rx
                 Serial.print(rxPower);
                 Serial.print("\n");
             #endif
+            if(anchors[i].distance_counter >= 20)
+            {
+            anchors[i].average_distance /= 20;
+            Serial.print("average distance:");
+            Serial.println(anchors[i].average_distance);
+            anchors[i].average_distance = 0;
+            anchors[i].distance_counter = 0;
+            }
             return;
         }
     }

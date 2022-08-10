@@ -1,35 +1,58 @@
 #include <Arduino.h>
 #include <SPI.h>
+#include <Wire.h>
 #include <stdint.h>
 #include "DW1000Ranging.h"
 #include "anchorManager.cpp"
+#include <U8g2lib.h>
+
+
 
 ///////////////////////////Device configuration/////////////////////////////////////
 
+U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE); 
+
 ////Choose whether debug output should be printed
-#define DEBUG_MAIN
+//#define DEBUG_MAIN
+
+#define AVERAGE_COUNT_MAX 35
 
 ////Choose if Serial output is required and interval in microseconds of output
 ////(comment out if not needed)
-#define USE_SERIAL
-int outputInterval = 1000;
+//#define USE_SERIAL
+//int outputInterval = 1000;
 
 
 ////Choose type of device
-//#define TYPE_ANCHOR
-#define TYPE_TAG
+
+#define TYPE_ANCHOR
+
+#define I2C_MODULE
+
+//#define TYPE_TAG
+
+#ifdef TYPE_ANCHOR
+// choose which anchor u want to flash/calibrate keep one uncommented even if u use tag for compile errors
+#define ANCHOR_1
+//#define ANCHOR_2
+//#define ANCHOR_3
+//#define ANCHOR_4
+double average_distance = 0;
+uint8_t average_counter = 0;
+#endif
 
 ////Enable the filter to smooth the distance (default off)
 //#define USE_RANGE_FILTERING
 
 ////Set unique device adress (first four digit cannot all be 0!)
-#define UNIQUE_ADRESS "01:11:5B:D5:A9:9A:E2:9C"
+
 //#define UNIQUE_ADRESS "83:17:5B:D5:A9:9A:E2:9C" // (default anchor)
-//#define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag)
 
 #ifdef TYPE_TAG
   static void initializeAnchors(){
     // define all anchors this tag should consider
+
+
     // system supports up to 6 anchors by default,
     // change MAX_ANCHORS in anchorManager.cpp if more are needed
     // addAnchor takes 3 parameters:
@@ -53,6 +76,9 @@ int outputInterval = 1000;
 #define SPI_MISO 19
 #define SPI_MOSI 23
 #define DW_CS 4
+#define SCL 21
+#define SDA 22
+
 
 // connection pins
 const uint8_t PIN_RST = 27; // reset pin
@@ -65,14 +91,30 @@ unsigned long lastTimestamp = millis();
 void newRange()
 {
     #ifdef TYPE_ANCHOR
-      Serial.print("from: ");
-      Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
-      Serial.print("\t Range: ");
-      Serial.print(DW1000Ranging.getDistantDevice()->getRange());
-      Serial.print(" m");
-      Serial.print("\t RX power: ");
-      Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
-      Serial.println(" dBm");
+    average_distance += DW1000Ranging.getDistantDevice()->getRange();
+    average_counter++;
+      //Serial.print("from: ");
+      //Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
+      //Serial.print("Range: ");
+      //Serial.println(DW1000Ranging.getDistantDevice()->getRange());
+      //Serial.print(" m");
+      //Serial.print("\t RX power: ");
+      //Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
+      //Serial.println(" dBm");
+      if(average_counter >= AVERAGE_COUNT_MAX)
+      {
+        average_distance /= AVERAGE_COUNT_MAX;
+        #ifndef I2C_MODULE
+        Serial.print("distance");
+        Serial.println(average_distance);
+        #endif
+        #ifdef I2C_MODULE
+        u8g2.print("distance");
+        u8g2.print(average_distance);
+        #endif
+        average_counter = 0;
+        average_distance = 0.00;
+      }
     #endif
 
     // if new range is found by Tag it should store the distance in the anchorManager
@@ -132,7 +174,10 @@ void newBlink(DW1000Device *device)
 void setup() {
   Serial.begin(115200);
   delay(3000);
-
+  #ifdef I2C_MODULE
+  u8g2.begin();
+  u8g2.enableUTF8Print();
+  #endif
 
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
@@ -141,6 +186,7 @@ void setup() {
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
 
   #ifdef TYPE_TAG
+  #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
     Serial.println("\n\nTAG starting");
 
     //initialize all anchors
@@ -151,6 +197,21 @@ void setup() {
     DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
   #endif
   #ifdef TYPE_ANCHOR
+   #ifdef ANCHOR_1
+  #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
+#endif
+
+#ifdef ANCHOR_2
+#define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
+#endif
+
+#ifdef ANCHOR_3
+#define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
+#endif
+
+#ifdef ANCHOR_4
+#define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
+#endif
     Serial.println("\n\n\n\n\nANCHOR starting");
     DW1000Ranging.attachBlinkDevice(newBlink);
     DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
@@ -161,6 +222,8 @@ void setup() {
   #endif
 
 }
+
+
 
 void loop() {
   DW1000Ranging.loop();
