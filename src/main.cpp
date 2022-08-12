@@ -1,54 +1,70 @@
-#include <Arduino.h>
+#include <stdio.h>
 #include <SPI.h>
-#include <Wire.h>
-#include <stdint.h>
-#include "DW1000Ranging.h"
 #include "anchorManager.cpp"
+#include "calibration.cpp"
 #include <U8g2lib.h>
-
-
 
 ///////////////////////////Device configuration/////////////////////////////////////
 
-U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE); 
+//#define USE_TXT////Choose if u want your serial data into a text file
 
-////Choose whether debug output should be printed
-//#define DEBUG_MAIN
+//#define USE_SERIAL////Choose if Serial output is required and interval in microseconds of output
+//int outputInterval = 1000;////(comment out if not needed)
 
-#define AVERAGE_COUNT_MAX 35
-
-////Choose if Serial output is required and interval in microseconds of output
-////(comment out if not needed)
-//#define USE_SERIAL
-//int outputInterval = 1000;
-
+//#define DEBUG_MAIN ////Choose whether debug output should be printed
 
 ////Choose type of device
-
+//#define TYPE_TAG
 #define TYPE_ANCHOR
 
-#define I2C_MODULE
+//#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
-//#define TYPE_TAG
+#define AVERAGE_COUNT_MAX 15  //count to measure the average for more accuarate results
+
+//#define INTERRUPT 15 //Pin to use the pin_change_interrupt
+
+//#define I2C_MODULE //choose if u want to print on the small display with I2C
+
+char *filename = "waardes.txt";//name of file you want to save the code in
+
+#ifdef USE_TXT
+FILE *out = fopen(filename, "w");//FILE variable to write
+#endif
+
 
 #ifdef TYPE_ANCHOR
-// choose which anchor u want to flash/calibrate keep one uncommented even if u use tag for compile errors
-#define ANCHOR_1
+//#define ANCHOR_CALIBRATION //choose to measure(comment) or calibrate the anchor(uncomment)
+//choose which anchor u want to flash
+//#define ANCHOR_1
 //#define ANCHOR_2
-//#define ANCHOR_3
+#define ANCHOR_3
 //#define ANCHOR_4
+//value calibrated antenna delays for the anchors and adresses to get detected by tag
+#ifdef ANCHOR_1
+#define ANTENNA_DELAY 16553 // BEST ANTENNA DELAY ANCHOR #1
+#define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
+#endif
+#ifdef ANCHOR_2
+#define ANTENNA_DELAY 16580 // BEST ANTENNA DELAY ANCHOR #2
+#define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
+#endif
+#ifdef ANCHOR_3
+#define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
+#define ANTENNA_DELAY 16589 // BEST ANTENNA DELAY ANCHOR #3
+#endif
+#ifdef ANCHOR_4
+#define ANTENNA_DELAY 16725 // BEST ANTENNA DELAY ANCHOR #4
+#define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
+#endif
+// choose which anchor u want to flash/calibrate keep one uncommented even if u use tag for compile errors
 double average_distance = 0;
 uint8_t average_counter = 0;
 #endif
 
-////Enable the filter to smooth the distance (default off)
-//#define USE_RANGE_FILTERING
-
-////Set unique device adress (first four digit cannot all be 0!)
-
-//#define UNIQUE_ADRESS "83:17:5B:D5:A9:9A:E2:9C" // (default anchor)
-
 #ifdef TYPE_TAG
+  #define ANTENNA_DELAY 16384 // The tag code always has 16384 and the anchors gave the calibrated numbers
+  #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
+
   static void initializeAnchors(){
     // define all anchors this tag should consider
 
@@ -76,8 +92,11 @@ uint8_t average_counter = 0;
 #define SPI_MISO 19
 #define SPI_MOSI 23
 #define DW_CS 4
-#define SCL 21
-#define SDA 22
+//define pins when printing with I2C
+#ifdef I2C_MODULE
+#define MP_ESP32_I2C_SDA 4
+#define MP_ESP32_I2C_SCL 5
+#endif
 
 
 // connection pins
@@ -91,6 +110,11 @@ unsigned long lastTimestamp = millis();
 void newRange()
 {
     #ifdef TYPE_ANCHOR
+    #ifdef ANCHOR_CALIBRATION
+    calibration();
+    #endif
+    #ifndef ANCHOR_CALIBRATION
+//  DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
     average_distance += DW1000Ranging.getDistantDevice()->getRange();
     average_counter++;
       //Serial.print("from: ");
@@ -115,8 +139,8 @@ void newRange()
         average_counter = 0;
         average_distance = 0.00;
       }
+      #endif
     #endif
-
     // if new range is found by Tag it should store the distance in the anchorManager
     #ifdef TYPE_TAG
       setDistanceIfRegisterdAnchor(
@@ -133,8 +157,6 @@ void newRange()
         }
       #endif
     #endif
-
-
 }
 
 void newDevice(DW1000Device *device)
@@ -177,18 +199,18 @@ void setup() {
   #ifdef I2C_MODULE
   u8g2.begin();
   u8g2.enableUTF8Print();
-  #endif
-
+  u8g2.print("init succes!!");
+  delay(3000);
   //init the configuration
+  #endif
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
   DW1000Ranging.attachNewRange(newRange);
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
 
   #ifdef TYPE_TAG
-  #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
-    Serial.println("\n\nTAG starting");
-
+  Serial.println("\n\nTAG starting");
+  DW1000.setAntennaDelay(ANTENNA_DELAY);
     //initialize all anchors
     initializeAnchors();
     printAnchorArray();
@@ -197,24 +219,13 @@ void setup() {
     DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
   #endif
   #ifdef TYPE_ANCHOR
-   #ifdef ANCHOR_1
-  #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
-#endif
-
-#ifdef ANCHOR_2
-#define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
-#endif
-
-#ifdef ANCHOR_3
-#define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
-#endif
-
-#ifdef ANCHOR_4
-#define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
-#endif
+    DW1000.setAntennaDelay(ANTENNA_DELAY);
     Serial.println("\n\n\n\n\nANCHOR starting");
     DW1000Ranging.attachBlinkDevice(newBlink);
     DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
+    #ifdef ANCHOR_CALIBRATION
+    Serial.println("calibration mode started:");
+    #endif
   #endif
 
   #ifdef USE_RANGE_FILTERING

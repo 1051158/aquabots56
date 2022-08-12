@@ -1,8 +1,17 @@
 #include <stdint.h>
 #include <Arduino.h>
+#include "U8g2lib.h"
+#include <Wire.h>
+
+//static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE); //setting up u8g2 class from lib use static to use in other than main.cpp codes
+
 
 //Choose whether debug messages of the anchorManager should be printed
 //#define DEBUG_ANCHOR_MANAGER
+//choose which communication mode you want to use (multiple choises availible)
+//#define I2C
+#define USE_SERIAL
+//#define TXT
 
 //Choose the amount of anchors supported
 #define MAX_ANCHORS 6
@@ -78,14 +87,15 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rx
                 Serial.print(rxPower);
                 Serial.print("\n");
             #endif
-            if(anchors[i].distance_counter >= 20)
+
+            /*if(anchors[i].distance_counter >= 20)//print distance after 20 measures
             {
             anchors[i].average_distance /= 20;
             Serial.print("average distance:");
             Serial.println(anchors[i].average_distance);
             anchors[i].average_distance = 0;
             anchors[i].distance_counter = 0;
-            }
+            }*/
             return;
         }
     }
@@ -95,7 +105,8 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rx
 }
 
 static void outputDataJson(){
-    Serial.print("[");
+#ifdef USE_SERIAL
+   Serial.print("[");
     for (int i = 0; i < MAX_ANCHORS; i++)
     {
         if (anchors[i].ID != 0){
@@ -111,4 +122,15 @@ static void outputDataJson(){
         }
     }
     Serial.println("]\n");
+    #endif
+    #ifdef I2C
+    for (int i = 0; i < MAX_ANCHORS; i++)// for statement to print the active anchors
+    {
+        //bool checker = anchors[i].active;
+        //if(checker == true)
+        //{
+            u8g2.println(anchors[i].distance);
+        //}
+    }
+    #endif
 }
