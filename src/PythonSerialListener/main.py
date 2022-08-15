@@ -3,7 +3,7 @@ import json
 import trilateration
 
 # define comport to which the tag is connected
-comPort = "COM15"
+comPort = "COM9"
 
 def serialReadLoop(targetPort, onIncoming):
     # initialize serial connection

@@ -3,13 +3,15 @@
 #include "U8g2lib.h"
 #include <Wire.h>
 
-//static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE); //setting up u8g2 class from lib use static to use in other than main.cpp codes
+ //setting up u8g2 class from lib use static to use in other than main.cpp codes
+
+static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 
 //Choose whether debug messages of the anchorManager should be printed
 //#define DEBUG_ANCHOR_MANAGER
 //choose which communication mode you want to use (multiple choises availible)
-//#define I2C
+#define I2C
 #define USE_SERIAL
 //#define TXT
 
@@ -69,11 +71,15 @@ static void setAnchorActive(uint16_t ID, bool isActive){
     #endif
 }
 
-static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rxPower){
+static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rxPower)
+{
     for (int i = 0; i < MAX_ANCHORS; i++)
     {
         
-        if (anchors[i].ID == ID){
+        if (anchors[i].ID == ID)
+        {
+            if(distance <=0)
+            distance = 0;
             anchors[i].distance = distance;
             anchors[i].average_distance += distance;
             anchors[i].distance_counter++;
@@ -87,15 +93,6 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rx
                 Serial.print(rxPower);
                 Serial.print("\n");
             #endif
-
-            /*if(anchors[i].distance_counter >= 20)//print distance after 20 measures
-            {
-            anchors[i].average_distance /= 20;
-            Serial.print("average distance:");
-            Serial.println(anchors[i].average_distance);
-            anchors[i].average_distance = 0;
-            anchors[i].distance_counter = 0;
-            }*/
             return;
         }
     }
@@ -104,33 +101,55 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rx
     #endif
 }
 
-static void outputDataJson(){
-#ifdef USE_SERIAL
+static void outputDataJson()
+{
+#ifdef USE_SERIAL//print the distances through serial
    Serial.print("[");
     for (int i = 0; i < MAX_ANCHORS; i++)
     {
         if (anchors[i].ID != 0){
-            if(i > 0){
+            if(i > 0)
+            {
                 Serial.print(", ");
             }
-            Serial.printf("{\"ID\": %u, \"x\": %f, \"y\": %f, \"distance\": %f, \"active\": %d}",
+            if(anchors[i].active)
+            {
+                anchors[i].average_distance /= anchors[i].distance_counter;//divide to get the average
+                Serial.printf("{\"ID\": %u, \"x\": %f, \"y\": %f, \"distance\": %f, \"active\": %d}",
                              anchors[i].ID,
                              anchors[i].x,
                              anchors[i].y,
-                             anchors[i].distance,
+                             anchors[i].average_distance,
                              anchors[i].active);
+            }
         }
     }
     Serial.println("]\n");
     #endif
     #ifdef I2C
-    for (int i = 0; i < MAX_ANCHORS; i++)// for statement to print the active anchors
+    int y = 0;
+    for (int i = 0; i < MAX_ANCHORS; i++)// for statement to print the active anchors through i2c
     {
-        //bool checker = anchors[i].active;
-        //if(checker == true)
-        //{
-            u8g2.println(anchors[i].distance);
-        //}
-    }
+        if(anchors[i].active)
+        {
+        int IDlength = snprintf(NULL, 0, "%d", anchors[i].ID);
+        char* ID = (char*)malloc(IDlength+1);
+        snprintf(ID, IDlength+1, "%d", anchors[i].ID);
+        int length = snprintf(NULL, 0, "%g", anchors[i].average_distance);
+        char* convert = (char*)malloc(length+1);
+        snprintf(convert, length+1, "%g", anchors[i].distance);
+        u8g2.setFont(u8g2_font_fancypixels_tf);
+        u8g2.drawStr(0,y, ID);
+        u8g2.drawStr(50,y,convert);
+        free(convert);
+        free(ID);
+        y += 10;
+        anchors[i].average_distance = 0;//set both values back to zero to get new average
+        anchors[i].distance_counter = 0;
+        }
+        }
+        u8g2.sendBuffer();
+        u8g2.clearBuffer();
     #endif
 }
+

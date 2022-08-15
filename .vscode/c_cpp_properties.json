@@ -10,7 +10,7 @@
             "includePath": [
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/include",
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/src",
-                "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2_Arduino-master/src",
+                "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/Dictionary/src",
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/DW1000/src",
@@ -203,6 +203,7 @@
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/qio_qspi/include",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/variants/esp32",
+                "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2_Arduino-master/src",
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/Unity/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
@@ -241,7 +242,7 @@
                 "path": [
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/include",
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/src",
-                    "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2_Arduino-master/src",
+                    "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/Dictionary/src",
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/DW1000/src",
@@ -434,6 +435,7 @@
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/qio_qspi/include",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/variants/esp32",
+                    "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2_Arduino-master/src",
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/Unity/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",

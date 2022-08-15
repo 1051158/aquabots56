@@ -1,21 +1,19 @@
 #include <stdio.h>
-#include <SPI.h>
+#include <stdlib.h>
 #include "anchorManager.cpp"
 #include "calibration.cpp"
-#include <U8g2lib.h>
-
 ///////////////////////////Device configuration/////////////////////////////////////
 
 //#define USE_TXT////Choose if u want your serial data into a text file
 
-//#define USE_SERIAL////Choose if Serial output is required and interval in microseconds of output
-//int outputInterval = 1000;////(comment out if not needed)
+#define USE_SERIAL////Choose if Serial output is required and interval in microseconds of output
+int outputInterval = 1000;////(comment out if not needed)
 
 //#define DEBUG_MAIN ////Choose whether debug output should be printed
 
 ////Choose type of device
-//#define TYPE_TAG
-#define TYPE_ANCHOR
+#define TYPE_TAG
+//#define TYPE_ANCHOR
 
 //#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
@@ -23,7 +21,7 @@
 
 //#define INTERRUPT 15 //Pin to use the pin_change_interrupt
 
-//#define I2C_MODULE //choose if u want to print on the small display with I2C
+#define I2C_MODULE //choose if u want to print on the small display with I2C
 
 char *filename = "waardes.txt";//name of file you want to save the code in
 
@@ -80,7 +78,7 @@ uint8_t average_counter = 0;
     addAnchor(4369, 0.0, 0.0);
     addAnchor(8738, 10.0, 0.0);
     addAnchor(13107, 0.0, 10.0);
-    addAnchor(17476, 10.0, 10.0);
+    //addAnchor(17476, 10.0, 10.0);
     // keep adding anchors this way to your liking
   }
 #endif
@@ -93,10 +91,6 @@ uint8_t average_counter = 0;
 #define SPI_MOSI 23
 #define DW_CS 4
 //define pins when printing with I2C
-#ifdef I2C_MODULE
-#define MP_ESP32_I2C_SDA 4
-#define MP_ESP32_I2C_SCL 5
-#endif
 
 
 // connection pins
@@ -194,20 +188,17 @@ void newBlink(DW1000Device *device)
 
 
 void setup() {
-  Serial.begin(115200);
-  delay(3000);
   #ifdef I2C_MODULE
   u8g2.begin();
-  u8g2.enableUTF8Print();
-  u8g2.print("init succes!!");
-  delay(3000);
+  u8g2.setFontPosTop();
   //init the configuration
   #endif
+  Serial.begin(115200);
+  delay(3000);
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
   DW1000Ranging.attachNewRange(newRange);
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
-
   #ifdef TYPE_TAG
   Serial.println("\n\nTAG starting");
   DW1000.setAntennaDelay(ANTENNA_DELAY);
