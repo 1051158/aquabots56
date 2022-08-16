@@ -39,16 +39,16 @@ FILE *out = fopen(filename, "w");//FILE variable to write
 //#define ANCHOR_4
 //value calibrated antenna delays for the anchors and adresses to get detected by tag
 #ifdef ANCHOR_1
-#define ANTENNA_DELAY 16553 // BEST ANTENNA DELAY ANCHOR #1
+#define ANTENNA_DELAY 16510 // BEST ANTENNA DELAY ANCHOR #1
 #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
 #endif
 #ifdef ANCHOR_2
-#define ANTENNA_DELAY 16580 // BEST ANTENNA DELAY ANCHOR #2
+#define ANTENNA_DELAY 16534 // BEST ANTENNA DELAY ANCHOR #2
 #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
 #endif
 #ifdef ANCHOR_3
 #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
-#define ANTENNA_DELAY 16589 // BEST ANTENNA DELAY ANCHOR #3
+#define ANTENNA_DELAY 16536 // BEST ANTENNA DELAY ANCHOR #3
 #endif
 #ifdef ANCHOR_4
 #define ANTENNA_DELAY 16725 // BEST ANTENNA DELAY ANCHOR #4
@@ -75,9 +75,9 @@ uint8_t average_counter = 0;
     //    Y(double) coordinate in meters
 
     //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
-    addAnchor(4369, 0.0, 0.0);
-    addAnchor(8738, 10.0, 0.0);
-    addAnchor(13107, 0.0, 10.0);
+    addAnchor(4369, 10.0, 0.0);
+    addAnchor(8738, 0.0, 17.3);
+    addAnchor(13107, 10.0, 17.3);
     //addAnchor(17476, 10.0, 10.0);
     // keep adding anchors this way to your liking
   }
@@ -194,7 +194,6 @@ void setup() {
   //init the configuration
   #endif
   Serial.begin(115200);
-  delay(3000);
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
   DW1000Ranging.attachNewRange(newRange);
