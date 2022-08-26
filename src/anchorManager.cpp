@@ -5,8 +5,6 @@
 
  //setting up u8g2 class from lib use static to use in other than main.cpp codes
 
-static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
-
 
 //Choose whether debug messages of the anchorManager should be printed
 //#define DEBUG_ANCHOR_MANAGER
@@ -14,6 +12,10 @@ static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN
 #define I2C
 #define USE_SERIAL
 //#define TXT
+
+#ifdef I2C
+static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+#endif
 
 //Choose the amount of anchors supported
 #define MAX_ANCHORS 6
