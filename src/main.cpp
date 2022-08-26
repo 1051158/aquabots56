@@ -4,9 +4,17 @@
 #include "calibration.cpp"
 ///////////////////////////Device configuration/////////////////////////////////////
 
+struct button
+{
+  const uint8_t interrupt_pin;
+  bool pressed;
+};
+
+button button1 = {3,false};
+
 //#define USE_TXT////Choose if u want your serial data into a text file
 
-#define USE_SERIAL////Choose if Serial output is required and interval in microseconds of output
+//#define USE_TIMER////Choose if Serial output is required and interval in microseconds of output
 int outputInterval = 1000;////(comment out if not needed)
 
 //#define DEBUG_MAIN ////Choose whether debug output should be printed
@@ -19,15 +27,28 @@ int outputInterval = 1000;////(comment out if not needed)
 
 #define AVERAGE_COUNT_MAX 15  //count to measure the average for more accuarate results
 
-//#define INTERRUPT 15 //Pin to use the pin_change_interrupt
+#define INTERRUPT_ON //define to use interrupt function to read data instead of timer
 
-#define I2C_MODULE //choose if u want to print on the small display with I2C
+char* mallocScan(char function)//function to make char pointer to use as less memory as possible
+{
+  uint8_t a = 0;
+  Serial.print("give length of string");
+  scanf("%u", a);
+  char* save = (char*)malloc(a+1*sizeof(char));
+  switch(function){
+  case 'A':
+  Serial.print("name of file(not bigger than 9 chars):\n");
+  for(uint8_t i = 0; i<=a; i++)
+  {
+  scanf("%c", save[i]);
+  }
+  default:
+  Serial.print("error");
+  break;
+  }
+  return save;
+}
 
-char *filename = "waardes.txt";//name of file you want to save the code in
-
-#ifdef USE_TXT
-FILE *out = fopen(filename, "w");//FILE variable to write
-#endif
 
 
 #ifdef TYPE_ANCHOR
@@ -62,7 +83,6 @@ uint8_t average_counter = 0;
 #ifdef TYPE_TAG
   #define ANTENNA_DELAY 16384 // The tag code always has 16384 and the anchors gave the calibrated numbers
   #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
-
   static void initializeAnchors(){
     // define all anchors this tag should consider
 
@@ -90,7 +110,7 @@ uint8_t average_counter = 0;
 #define SPI_MISO 19
 #define SPI_MOSI 23
 #define DW_CS 4
-//define pins when printing with I2C
+
 
 
 // connection pins
@@ -100,6 +120,19 @@ const uint8_t PIN_SS = 4;   // spi select pin
 
 // timing variable
 unsigned long lastTimestamp = millis();
+unsigned long button_time = 0;  
+unsigned long last_button_time = 0; 
+
+void IRAM_ATTR readDistance(void)
+{
+    button_time = millis();
+if (button_time - last_button_time > 250)
+{
+    button1.pressed = true;
+    last_button_time = button_time;
+}
+}
+
 
 void newRange()
 {
@@ -122,13 +155,9 @@ void newRange()
       if(average_counter >= AVERAGE_COUNT_MAX)
       {
         average_distance /= AVERAGE_COUNT_MAX;
-        #ifndef I2C_MODULE
+        #ifndef I2C
         Serial.print("distance");
         Serial.println(average_distance);
-        #endif
-        #ifdef I2C_MODULE
-        u8g2.print("distance");
-        u8g2.print(average_distance);
         #endif
         average_counter = 0;
         average_distance = 0.00;
@@ -142,16 +171,23 @@ void newRange()
         DW1000Ranging.getDistantDevice()->getRange(),
         DW1000Ranging.getDistantDevice()->getRXPower()
       );
-
-
-      #ifdef USE_SERIAL
+      #ifdef USE_TIMER
         if(millis() - lastTimestamp > outputInterval){
           outputDataJson();
           lastTimestamp = millis();
         }
       #endif
+      #ifdef INTERRUPT_ON
+        if(button1.pressed)
+        {
+          outputDataJson();
+          button1.pressed = false;
+        }
+      #endif
     #endif
 }
+
+/////////////////////////////////////////////////////////////////////////
 
 void newDevice(DW1000Device *device)
 {
@@ -167,6 +203,8 @@ void newDevice(DW1000Device *device)
     #endif
 }
 
+/////////////////////////////////////////////////////////////////////////
+
 void inactiveDevice(DW1000Device *device)
 {
     #ifdef TYPE_ANCHOR
@@ -179,6 +217,8 @@ void inactiveDevice(DW1000Device *device)
     #endif
 }
 
+/////////////////////////////////////////////////////////////////////////
+
 void newBlink(DW1000Device *device)
 {
     Serial.print("blink; 1 device added ! -> ");
@@ -186,9 +226,10 @@ void newBlink(DW1000Device *device)
     Serial.println(device->getShortAddress(), HEX);
 }
 
+/////////////////////////////////////////////////////////////////////////
 
 void setup() {
-  #ifdef I2C_MODULE
+  #ifdef I2C  
   u8g2.begin();
   u8g2.setFontPosTop();
   //init the configuration
@@ -199,6 +240,10 @@ void setup() {
   DW1000Ranging.attachNewRange(newRange);
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
   #ifdef TYPE_TAG
+  #ifdef INTERRUPT_ON
+  pinMode(button1.interrupt_pin, INPUT_PULLUP);
+  attachInterrupt(button1.interrupt_pin, readDistance, FALLING);
+  #endif
   Serial.println("\n\nTAG starting");
   DW1000.setAntennaDelay(ANTENNA_DELAY);
     //initialize all anchors
@@ -221,10 +266,9 @@ void setup() {
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif
-
 }
 
-
+/////////////////////////////////////////////////////////////////////////
 
 void loop() {
   DW1000Ranging.loop();
