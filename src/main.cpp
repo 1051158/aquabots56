@@ -10,9 +10,9 @@ struct button
   bool pressed;
 };
 
-button button1 = {3,false};
-
-//#define USE_TXT////Choose if u want your serial data into a text file
+button button_send = {3,false};//interrupt button to send data to pyhonscript
+button button_end = {2,false};//interrupt to stop python script
+button button_backspace{12, false};//interrupt to skip latest uart value
 
 //#define USE_TIMER////Choose if Serial output is required and interval in microseconds of output
 int outputInterval = 1000;////(comment out if not needed)
@@ -25,10 +25,10 @@ int outputInterval = 1000;////(comment out if not needed)
 
 //#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
-#define AVERAGE_COUNT_MAX 15  //count to measure the average for more accuarate results
-
 #define INTERRUPT_ON //define to use interrupt function to read data instead of timer
+#define END_INTERRUPT_ON//uncomment to make the program stop with the click of a button
 
+#ifdef USE_TXT
 char* mallocScan(char function)//function to make char pointer to use as less memory as possible
 {
   uint8_t a = 0;
@@ -37,7 +37,7 @@ char* mallocScan(char function)//function to make char pointer to use as less me
   char* save = (char*)malloc(a+1*sizeof(char));
   switch(function){
   case 'A':
-  Serial.print("name of file(not bigger than 9 chars):\n");
+  Serial.print("name of file(not bigger than length of chars):\n");
   for(uint8_t i = 0; i<=a; i++)
   {
   scanf("%c", save[i]);
@@ -48,7 +48,7 @@ char* mallocScan(char function)//function to make char pointer to use as less me
   }
   return save;
 }
-
+#endif
 
 
 #ifdef TYPE_ANCHOR
@@ -122,20 +122,37 @@ const uint8_t PIN_SS = 4;   // spi select pin
 unsigned long lastTimestamp = millis();
 unsigned long button_time = 0;  
 unsigned long last_button_time = 0; 
+uint8_t average_counter = 0;
 
 void IRAM_ATTR readDistance(void)
 {
     button_time = millis();
 if (button_time - last_button_time > 250)
 {
-    button1.pressed = true;
+    button_send.pressed = true;
     last_button_time = button_time;
 }
+}
+
+void IRAM_ATTR endCode(void)
+{
+  button_time = millis();
+  if (button_time - last_button_time > 250)
+  { 
+    button_end.pressed = true;
+  }
 }
 
 
 void newRange()
 {
+  #ifdef END_INTERRUPT_ON
+  if(button_end.pressed == true)
+  {
+    Serial.print("end");//string to integrate with python code
+    esp_deep_sleep_start();//to make sure nothing gets send after shutting down the program
+  }
+  #endif
     #ifdef TYPE_ANCHOR
     #ifdef ANCHOR_CALIBRATION
     calibration();
@@ -166,22 +183,27 @@ void newRange()
     #endif
     // if new range is found by Tag it should store the distance in the anchorManager
     #ifdef TYPE_TAG
+    #ifdef INTERRUPT_ON
+    if(button_send.pressed)
+    {
       setDistanceIfRegisterdAnchor(
         DW1000Ranging.getDistantDevice()->getShortAddress(),
         DW1000Ranging.getDistantDevice()->getRange(),
         DW1000Ranging.getDistantDevice()->getRXPower()
       );
+      average_counter++;
+      if(average_counter >= AVERAGE_COUNT_MAX)
+      {
+        outputDataJson();
+        average_counter = 0;
+        button_send.pressed = false;
+      }
+    }
+    #endif
       #ifdef USE_TIMER
         if(millis() - lastTimestamp > outputInterval){
           outputDataJson();
           lastTimestamp = millis();
-        }
-      #endif
-      #ifdef INTERRUPT_ON
-        if(button1.pressed)
-        {
-          outputDataJson();
-          button1.pressed = false;
         }
       #endif
     #endif
@@ -241,8 +263,12 @@ void setup() {
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
   #ifdef TYPE_TAG
   #ifdef INTERRUPT_ON
-  pinMode(button1.interrupt_pin, INPUT_PULLUP);
-  attachInterrupt(button1.interrupt_pin, readDistance, FALLING);
+  pinMode(button_send.interrupt_pin, INPUT_PULLUP);
+  attachInterrupt(button_send.interrupt_pin, readDistance, FALLING);
+  #endif
+  #ifdef END_INTERRUPT_ON
+  pinMode(button_end.interrupt_pin, INPUT_PULLUP);
+  attachInterrupt(button_end.interrupt_pin, endCode, FALLING);
   #endif
   Serial.println("\n\nTAG starting");
   DW1000.setAntennaDelay(ANTENNA_DELAY);
