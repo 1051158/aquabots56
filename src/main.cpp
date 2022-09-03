@@ -1,18 +1,16 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include "anchorManager.cpp"
 #include "calibration.cpp"
+#include "Wifi.cpp"
+
 ///////////////////////////Device configuration/////////////////////////////////////
 
+//struct for the button interrupts
 struct button
 {
   const uint8_t interrupt_pin;
   bool pressed;
 };
-
-button button_send = {3,false};//interrupt button to send data to pyhonscript
-button button_end = {2,false};//interrupt to stop python script
-button button_backspace{12, false};//interrupt to skip latest uart value
 
 //#define USE_TIMER////Choose if Serial output is required and interval in microseconds of output
 int outputInterval = 1000;////(comment out if not needed)
@@ -27,29 +25,6 @@ int outputInterval = 1000;////(comment out if not needed)
 
 #define INTERRUPT_ON //define to use interrupt function to read data instead of timer
 #define END_INTERRUPT_ON//uncomment to make the program stop with the click of a button
-
-#ifdef USE_TXT
-char* mallocScan(char function)//function to make char pointer to use as less memory as possible
-{
-  uint8_t a = 0;
-  Serial.print("give length of string");
-  scanf("%u", a);
-  char* save = (char*)malloc(a+1*sizeof(char));
-  switch(function){
-  case 'A':
-  Serial.print("name of file(not bigger than length of chars):\n");
-  for(uint8_t i = 0; i<=a; i++)
-  {
-  scanf("%c", save[i]);
-  }
-  default:
-  Serial.print("error");
-  break;
-  }
-  return save;
-}
-#endif
-
 
 #ifdef TYPE_ANCHOR
 //#define ANCHOR_CALIBRATION //choose to measure(comment) or calibrate the anchor(uncomment)
@@ -84,20 +59,10 @@ uint8_t average_counter = 0;
   #define ANTENNA_DELAY 16384 // The tag code always has 16384 and the anchors gave the calibrated numbers
   #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
   static void initializeAnchors(){
-    // define all anchors this tag should consider
-
-
-    // system supports up to 6 anchors by default,
-    // change MAX_ANCHORS in anchorManager.cpp if more are needed
-    // addAnchor takes 3 parameters:
-    //    ID(int) (takes the HEX first four characters of the UNIQUE_ADRESS)
-    //    X(double) coordinate in meters
-    //    Y(double) coordinate in meters
-
     //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
-    addAnchor(4369, 10.0, 0.0);
-    addAnchor(8738, 0.0, 17.3);
-    addAnchor(13107, 10.0, 17.3);
+    addAnchor(4369, 10, 0);
+    addAnchor(8738, 0, 17);
+    addAnchor(13107, 10, 17);
     //addAnchor(17476, 10.0, 10.0);
     // keep adding anchors this way to your liking
   }
@@ -119,40 +84,10 @@ const uint8_t PIN_IRQ = 34; // irq pin
 const uint8_t PIN_SS = 4;   // spi select pin
 
 // timing variable
-unsigned long lastTimestamp = millis();
-unsigned long button_time = 0;  
-unsigned long last_button_time = 0; 
-uint8_t average_counter = 0;
-
-void IRAM_ATTR readDistance(void)
-{
-    button_time = millis();
-if (button_time - last_button_time > 250)
-{
-    button_send.pressed = true;
-    last_button_time = button_time;
-}
-}
-
-void IRAM_ATTR endCode(void)
-{
-  button_time = millis();
-  if (button_time - last_button_time > 250)
-  { 
-    button_end.pressed = true;
-  }
-}
-
 
 void newRange()
 {
-  #ifdef END_INTERRUPT_ON
-  if(button_end.pressed == true)
-  {
-    Serial.print("end");//string to integrate with python code
-    esp_deep_sleep_start();//to make sure nothing gets send after shutting down the program
-  }
-  #endif
+  Serial.print('2');
     #ifdef TYPE_ANCHOR
     #ifdef ANCHOR_CALIBRATION
     calibration();
@@ -183,30 +118,23 @@ void newRange()
     #endif
     // if new range is found by Tag it should store the distance in the anchorManager
     #ifdef TYPE_TAG
-    #ifdef INTERRUPT_ON
-    if(button_send.pressed)
-    {
       setDistanceIfRegisterdAnchor(
-        DW1000Ranging.getDistantDevice()->getShortAddress(),
-        DW1000Ranging.getDistantDevice()->getRange(),
-        DW1000Ranging.getDistantDevice()->getRXPower()
+      DW1000Ranging.getDistantDevice()->getShortAddress(),
+      DW1000Ranging.getDistantDevice()->getRange()
       );
-      average_counter++;
-      if(average_counter >= AVERAGE_COUNT_MAX)
-      {
-        outputDataJson();
-        average_counter = 0;
-        button_send.pressed = false;
-      }
-    }
-    #endif
+      //average_counter++;
+        #ifdef USE_SERIAL
+          outputDataJson();
+          average_counter = 0;
+          button_send.pressed = false;
+        #endif
       #ifdef USE_TIMER
         if(millis() - lastTimestamp > outputInterval){
           outputDataJson();
           lastTimestamp = millis();
         }
-      #endif
-    #endif
+#endif
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -250,31 +178,36 @@ void newBlink(DW1000Device *device)
 
 /////////////////////////////////////////////////////////////////////////
 
-void setup() {
-  #ifdef I2C  
-  u8g2.begin();
-  u8g2.setFontPosTop();
-  //init the configuration
+void setup() 
+{
+  const char* ssid = "ESP32-Access-Point";
+  const char* psswrd = "123456789";
+  #ifdef I2C  //setup the ug2b lib //ug2b class is defined in anchor manager//
+    u8g2.begin();
+    u8g2.setFontPosTop();
+    //init the configuration
   #endif
-  Serial.begin(115200);
+  Serial.begin(115200);//baud rate
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
-  DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
-  DW1000Ranging.attachNewRange(newRange);
-  DW1000Ranging.attachInactiveDevice(inactiveDevice);
   #ifdef TYPE_TAG
-  #ifdef INTERRUPT_ON
-  pinMode(button_send.interrupt_pin, INPUT_PULLUP);
-  attachInterrupt(button_send.interrupt_pin, readDistance, FALLING);
-  #endif
-  #ifdef END_INTERRUPT_ON
-  pinMode(button_end.interrupt_pin, INPUT_PULLUP);
-  attachInterrupt(button_end.interrupt_pin, endCode, FALLING);
-  #endif
-  Serial.println("\n\nTAG starting");
-  DW1000.setAntennaDelay(ANTENNA_DELAY);
+    #ifdef WIFI_ON
+    WiFi.softAP(ssid, psswrd);
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+    Server.on("/anchor", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", outputDataWiFi().c_str());
+    });
+    Server.begin();
+    #endif
+    Serial.println("\n\nTAG starting");
+    DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
+    DW1000Ranging.attachNewRange(newRange);
+    DW1000Ranging.attachInactiveDevice(inactiveDevice);
+    DW1000.setAntennaDelay(ANTENNA_DELAY);//set the defined antenna delay
     //initialize all anchors
     initializeAnchors();
-    printAnchorArray();
+    //printAnchorArray();//uncomment to check if all anchors are initilized
 
     DW1000Ranging.attachNewDevice(newDevice);
     DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
@@ -296,6 +229,7 @@ void setup() {
 
 /////////////////////////////////////////////////////////////////////////
 
-void loop() {
+void loop() 
+{
   DW1000Ranging.loop();
 }

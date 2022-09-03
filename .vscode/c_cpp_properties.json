@@ -10,6 +10,10 @@
             "includePath": [
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/include",
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/src",
+                "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/ESP Async WebServer/src",
+                "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
+                "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
+                "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/AsyncTCP/src",
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/Dictionary/src",
@@ -215,7 +219,6 @@
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/ESPmDNS/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/Ethernet/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/FFat/src",
-                "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/HTTPClient/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/HTTPUpdate/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/HTTPUpdateServer/src",
@@ -232,7 +235,6 @@
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/USB/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/Update/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
-                "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
                 ""
@@ -242,6 +244,10 @@
                 "path": [
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/include",
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/src",
+                    "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/ESP Async WebServer/src",
+                    "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
+                    "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
+                    "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/AsyncTCP/src",
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/Dictionary/src",
@@ -447,7 +453,6 @@
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/ESPmDNS/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/Ethernet/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/FFat/src",
-                    "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/HTTPClient/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/HTTPUpdate/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/HTTPUpdateServer/src",
@@ -464,7 +469,6 @@
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/USB/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/Update/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
-                    "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
                     ""

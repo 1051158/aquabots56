@@ -1,7 +1,9 @@
 #include <stdint.h>
 #include <Arduino.h>
 #include "U8g2lib.h"
+#include "DW1000.h"
 #include <Wire.h>
+#include <WiFi.h>
 
  //setting up u8g2 class from lib use static to use in other than main.cpp codes
 
@@ -9,9 +11,10 @@
 //Choose whether debug messages of the anchorManager should be printed
 //#define DEBUG_ANCHOR_MANAGER
 //choose which communication mode you want to use (multiple choises availible)
-#define I2C
-#define USE_SERIAL
-//#define TXT
+//#define I2C
+//#define USE_SERIAL//display the distance through uart
+
+#define AVERAGE_COUNT_MAX 15  //count to measure the average for more accuarate results
 
 #ifdef I2C
 static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -23,25 +26,22 @@ static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN
 
 struct anchor{
     uint16_t ID;
-    double x;
-    double y;
-    double distance;
-    double average_distance;
-    uint8_t distance_counter;
-    double rxPower;
+    uint8_t x;
+    uint8_t y;
+    float average_distance;
     bool active;
 };
 
-static anchor anchors[MAX_ANCHORS] = {0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, false};
+static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, false};
 static int anchorCount = 0;
 
-static void addAnchor(uint16_t ID, double XCoordInMtr, double YCoordInMtr){
+static void addAnchor(uint16_t ID, uint8_t XCoordInMtr, uint8_t YCoordInMtr){
     if(anchorCount < MAX_ANCHORS){
-        anchors[anchorCount] = {ID, XCoordInMtr, YCoordInMtr, 0.0, 0.0, false};
+        anchors[anchorCount] = {ID, XCoordInMtr, YCoordInMtr, 0.0, false};
         anchorCount++;
     }
 }
-
+////uncomment in main to check which anchors are connected(commented for faster performance)
 static void printAnchorArray(){
     Serial.println("\n\nInitialized anchors:");
     for (int i = 0; i < MAX_ANCHORS; i++)
@@ -73,7 +73,7 @@ static void setAnchorActive(uint16_t ID, bool isActive){
     #endif
 }
 
-static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rxPower)
+static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance)
 {
     for (int i = 0; i < MAX_ANCHORS; i++)
     {
@@ -82,10 +82,7 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, double rx
         {
             if(distance <=0)
             distance = 0;
-            anchors[i].distance = distance;
-            anchors[i].average_distance += distance;
-            anchors[i].distance_counter++;
-            anchors[i].rxPower = rxPower;
+            anchors[i].average_distance = distance;
             #ifdef DEBUG_ANCHOR_MANAGER
                 Serial.print("Set distance of ");
                 Serial.print(ID);
@@ -114,16 +111,13 @@ static void outputDataJson()
             {
                 Serial.print(", ");
             }
-            if(anchors[i].active)
-            {
-                anchors[i].average_distance /= anchors[i].distance_counter;//divide to get the average
+                anchors[i].average_distance /= AVERAGE_COUNT_MAX;//divide to get the average
                 Serial.printf("{\"ID\": %u, \"x\": %f, \"y\": %f, \"distance\": %f, \"active\": %d}",
                              anchors[i].ID,
                              anchors[i].x,
                              anchors[i].y,
                              anchors[i].average_distance,
                              anchors[i].active);
-            }
         }
     }
     Serial.println("]\n");
@@ -155,3 +149,24 @@ static void outputDataJson()
     #endif
 }
 
+static String outputDataWiFi()
+{
+    String dataDistance = "";
+    String dataID = "";
+    String dataX;
+    String dataY;
+    String total_data= "";
+    for (int i = 0; i < MAX_ANCHORS; i++)
+    {
+        if (anchors[i].ID != 0 && anchors[i].active == 1){
+                //divide to get the average
+                dataID = anchors[i].ID;
+                dataX = anchors[i].x;
+                dataY = anchors[i].y;
+                dataDistance = anchors[i].average_distance;
+                total_data = total_data + dataID + '\n' + dataDistance + '\n' + dataX + '\n' + dataY + "\n";
+        } 
+    }
+
+    return total_data;
+}
