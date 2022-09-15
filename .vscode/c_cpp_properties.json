@@ -204,7 +204,7 @@
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/esp32-camera/driver/include",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/esp32-camera/conversions/include",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/fb_gfx/include",
-                "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/qio_qspi/include",
+                "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/dio_qspi/include",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                 "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/variants/esp32",
                 "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2_Arduino-master/src",
@@ -438,7 +438,7 @@
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/esp32-camera/driver/include",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/esp32-camera/conversions/include",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/fb_gfx/include",
-                    "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/qio_qspi/include",
+                    "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/dio_qspi/include",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                     "C:/Users/Donny/.platformio/packages/framework-arduinoespressif32/variants/esp32",
                     "c:/Users/Donny/ESP UWB/localization-uwb-esp32/.pio/libdeps/esp32dev/U8g2_Arduino-master/src",
@@ -475,7 +475,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=60104",
+                "PLATFORMIO=60105",
                 "ARDUINO_ESP32_DEV",
                 "HAVE_CONFIG_H",
                 "MBEDTLS_CONFIG_FILE=\"mbedtls/esp_config.h\"",

@@ -5,7 +5,7 @@
 static float last_delta = 0.0;
 static uint8_t Adelay_delta = 100;
 static uint16_t this_anchor_Adelay = 16500;//starting antenna delay;
-static uint16_t this_anchor_target_distance = 7.00;
+static uint16_t this_anchor_target_distance = 7.20;
 
 static void calibration(void)
 {

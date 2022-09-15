@@ -7,6 +7,7 @@
 
  //setting up u8g2 class from lib use static to use in other than main.cpp codes
 
+static String total_data = "";
 
 //Choose whether debug messages of the anchorManager should be printed
 //#define DEBUG_ANCHOR_MANAGER
@@ -147,13 +148,13 @@ static void outputDataJson()
     #endif
 }
 
-static String outputDataWiFi()
+static String updateDataWiFi()
 {
     String dataDistance = "";
     String dataID = "";
     String dataX = "";
     String dataY = "";
-    String total_data = "";
+    total_data = "";
     for (int i = 0; i < MAX_ANCHORS; i++)
     {
         if (anchors[i].active){
@@ -161,13 +162,11 @@ static String outputDataWiFi()
                 dataID = anchors[i].ID;
                 dataX = anchors[i].x;
                 dataY = anchors[i].y;
-                anchors[i].distance /= anchors[i].distance_counter;
+                //anchors[i].distance /= anchors[i].distance_counter;
                 dataDistance = anchors[i].distance;
                 total_data = total_data + dataID + "ID" + dataDistance + 'd' + dataX + 'x' + dataY + 'y' + '\t';
-                anchors[i].distance = 0;
-                anchors[i].distance_counter = 0;
         } 
     }
-
+    Serial.println(total_data);
     return total_data;
 }
