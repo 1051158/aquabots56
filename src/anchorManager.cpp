@@ -14,7 +14,6 @@
 //#define I2C
 //#define USE_SERIAL//display the distance through uart
 
-#define AVERAGE_COUNT_MAX 15  //count to measure the average for more accuarate results
 
 #ifdef I2C
 static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -28,7 +27,8 @@ struct anchor{
     uint16_t ID;
     uint8_t x;
     uint8_t y;
-    float average_distance;
+    float distance;
+    uint8_t distance_counter;
     bool active;
 };
 
@@ -82,7 +82,8 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance)
         {
             if(distance <=0)
             distance = 0;
-            anchors[i].average_distance = distance;
+            anchors[i].distance = distance;
+            anchors[i].distance_counter++;
             #ifdef DEBUG_ANCHOR_MANAGER
                 Serial.print("Set distance of ");
                 Serial.print(ID);
@@ -104,20 +105,19 @@ static void outputDataJson()
 {
 #ifdef USE_SERIAL//print the distances through serial
    Serial.print("[");
-    for (int i = 0; i < MAX_ANCHORS; i++)
+    for (int i = 0; i < 3; i++)
     {
-        if (anchors[i].ID != 0){
+        if (anchors[i].active){
             if(i > 0)
             {
                 Serial.print(", ");
             }
-                anchors[i].average_distance /= AVERAGE_COUNT_MAX;//divide to get the average
-                Serial.printf("{\"ID\": %u, \"x\": %f, \"y\": %f, \"distance\": %f, \"active\": %d}",
-                             anchors[i].ID,
-                             anchors[i].x,
-                             anchors[i].y,
-                             anchors[i].average_distance,
-                             anchors[i].active);
+            Serial.printf("{\"ID\": %u, \"x\": %u, \"y\": %u, \"distance\": %f, \"active\": %d}",
+                         anchors[i].ID,
+                         anchors[i].x,
+                         anchors[i].y,
+                         anchors[i].distance,
+                         anchors[i].active);
         }
     }
     Serial.println("]\n");
@@ -131,7 +131,7 @@ static void outputDataJson()
         int IDlength = snprintf(NULL, 0, "%d", anchors[i].ID);
         char* ID = (char*)malloc(IDlength+1);
         snprintf(ID, IDlength+1, "%d", anchors[i].ID);
-        int length = snprintf(NULL, 0, "%g", anchors[i].average_distance);
+        int length = snprintf(NULL, 0, "%g", anchors[i].distance);
         char* convert = (char*)malloc(length+1);
         snprintf(convert, length+1, "%g", anchors[i].distance);
         u8g2.setFont(u8g2_font_fancypixels_tf);
@@ -140,8 +140,6 @@ static void outputDataJson()
         free(convert);
         free(ID);
         y += 10;
-        anchors[i].average_distance = 0;//set both values back to zero to get new average
-        anchors[i].distance_counter = 0;
         }
         }
         u8g2.sendBuffer();
@@ -153,18 +151,21 @@ static String outputDataWiFi()
 {
     String dataDistance = "";
     String dataID = "";
-    String dataX;
-    String dataY;
-    String total_data= "";
+    String dataX = "";
+    String dataY = "";
+    String total_data = "";
     for (int i = 0; i < MAX_ANCHORS; i++)
     {
-        if (anchors[i].ID != 0 && anchors[i].active == 1){
+        if (anchors[i].active){
                 //divide to get the average
                 dataID = anchors[i].ID;
                 dataX = anchors[i].x;
                 dataY = anchors[i].y;
-                dataDistance = anchors[i].average_distance;
-                total_data = total_data + dataID + '\n' + dataDistance + '\n' + dataX + '\n' + dataY + "\n";
+                anchors[i].distance /= anchors[i].distance_counter;
+                dataDistance = anchors[i].distance;
+                total_data = total_data + dataID + "ID" + dataDistance + 'd' + dataX + 'x' + dataY + 'y' + '\t';
+                anchors[i].distance = 0;
+                anchors[i].distance_counter = 0;
         } 
     }
 
