@@ -59,8 +59,8 @@ int outputInterval = 1000;////(comment out if not needed)
 //#define DEBUG_MAIN ////Choose whether debug output should be printed
 
 ////Choose type of device
-#define TYPE_TAG
-//#define TYPE_ANCHOR
+//#define TYPE_TAG
+#define TYPE_ANCHOR
 
 //#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
@@ -69,21 +69,21 @@ int outputInterval = 1000;////(comment out if not needed)
 //#define ANCHOR_CALIBRATION //choose to measure(comment) or calibrate the anchor(uncomment)
 //choose which anchor u want to flash
 //#define ANCHOR_1
-//#define ANCHOR_2
-#define ANCHOR_3
+#define ANCHOR_2
+//#define ANCHOR_3
 //#define ANCHOR_4
 //value calibrated antenna delays for the anchors and adresses to get detected by tag
 #ifdef ANCHOR_1
-#define ANTENNA_DELAY 16584 // BEST ANTENNA DELAY ANCHOR #1
+#define ANTENNA_DELAY 16530 // BEST ANTENNA DELAY ANCHOR #1
 #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
 #endif
 #ifdef ANCHOR_2
-#define ANTENNA_DELAY 16581 // BEST ANTENNA DELAY ANCHOR #2
+#define ANTENNA_DELAY 16530 // BEST ANTENNA DELAY ANCHOR #2
 #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
 #endif
 #ifdef ANCHOR_3
 #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
-#define ANTENNA_DELAY 16603 // BEST ANTENNA DELAY ANCHOR #3
+#define ANTENNA_DELAY 16540 // BEST ANTENNA DELAY ANCHOR #3
 #endif
 #ifdef ANCHOR_4
 #define ANTENNA_DELAY 16725 // BEST ANTENNA DELAY ANCHOR #4
@@ -99,9 +99,9 @@ double average_distance = 0;
     #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
     static void initializeAnchors(){
       //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
-      addAnchor(4369, 3, 0);
+      addAnchor(4369, 2, 0);
       addAnchor(8738, 0, 7);
-      addAnchor(13107, 3, 7);
+      addAnchor(13107, 2, 7);
       //addAnchor(17476, 10.0, 10.0);
     // keep adding anchors this way to your likinG
   }
@@ -153,24 +153,19 @@ void newRange()
       }
       if(button_send.pressed)
       {
-        
-        //for(uint8_t i = 0; i<MAX_ANCHORS;i++)
-        //{
-          //if(anchors[i].distance_counter >= 15)
-            //{
+        setDistanceIfRegisterdAnchor(
+      DW1000Ranging.getDistantDevice()->getShortAddress(),
+      DW1000Ranging.getDistantDevice()->getRange()
+      );  
+        for(uint8_t i = 0; i<MAX_ANCHORS;i++)
+        {
+          if(anchors[i].distance_counter >= 5)
+            {
             outputDataJson();
             total_data = updateDataWiFi();
             button_send.pressed = false;
-           // break;}
-          //if(anchors[i].distance_counter < 15)
-          //{
-            //button_send.pressed = true;
-          //}
-          setDistanceIfRegisterdAnchor(
-      DW1000Ranging.getDistantDevice()->getShortAddress(),
-      DW1000Ranging.getDistantDevice()->getRange()
-      );
-        //}
+            break;}
+        }
       //}
       if(button_backspace.pressed)
       {
@@ -188,8 +183,9 @@ void newRange()
           outputDataJson();
           lastTimestamp = millis();
         }
+      }
 #endif
-}
+
 }
 
 /////////////////////////////////////////////////////////////////////////

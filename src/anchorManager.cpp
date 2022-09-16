@@ -12,7 +12,7 @@ static String total_data = "";
 //Choose whether debug messages of the anchorManager should be printed
 //#define DEBUG_ANCHOR_MANAGER
 //choose which communication mode you want to use (multiple choises availible)
-//#define I2C
+#define I2C
 //#define USE_SERIAL//display the distance through uart
 
 
@@ -35,6 +35,9 @@ struct anchor{
 
 static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, false};
 static int anchorCount = 0;
+
+static double longest_range = 7.29;
+
 
 static void addAnchor(uint16_t ID, uint8_t XCoordInMtr, uint8_t YCoordInMtr){
     if(anchorCount < MAX_ANCHORS){
@@ -83,8 +86,12 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance)
         {
             if(distance <=0)
             distance = 0;
-            anchors[i].distance = distance;
+            if(distance>longest_range)//if the measured value is bigger than the maximum range
+            {anchors[i].distance += longest_range;//set is to max range
             anchors[i].distance_counter++;
+            return;}
+            anchors[i].distance += distance;//add distance 
+            anchors[i].distance_counter++;//add 1 to distance_counter
             #ifdef DEBUG_ANCHOR_MANAGER
                 Serial.print("Set distance of ");
                 Serial.print(ID);
@@ -129,6 +136,7 @@ static void outputDataJson()
     {
         if(anchors[i].active)
         {
+        anchors[i].distance /= anchors[i].distance_counter;
         int IDlength = snprintf(NULL, 0, "%d", anchors[i].ID);
         char* ID = (char*)malloc(IDlength+1);
         snprintf(ID, IDlength+1, "%d", anchors[i].ID);
@@ -165,8 +173,11 @@ static String updateDataWiFi()
                 //anchors[i].distance /= anchors[i].distance_counter;
                 dataDistance = anchors[i].distance;
                 total_data = total_data + dataID + "ID" + dataDistance + 'd' + dataX + 'x' + dataY + 'y' + '\t';
+                anchors[i].distance = 0;
+                anchors[i].distance_counter = 0;
         } 
     }
-    Serial.println(total_data);
+
+    //Serial.println(total_data);
     return total_data;
 }
