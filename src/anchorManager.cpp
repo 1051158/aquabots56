@@ -9,10 +9,22 @@
 
 static String total_data = "";
 
+//#define X_Y_TEST
+
+#define RANGETEST
+
+#define NUM_OF_SEND 10
+
+static uint8_t output_counter = 0;
+static uint8_t distance_counter_max = 5;
+static uint8_t hulp_bool = true;
+static uint8_t hulp_send_bool = false;
+static uint8_t hulp = 0;
+
 //Choose whether debug messages of the anchorManager should be printed
 //#define DEBUG_ANCHOR_MANAGER
 //choose which communication mode you want to use (multiple choises availible)
-#define I2C
+//#define I2C
 //#define USE_SERIAL//display the distance through uart
 
 
@@ -36,7 +48,7 @@ struct anchor{
 static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, false};
 static int anchorCount = 0;
 
-static double longest_range = 7.29;
+static double longest_range = 11;
 
 
 static void addAnchor(uint16_t ID, uint8_t XCoordInMtr, uint8_t YCoordInMtr){
@@ -136,18 +148,24 @@ static void outputDataJson()
     {
         if(anchors[i].active)
         {
-        anchors[i].distance /= anchors[i].distance_counter;
+        anchors[i].distance = anchors[i].distance/anchors[i].distance_counter;
+        Serial.print(anchors[i].distance_counter);
         int IDlength = snprintf(NULL, 0, "%d", anchors[i].ID);
         char* ID = (char*)malloc(IDlength+1);
         snprintf(ID, IDlength+1, "%d", anchors[i].ID);
         int length = snprintf(NULL, 0, "%g", anchors[i].distance);
         char* convert = (char*)malloc(length+1);
         snprintf(convert, length+1, "%g", anchors[i].distance);
+        int counterLength = snprintf(NULL, 0, "%d", anchors[i].distance_counter);
+        char* counter = (char*)malloc(length+1);
+        snprintf(counter, counterLength+1, "%d", anchors[i].distance_counter);
         u8g2.setFont(u8g2_font_fancypixels_tf);
         u8g2.drawStr(0,y, ID);
         u8g2.drawStr(50,y,convert);
+        u8g2.drawStr(90,y, counter);
         free(convert);
         free(ID);
+        free(counter);
         y += 10;
         }
         }
@@ -158,26 +176,62 @@ static void outputDataJson()
 
 static String updateDataWiFi()
 {
+    //Serial.println(hulp);
+    //hulp++;
     String dataDistance = "";
     String dataID = "";
     String dataX = "";
     String dataY = "";
+    String dataCounter = "";
     total_data = "";
-    for (int i = 0; i < MAX_ANCHORS; i++)
+    for (int i = 0; i < 1; i++)
     {
-        if (anchors[i].active){
-                //divide to get the average
-                dataID = anchors[i].ID;
+        if (anchors[i].active)
+        {
+            #ifdef RANGETEST
+                if(anchors[i].distance_counter>=distance_counter_max)
+                {
+                    dataCounter = anchors[i].distance_counter;
+                    anchors[i].distance /= anchors[i].distance_counter;
+                    dataDistance = anchors[i].distance;
+                    dataID = anchors[i].ID;
+
+                    if(output_counter >= NUM_OF_SEND)
+                    //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
+                    {
+                        distance_counter_max *= 2;
+                        if(distance_counter_max > 20)
+                        {
+                            distance_counter_max = 5;
+                            total_data = dataID + "ID" + dataDistance + 'd' + 'a' +'\t';
+                            output_counter = 0;
+                            hulp_bool = true;
+                            hulp_send_bool = true;
+                            Serial.println(total_data);
+                            break;
+                        }
+                        else
+                        {
+                            output_counter = 0;
+                            hulp_bool = true;
+                            total_data = dataID + "ID" + dataDistance + 'd' + 'e' +'\t';
+                            Serial.println(total_data);
+                            break;
+                        }                 
+                    }
+                    total_data = dataID + "ID" + dataDistance + 'd' +'\t';
+                    Serial.println(total_data);
+                    output_counter++;
+                    anchors[i].distance = 0;
+                    anchors[i].distance_counter = 0;
+                #endif
+                #ifndef RANGETEST
                 dataX = anchors[i].x;
                 dataY = anchors[i].y;
-                //anchors[i].distance /= anchors[i].distance_counter;
-                dataDistance = anchors[i].distance;
-                total_data = total_data + dataID + "ID" + dataDistance + 'd' + dataX + 'x' + dataY + 'y' + '\t';
-                anchors[i].distance = 0;
-                anchors[i].distance_counter = 0;
-        } 
+                total_data = total_data + dataID + "ID" + dataDistance + dataCounter +"dc" +'\t';//todo
+                #endif
+            } 
+        }
     }
-
-    //Serial.println(total_data);
     return total_data;
 }

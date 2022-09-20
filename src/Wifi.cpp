@@ -5,13 +5,15 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
-//#define WIFI_ON//comment if WiFi shoud be turned off
-
 static AsyncWebServer Server(80);
 
 static void WiFi_settings(void)
 {
-    
-    //Server.begin();
+    const char* ssid = "ESP32-Access-Point";
+    const char* psswrd = "123456789";
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(ssid, psswrd);
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print(IP);
 }
 

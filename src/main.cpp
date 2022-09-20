@@ -1,41 +1,35 @@
-#include <stdlib.h>
 #include "anchorManager.cpp"
 #include "calibration.cpp"
 #include "Wifi.cpp"
+#include <driver/uart.h>
 
-///////////////////////////Device configuration/////////////////////////////////////
-
-//struct for the button interrupts
 struct button
 {
   const uint8_t interrupt_pin;
   bool pressed;
 };
-
-//AsyncWebSocket ws("/ws");
-
+////////////////////////interrupt buttons////////////////////////////
 
 button button_send = {16,false};//interrupt button to send data to pyhonscript
 button button_end = {5,false};//interrupt to stop python script
 button button_backspace{17, false};//interrupt to skip latest uart value
 
-bool hulpswitch = false;
-
+////////////////////////millis() variables//////////////////////////
 unsigned long lastTimestamp = millis();
 unsigned long button_time = 0;  
 unsigned long last_button_time = 0; 
 
-void IRAM_ATTR backCode(void)
+static void IRAM_ATTR backCode(void)//interruptfunction to go 1 row up in excel
 {
   button_time = millis();
-  if (button_time - last_button_time > 250)
+  if (button_time - last_button_time > 250)//to prevent debouncing of the button
   { 
     button_backspace.pressed = true;
     last_button_time = button_time;
   }
 }
 
-void IRAM_ATTR refresh(void)
+static void IRAM_ATTR refresh(void)//interrupt code to refresh the http page
 {
     button_time = millis();
 if (button_time - last_button_time > 250)
@@ -45,22 +39,23 @@ if (button_time - last_button_time > 250)
 }
 }
 
-void IRAM_ATTR endCode(void)
+static void IRAM_ATTR endCode(void)//interrupt function to stop the code of the tag
 {
   button_time = millis();
-  if (button_time - last_button_time > 250)
+  if (button_time - last_button_time > 250)//to prevent debouncing of the button
   { 
     button_end.pressed = true;
   }
 }
+
 //#define USE_TIMER////Choose if Serial output is required and interval in microseconds of output
 int outputInterval = 1000;////(comment out if not needed)
 
 //#define DEBUG_MAIN ////Choose whether debug output should be printed
 
 ////Choose type of device
-//#define TYPE_TAG
-#define TYPE_ANCHOR
+#define TYPE_TAG
+//#define TYPE_ANCHOR
 
 //#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
@@ -68,13 +63,13 @@ int outputInterval = 1000;////(comment out if not needed)
 #ifdef TYPE_ANCHOR
 //#define ANCHOR_CALIBRATION //choose to measure(comment) or calibrate the anchor(uncomment)
 //choose which anchor u want to flash
-//#define ANCHOR_1
-#define ANCHOR_2
+#define ANCHOR_1
+//#define ANCHOR_2
 //#define ANCHOR_3
 //#define ANCHOR_4
 //value calibrated antenna delays for the anchors and adresses to get detected by tag
 #ifdef ANCHOR_1
-#define ANTENNA_DELAY 16530 // BEST ANTENNA DELAY ANCHOR #1
+#define ANTENNA_DELAY 16570 // BEST ANTENNA DELAY ANCHOR #1
 #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
 #endif
 #ifdef ANCHOR_2
@@ -90,7 +85,6 @@ int outputInterval = 1000;////(comment out if not needed)
 #define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
 #endif
 // choose which anchor u want to flash/calibrate keep one uncommented even if u use tag for compile errors
-double average_distance = 0;
 #endif
 
 #ifdef TYPE_TAG
@@ -114,7 +108,8 @@ double average_distance = 0;
 #define SPI_MISO 19
 #define SPI_MOSI 23
 #define DW_CS 4
-
+ 
+unsigned long rangetime = millis();
 
 
 // connection pins
@@ -128,11 +123,11 @@ void newRange()
 {
   //Serial.print('2');
     #ifdef TYPE_ANCHOR
-    #ifdef ANCHOR_CALIBRATION
-    calibration();
-    #endif
-    #ifndef ANCHOR_CALIBRATION
-//  DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
+      #ifdef ANCHOR_CALIBRATION
+        calibration();//calibrate the anchor when antenna delay is unknown
+      #endif
+      #ifndef ANCHOR_CALIBRATION
+//    DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
     //Serial.print(DW1000Ranging.getDistantDevice()->getRange());
       //Serial.print("from: ");
       //Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
@@ -145,6 +140,7 @@ void newRange()
       #endif
     #endif
     // if new range is found by Tag it should store the distance in the anchorManager
+    setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange()); 
     #ifdef TYPE_TAG
       if(button_end.pressed)
       {
@@ -153,20 +149,19 @@ void newRange()
       }
       if(button_send.pressed)
       {
-        setDistanceIfRegisterdAnchor(
-      DW1000Ranging.getDistantDevice()->getShortAddress(),
-      DW1000Ranging.getDistantDevice()->getRange()
-      );  
         for(uint8_t i = 0; i<MAX_ANCHORS;i++)
         {
-          if(anchors[i].distance_counter >= 5)
-            {
+          if(hulp_send_bool)
+          {
             outputDataJson();
-            total_data = updateDataWiFi();
             button_send.pressed = false;
-            break;}
+            hulp_send_bool = false;
+            break;
+          }
+            //outputDataJson();//send data to i2c 
+            total_data = updateDataWiFi();//send data through wifi to wifi-tag
         }
-      //}
+      }
       if(button_backspace.pressed)
       {
         Serial.print("back");
@@ -177,16 +172,17 @@ void newRange()
         //#ifdef USE_SERIAL
           //outputDataJson();
           //average_counter = 0;
-        #endif
-      #ifdef USE_TIMER
-        if(millis() - lastTimestamp > outputInterval){
-          outputDataJson();
-          lastTimestamp = millis();
-        }
+    #endif
+    #ifdef USE_TIMER
+      if(millis() - lastTimestamp > outputInterval)
+      {
+        outputDataJson();
+        lastTimestamp = millis();
       }
-#endif
+    
+    #endif
+  }
 
-}
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -228,7 +224,16 @@ void newBlink(DW1000Device *device)
 }
 
 /////////////////////////////////////////////////////////////////////////
-
+void interruptfunctions(void)
+{
+  pinMode(button_send.interrupt_pin, INPUT_PULLUP);//enable interrupt to send data when green button is pressed
+  attachInterrupt(button_send.interrupt_pin, refresh, FALLING);
+  pinMode(button_backspace.interrupt_pin, INPUT_PULLUP);//enable interrupt to use 'backspace' in python
+  attachInterrupt(button_backspace.interrupt_pin, backCode, FALLING);
+  pinMode(button_end.interrupt_pin, INPUT_PULLUP);//enable interrupt to end code when red button is pressed
+  attachInterrupt(button_end.interrupt_pin, endCode, FALLING);
+}
+//////////////////////////////////////////////////////////////////////////
 void setup() 
 {
   #ifdef I2C  //setup the ug2b lib //ug2b class is defined in anchormanager.cpp//
@@ -236,31 +241,22 @@ void setup()
     u8g2.setFontPosTop();
     //init the configuration
   #endif
+  //uart_set_wakeup_threshold(UART_NUM_0, 0xFF);
+  //esp_sleep_enable_uart_wakeup(ESP_SLEEP_WAKEUP_UART);
   Serial.begin(115200);//baud rate
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
-    DW1000Ranging.attachNewRange(newRange);
-    DW1000Ranging.attachInactiveDevice(inactiveDevice);
+  DW1000Ranging.attachNewRange(newRange);
+  DW1000Ranging.attachInactiveDevice(inactiveDevice);
   #ifdef TYPE_TAG
-  
-  pinMode(button_send.interrupt_pin, INPUT_PULLUP);//enable interrupt to send data when green button is pressed
-  attachInterrupt(button_send.interrupt_pin, refresh, FALLING);
-  pinMode(button_backspace.interrupt_pin, INPUT_PULLUP);//enable interrupt to use 'backspace' in python
-  attachInterrupt(button_backspace.interrupt_pin, backCode, FALLING);
-  pinMode(button_end.interrupt_pin, INPUT_PULLUP);//enable interrupt to end code when red button is pressed
-  attachInterrupt(button_end.interrupt_pin, endCode, FALLING);
+    interruptfunctions();
     #ifdef WIFI_ON
-    const char* ssid = "ESP32-Access-Point";
-    const char* psswrd = "123456789";
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(ssid, psswrd);
-    IPAddress IP = WiFi.softAPIP();
-    Serial.print(IP);
-    Server.on("/anchor", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-    request->send(200, "text/plain",  total_data.c_str());
-    });
-    Server.begin();
+      WiFi_settings();//configure the wifi settings when 
+      Server.on("/anchor", HTTP_GET, [](AsyncWebServerRequest *request)
+      {
+        request->send(200, "text/plain",  total_data.c_str());
+      });
+      Server.begin();
     #endif
     Serial.println("\n\nTAG starting");
     DW1000.setAntennaDelay(ANTENNA_DELAY);//set the defined antenna delay
