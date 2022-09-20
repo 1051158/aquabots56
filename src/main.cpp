@@ -151,15 +151,18 @@ void newRange()
       {
         for(uint8_t i = 0; i<MAX_ANCHORS;i++)
         {
-          if(hulp_send_bool)
-          {
-            outputDataJson();
-            button_send.pressed = false;
-            hulp_send_bool = false;
-            break;
-          }
+          if(anchors[i].active)
+            if(hulp_send_bool)
+            {
+              outputDataJson();
+              button_send.pressed = false;
+              hulp_send_bool = false;
+              break;
+            }
             //outputDataJson();//send data to i2c 
             total_data = updateDataWiFi();//send data through wifi to wifi-tag
+            //Serial.print("main: ");
+            //Serial.println(total_data);
         }
       }
       if(button_backspace.pressed)
@@ -214,6 +217,13 @@ void inactiveDevice(DW1000Device *device)
     #endif
 }
 
+String send_total_data(void)
+{
+  String total_data1 = total_data;
+  total_data = "";
+  return total_data1;
+}
+
 /////////////////////////////////////////////////////////////////////////
 
 void newBlink(DW1000Device *device)
@@ -251,10 +261,15 @@ void setup()
   #ifdef TYPE_TAG
     interruptfunctions();
     #ifdef WIFI_ON
-      WiFi_settings();//configure the wifi settings when 
+      const char* ssid = "ESP32-Access-Point";
+    const char* psswrd = "123456789";
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(ssid, psswrd);
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print(IP);//configure the wifi settings when 
       Server.on("/anchor", HTTP_GET, [](AsyncWebServerRequest *request)
       {
-        request->send(200, "text/plain",  total_data.c_str());
+        request->send(200, "text/plain",  send_total_data().c_str());
       });
       Server.begin();
     #endif

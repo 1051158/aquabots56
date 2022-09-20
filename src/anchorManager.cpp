@@ -183,7 +183,6 @@ static String updateDataWiFi()
     String dataX = "";
     String dataY = "";
     String dataCounter = "";
-    total_data = "";
     for (int i = 0; i < 1; i++)
     {
         if (anchors[i].active)
@@ -203,24 +202,24 @@ static String updateDataWiFi()
                         if(distance_counter_max > 20)
                         {
                             distance_counter_max = 5;
-                            total_data = dataID + "ID" + dataDistance + 'd' + 'a' +'\t';
+                            total_data = total_data + dataID + "ID" + dataDistance + 'd' + 'a' +'\t';
                             output_counter = 0;
                             hulp_bool = true;
                             hulp_send_bool = true;
-                            Serial.println(total_data);
+                            //Serial.println(total_data);
                             break;
                         }
                         else
                         {
                             output_counter = 0;
                             hulp_bool = true;
-                            total_data = dataID + "ID" + dataDistance + 'd' + 'e' +'\t';
-                            Serial.println(total_data);
+                            total_data = total_data + dataID + "ID" + dataDistance + 'd' + 'e' +'\t';
+                            //Serial.println(total_data);
                             break;
                         }                 
                     }
-                    total_data = dataID + "ID" + dataDistance + 'd' +'\t';
-                    Serial.println(total_data);
+                    total_data = total_data + dataID + "ID" + dataDistance + 'd' +'\t';
+                    //Serial.println(total_data);
                     output_counter++;
                     anchors[i].distance = 0;
                     anchors[i].distance_counter = 0;
@@ -233,5 +232,6 @@ static String updateDataWiFi()
             } 
         }
     }
+    //Serial.println(total_data);
     return total_data;
 }
