@@ -13,12 +13,13 @@ static String total_data = "";
 
 #define RANGETEST
 
-#define NUM_OF_SEND 10
+#define NUM_OF_SEND 5
 
 static uint8_t output_counter = 0;
-static uint8_t distance_counter_max = 5;
-static uint8_t hulp_bool = true;
-static uint8_t hulp_send_bool = false;
+static uint8_t distance_counter_max = 2;
+static bool hulp_bool = true;
+static bool hulp_send_bool = false;
+static bool hulp_change_delay = false;
 static uint8_t hulp = 0;
 
 //Choose whether debug messages of the anchorManager should be printed
@@ -33,7 +34,7 @@ static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN
 #endif
 
 //Choose the amount of anchors supported
-#define MAX_ANCHORS 6
+#define MAX_ANCHORS 1
 
 
 struct anchor{
@@ -177,12 +178,6 @@ static void outputDataJson()
 static String updateDataWiFi()
 {
     //Serial.println(hulp);
-    //hulp++;
-    String dataDistance = "";
-    String dataID = "";
-    String dataX = "";
-    String dataY = "";
-    String dataCounter = "";
     for (int i = 0; i < 1; i++)
     {
         if (anchors[i].active)
@@ -190,22 +185,22 @@ static String updateDataWiFi()
             #ifdef RANGETEST
                 if(anchors[i].distance_counter>=distance_counter_max)
                 {
-                    dataCounter = anchors[i].distance_counter;
+                    output_counter++;
+                    hulp++;
                     anchors[i].distance /= anchors[i].distance_counter;
-                    dataDistance = anchors[i].distance;
-                    dataID = anchors[i].ID;
-
                     if(output_counter >= NUM_OF_SEND)
                     //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
                     {
                         distance_counter_max *= 2;
-                        if(distance_counter_max > 20)
+                        if(distance_counter_max > 4)
                         {
-                            distance_counter_max = 5;
-                            total_data = total_data + dataID + "ID" + dataDistance + 'd' + 'a' +'\t';
+                            distance_counter_max = 2;
+                            total_data = total_data + anchors[i].ID + "ID" + anchors[i].distance + 'd'+ hulp + 'a';
                             output_counter = 0;
                             hulp_bool = true;
-                            hulp_send_bool = true;
+                            hulp_change_delay = true;
+                            anchors[i].distance = 0;
+                            anchors[i].distance_counter = 0;
                             //Serial.println(total_data);
                             break;
                         }
@@ -213,14 +208,15 @@ static String updateDataWiFi()
                         {
                             output_counter = 0;
                             hulp_bool = true;
-                            total_data = total_data + dataID + "ID" + dataDistance + 'd' + 'e' +'\t';
+                            total_data = total_data + anchors[i].ID + "ID" + anchors[i].distance + 'd'+ hulp + 'e';
                             //Serial.println(total_data);
+                            anchors[i].distance = 0;
+                            anchors[i].distance_counter = 0;
                             break;
                         }                 
                     }
-                    total_data = total_data + dataID + "ID" + dataDistance + 'd' +'\t';
-                    //Serial.println(total_data);
-                    output_counter++;
+                    total_data = total_data + anchors[i].ID + "ID" + anchors[i].distance + 'd'+ hulp;
+                    Serial.println(total_data);
                     anchors[i].distance = 0;
                     anchors[i].distance_counter = 0;
                 #endif
