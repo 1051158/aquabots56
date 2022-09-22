@@ -13,7 +13,7 @@ static String total_data = "";
 
 #define RANGETEST
 
-#define NUM_OF_SEND 5
+#define NUM_OF_SEND 4
 
 static uint8_t output_counter = 0;
 static uint8_t distance_counter_max = 2;
@@ -191,8 +191,8 @@ static String updateDataWiFi()
                     if(output_counter >= NUM_OF_SEND)
                     //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
                     {
-                        distance_counter_max *= 2;
-                        if(distance_counter_max > 4)
+                        distance_counter_max += 3;
+                        if(distance_counter_max > 5)
                         {
                             distance_counter_max = 2;
                             total_data = total_data + anchors[i].ID + "ID" + anchors[i].distance + 'd'+ hulp + 'a';
