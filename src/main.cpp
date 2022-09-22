@@ -10,8 +10,13 @@ struct button
 };
 ////////////////////////interrupt buttons////////////////////////////
 
-uint32_t antenna_delay = 15000;
-uint8_t antenna_interval = 100;
+bool sendAntennaInfo = true;
+
+#define ANTENNA_DELAY_START 16500
+
+uint32_t antenna_delay_start = 16500;//will be sended as 'ads'
+uint32_t antenna_delay_end = 16800;//will be sended as 'ade'
+uint8_t antenna_interval = 20;//will be sended as ain(to prevent confusion of the meaning of AI which is not used here)
 
 button button_send = {16,false};//interrupt button to send data to pyhonscript
 button button_end = {5,false};//interrupt to stop python script
@@ -62,7 +67,7 @@ int outputInterval = 1000;////(comment out if not needed)
 
 //#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
-
+////////////////////////anchor antenna_delays//////////////////////////////////////////
 #ifdef TYPE_ANCHOR
 //#define ANCHOR_CALIBRATION //choose to measure(comment) or calibrate the anchor(uncomment)
 //choose which anchor u want to flash
@@ -92,7 +97,7 @@ int outputInterval = 1000;////(comment out if not needed)
 
 #ifdef TYPE_TAG
   #define WIFI_ON
-    //#define ANTENNA_DELAY 16384 // The tag code always has 16384 and the anchors gave the calibrated numbers
+    #define ANTENNA_DELAY 16384 // The tag code always has 16384 and the anchors gave the calibrated numbers
     #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
     static void initializeAnchors(){
       //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
@@ -155,32 +160,35 @@ void newRange()
         for(uint8_t i = 0; i<MAX_ANCHORS;i++)
         {
           if(anchors[i].active)
-            if(hulp_send_bool)
+            if(hulp_send_bool)//Press again to start the measurement of range or x_y
             {
               outputDataJson();
               button_send.pressed = false;
               hulp_send_bool = false;
               break;
             }
+            #ifdef RANGETEST
             if(hulp_change_delay)
             {
-              antenna_delay += antenna_interval;
-              DW1000.setAntennaDelay(antenna_delay);
-              if(antenna_delay >= 22000)
+              antenna_delay_start += antenna_interval;
+              DW1000.setAntennaDelay(antenna_delay_start);
+              if(antenna_delay_start >= antenna_delay_end)
               {
                 hulp_send_bool = true;
                 total_data = "end";
                 Serial.print(total_data);
                 delay(200);
-                esp_deep_sleep_start();
+                antenna_delay_start = ANTENNA_DELAY_START;
               }
               hulp_change_delay = false;
             }
-            //outputDataJson();//send data to i2c 
+            //outputDataJson();//send data to i2c or uart
             total_data = updateDataWiFi();//send data through wifi to wifi-tag
             //Serial.print("main: ");
-            //Serial.println(total_data);
+            Serial.println(total_data);
+            #endif
         }
+
       }
       if(button_backspace.pressed)
       {
@@ -202,7 +210,6 @@ void newRange()
     
     #endif
   }
-
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -291,7 +298,10 @@ void setup()
       Server.begin();
     #endif
     Serial.println("\n\nTAG starting");
-    DW1000.setAntennaDelay(antenna_delay);//set the defined antenna delay
+    DW1000.setAntennaDelay(antenna_delay_start);//set the defined antenna delay
+    #ifndef RANGETEST
+    DW1000.setAntennaDelay(ANTENNA_DELAY);
+    #endif
     //initialize all anchors
     initializeAnchors();
     //printAnchorArray();//uncomment to check if all anchors are initilized
@@ -311,6 +321,9 @@ void setup()
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif
+  Serial.println(antenna_delay_end);
+  Serial.println(antenna_delay_start);
+  Serial.println(antenna_interval);
 }
 
 /////////////////////////////////////////////////////////////////////////
