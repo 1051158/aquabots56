@@ -11,12 +11,18 @@ struct button
 ////////////////////////interrupt buttons////////////////////////////
 
 bool sendAntennaInfo = true;
+bool bool_nummer = false;
 
-#define ANTENNA_DELAY_START 16500
+#define ANTENNA_DELAY
 
-uint32_t antenna_delay_start = 16500;//will be sended as 'ads'
-uint32_t antenna_delay_end = 16800;//will be sended as 'ade'
-uint8_t antenna_interval = 20;//will be sended as ain(to prevent confusion of the meaning of AI which is not used here)
+#ifdef ANTENNA_DELAY
+  #define NOV 14
+  uint16_t antenna_delay = 16510;
+  uint16_t antenna_delay_start = 16510;
+  uint16_t antenna_delay_end = 16580;
+  uint8_t antenna_interval = 2;//will be sended as ain(to prevent confusion of the meaning of AI which is not used here)
+  uint8_t number = 0;
+#endif
 
 button button_send = {16,false};//interrupt button to send data to pyhonscript
 button button_end = {5,false};//interrupt to stop python script
@@ -65,14 +71,18 @@ int outputInterval = 1000;////(comment out if not needed)
 #define TYPE_TAG
 //#define TYPE_ANCHOR
 
+////Choose measure mode
+#define LOWPOWER
+//#define ACCURACY
+
 //#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
 ////////////////////////anchor antenna_delays//////////////////////////////////////////
 #ifdef TYPE_ANCHOR
 //#define ANCHOR_CALIBRATION //choose to measure(comment) or calibrate the anchor(uncomment)
 //choose which anchor u want to flash
-#define ANCHOR_1
-//#define ANCHOR_2
+//#define ANCHOR_1
+#define ANCHOR_2
 //#define ANCHOR_3
 //#define ANCHOR_4
 //value calibrated antenna delays for the anchors and adresses to get detected by tag
@@ -97,7 +107,7 @@ int outputInterval = 1000;////(comment out if not needed)
 
 #ifdef TYPE_TAG
   #define WIFI_ON
-    #define ANTENNA_DELAY 16384 // The tag code always has 16384 and the anchors gave the calibrated numbers
+    //#define ANTENNA_DELAY 16384 // The tag code always has 16384 and the anchors gave the calibrated numbers
     #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
     static void initializeAnchors(){
       //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
@@ -148,14 +158,15 @@ void newRange()
       #endif
     #endif
     // if new range is found by Tag it should store the distance in the anchorManager
-    setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange()); 
     #ifdef TYPE_TAG
+      setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange()); 
+
       if(button_end.pressed)
       {
         Serial.print("end");
         esp_deep_sleep_start();
       }
-      if(button_send.pressed)
+      if(button_send.pressed)//press the interrupt button to start measurement
       {
         for(uint8_t i = 0; i<MAX_ANCHORS;i++)
         {
@@ -170,15 +181,14 @@ void newRange()
             #ifdef RANGETEST
             if(hulp_change_delay)
             {
-              antenna_delay_start += antenna_interval;
-              DW1000.setAntennaDelay(antenna_delay_start);
-              if(antenna_delay_start >= antenna_delay_end)
+              antenna_delay += antenna_interval;
+              DW1000.setAntennaDelay(antenna_delay);
+              if(antenna_delay >= antenna_delay_end)
               {
+                uint16_t antenna_delay = antenna_delay_start;
                 hulp_send_bool = true;
                 total_data = "end";
-                Serial.print(total_data);
                 delay(200);
-                antenna_delay_start = ANTENNA_DELAY_START;
               }
               hulp_change_delay = false;
             }
@@ -291,14 +301,16 @@ void setup()
       WiFi.softAP(ssid, psswrd);
       IPAddress IP = WiFi.softAPIP();
       //Serial.print(IP);//configure the wifi settings when 
-      Server.on("/anchor", HTTP_GET, [](AsyncWebServerRequest *request)
+      Server.on("/anchor1", HTTP_GET, [](AsyncWebServerRequest *request)
       {
-        request->send(200, "text/plain",  send_total_data().c_str());
+        request->send(200, "text/plain", send_total_data().c_str());
       });
       Server.begin();
     #endif
     Serial.println("\n\nTAG starting");
-    DW1000.setAntennaDelay(antenna_delay_start);//set the defined antenna delay
+    uint16_t antenna_delay = antenna_delay_start;
+    DW1000.setAntennaDelay(antenna_delay);//set the defined antenna delay
+    Serial.print(number);
     #ifndef RANGETEST
     DW1000.setAntennaDelay(ANTENNA_DELAY);
     #endif
@@ -306,24 +318,32 @@ void setup()
     initializeAnchors();
     //printAnchorArray();//uncomment to check if all anchors are initilized
     DW1000Ranging.attachNewDevice(newDevice);
-    DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
+    #ifdef LOWPOWER
+    DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
+    #endif
+    #ifdef ACCURACY
+      DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
+    #endif
+
   #endif
   #ifdef TYPE_ANCHOR
     DW1000.setAntennaDelay(ANTENNA_DELAY);
     Serial.println("\n\n\n\n\nANCHOR starting");
     DW1000Ranging.attachBlinkDevice(newBlink);
-    DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
+    #ifdef LOWPOWER
+    DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
+    #endif    
     #ifdef ANCHOR_CALIBRATION
     Serial.println("calibration mode started:");
+    #endif
+    #ifdef ACCURACY
+      DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
     #endif
   #endif
 
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif
-  Serial.println(antenna_delay_end);
-  Serial.println(antenna_delay_start);
-  Serial.println(antenna_interval);
 }
 
 /////////////////////////////////////////////////////////////////////////
