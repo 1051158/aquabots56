@@ -34,7 +34,7 @@ static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN
 #endif
 
 //Choose the amount of anchors supported
-#define MAX_ANCHORS 1
+#define MAX_ANCHORS 3
 
 
 struct anchor{
@@ -178,7 +178,7 @@ static void outputDataJson()
 static String updateDataWiFi()
 {
     //Serial.println(hulp);
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < MAX_ANCHORS; i++)
     {
         if (anchors[i].active)
         {
@@ -192,7 +192,7 @@ static String updateDataWiFi()
                     //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
                     {
                         distance_counter_max += 3;
-                        if(distance_counter_max > 5)
+                        if(distance_counter_max >= 5)
                         {
                             distance_counter_max = 2;
                             total_data = total_data + anchors[i].ID + "ID" + anchors[i].distance + 'd'+ hulp + 'a';
@@ -216,7 +216,7 @@ static String updateDataWiFi()
                         }                 
                     }
                     total_data = total_data + anchors[i].ID + "ID" + anchors[i].distance + 'd'+ hulp;
-                    Serial.println(total_data);
+                    //Serial.println(total_data);
                     anchors[i].distance = 0;
                     anchors[i].distance_counter = 0;
                 #endif
