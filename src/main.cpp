@@ -15,15 +15,6 @@ bool bool_nummer = false;
 
 #define ANTENNA_DELAY
 
-#ifdef ANTENNA_DELAY
-  #define NOV 14
-  uint16_t antenna_delay = 16500;
-  uint16_t antenna_delay_start = 16500;
-  uint16_t antenna_delay_end = 16650;
-  uint8_t antenna_interval = 10;//will be sended as ain(to prevent confusion of the meaning of AI which is not used here)
-  uint8_t number = 0;
-#endif
-
 button button_send = {16,false};//interrupt button to send data to pyhonscript
 button button_end = {5,false};//interrupt to stop python script
 button button_backspace{17, false};//interrupt to skip latest uart value
@@ -71,49 +62,51 @@ int outputInterval = 1000;////(comment out if not needed)
 #define TYPE_TAG
 //#define TYPE_ANCHOR
 
+
+///////////////////////to program the right anchor///////////////////////////////////////////////////////////
+#ifdef TYPE_ANCHOR
+    //#define ANCHOR_1
+//valeus for the right anchor for the void setup() function
+    #ifdef ANCHOR_1
+        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
+        #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
+    #endif
+    //#define ANCHOR_2
+//valeus for the right anchor for the void setup() function
+    #ifdef ANCHOR_2
+        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #2
+        #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
+    #endif
+#define ANCHOR_3
+//valeus for the right anchor for the void setup() function
+    #ifdef ANCHOR_3
+        #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
+        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #3
+    #endif
+//#define ANCHOR_4
+//valeus for the right anchor for the void setup() function
+    #ifdef ANCHOR_4
+        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
+        #define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
+    #endif
+#endif
+
 ////Choose measure mode
 #define LOWPOWER
 //#define ACCURACY
 
 //#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
-////////////////////////anchor antenna_delays//////////////////////////////////////////
-#ifdef TYPE_ANCHOR
-//#define ANCHOR_CALIBRATION //choose to measure(comment) or calibrate the anchor(uncomment)
-//choose which anchor u want to flash
-#define ANCHOR_1
-//#define ANCHOR_2
-//#define ANCHOR_3
-//#define ANCHOR_4
-//value calibrated antenna delays for the anchors and adresses to get detected by tag
-#ifdef ANCHOR_1
-#define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
-#define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
-#endif
-#ifdef ANCHOR_2
-#define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #2
-#define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
-#endif
-#ifdef ANCHOR_3
-#define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
-#define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #3
-#endif
-#ifdef ANCHOR_4
-#define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
-#define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
-#endif
-// choose which anchor u want to flash/calibrate keep one uncommented even if u use tag for compile errors
-#endif
 
 #ifdef TYPE_TAG
   #define WIFI_ON
     #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
     static void initializeAnchors(){
       //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
-      addAnchor(4369, 2, 0);
-      addAnchor(8738, 0, 7);
-      addAnchor(13107, 2, 7);
-      //addAnchor(17476, 10.0, 10.0);
+      addAnchor(ANCHOR_ID_1, ANCHOR_X_1, ANCHOR_Y_1);
+      addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
+      addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
+      //addAnchor(ANCHOR_ID_4, 10.0, 10.0); ToDo
     // keep adding anchors this way to your likinG
   }
 #endif
@@ -167,59 +160,70 @@ void newRange()
       }
       if(button_send.pressed)//press the interrupt button to start measurement
       {
+        //Serial.print('3');
         for(uint8_t i = 0; i<MAX_ANCHORS;i++)
         {
-          if(anchors[i].active)
-            {
-              if(hulp_send_bool)//Press again to start the measurement of range or x_y
+//when ID's match and the distance hasn't been created in the pas yet go further into funtion
+              if(anchors[i].ID == DW1000Ranging.getDistantDevice()->getShortAddress() && !anchors[i].done)
+//start with renewing http if the last http of the defined anchor array hasn't been made yet
               {
-                outputDataJson();
-                button_send.pressed = false;
-                hulp_send_bool = false;
-                break;
-              }
-              #ifdef RANGETEST
-              if(hulp_change_delay)
-              {
-                antenna_delay += antenna_interval;
-                DW1000.setAntennaDelay(antenna_delay);
-                if(antenna_delay >= antenna_delay_end)
+                //Serial.print('4');
+                #ifdef RANGETEST
+                anchors[i].total_data = updateDataWiFi(i);//send data through wifi to wifi-tag(i stands for the anchor number)
+                if(anchors[i].total_data == "not")
                 {
-                  antenna_delay = antenna_delay_start;
-                  hulp_send_bool = true;
-                  total_data = "end";
-                  num_of_send_counter = 0;
-                  distance_counter_max = 2;
-                  delay(200);
+                  //Serial.print('n');
+                  anchors[i].total_data = "";
                 }
-                hulp_change_delay = false;
-                //outputDataJson();//send data to i2c or uart
+                else
+                {
+                  if(anchors[i].hulp_change_delay)
+                {
+                  anchors[i].antenna_delay += ANTENNA_INTERVAL;
+                  //Serial.println(anchors[i].antenna_delay);
+                  DW1000.setAntennaDelay(anchors[i].antenna_delay);
+                  if(anchors[i].antenna_delay >= 16650)
+                  {
+                    for(int j = 0; j< MAX_ANCHORS; j++)
+                    {
+                    anchors[j].antenna_delay = ANTENNA_DELAY_START;
+                    anchors[j].total_data = "end";
+                    anchors[j].num_of_send_counter = 0;
+                    button_send.pressed = false;
+                    }
+                    distance_counter_max = DISTANCE_COUNTER_MIN;
+                    delay(200);
+                  }
+                  anchors[i].hulp_change_delay = false;
+                  //outputDataJson();//send data to i2c or uart
+                }
+                }
+                //Serial.print("main: ");
+                //Serial.print(i);
+                //Serial.println(anchors[i].total_data);
+//distance is determined waiting for the distances of the other anchors in the array
+                anchors[i].done = true;
               }
-              total_data = updateDataWiFi();//send data through wifi to wifi-tag
-              //Serial.print("main: ");
-              Serial.println(total_data);
-              break;
+              }
             }
+            #endif
+          if(button_backspace.pressed)
+          {
+            Serial.print("back");
+            button_backspace.pressed = false;
           }
-          #endif
-        if(button_backspace.pressed)
-        {
-          Serial.print("back");
-          button_backspace.pressed = false;
-        }
-      }
-      //average_counter++;
-        //#ifdef USE_SERIAL
-          //outputDataJson();
-          //average_counter = 0;
-    #endif
-      #ifdef USE_TIMER
-        if(millis() - lastTimestamp > outputInterval)
-        { 
-          outputDataJson();
-          lastTimestamp = millis();
-        }
-    
+        //average_counter++;
+          //#ifdef USE_SERIAL
+            //outputDataJson();
+            //average_counter = 0;
+      #endif
+        #ifdef USE_TIMER
+          if(millis() - lastTimestamp > outputInterval)
+          { 
+            outputDataJson();
+            lastTimestamp = millis();
+          }
+
       #endif
     }
 
@@ -255,11 +259,20 @@ void inactiveDevice(DW1000Device *device)
 
 ////////////////////////////////////////////////////////////////////////
 
-String send_total_data(void)
+String send_total_data_server()
 {
-  String total_data1 = total_data;
-  total_data = "";
-  return total_data1;
+  String total_data_1; // use hulp string to store the array of strings of every anchor in
+  if(anchors[0].done && anchors[1].done && anchors[2].done)
+  {
+    for(int i = 0; i<MAX_ANCHORS;i++)
+    {
+      total_data_1 = total_data_1 + anchors[i].total_data;
+      anchors[i].done = false;
+    }
+  }
+  else
+  total_data_1 = "ignore";
+  return total_data_1;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -304,21 +317,29 @@ void setup()
       WiFi.mode(WIFI_AP);
       WiFi.softAP(ssid, psswrd);
       IPAddress IP = WiFi.softAPIP();
-      //Serial.print(IP);//configure the wifi settings when 
+      Serial.print(IP);//configure the wifi settings when 
       Server.on("/anchor1", HTTP_GET, [](AsyncWebServerRequest *request)
       {
-        request->send(200, "text/plain", send_total_data().c_str());
+        String send;
+        send = send_total_data_server().c_str();
+        Serial.println("send");
+        Serial.print(send);
+        request->send(200, "text/plain", send);
       });
-      /*Server.on("/anchor2", HTTP_GET, [](AsyncWebServerRequest *request)
+      /*Server.on("/anchor3", HTTP_GET, [](AsyncWebServerRequest *request)
       {
-        request->send(200, "text/plain", send_total_data().c_str());
-      });*/
+        request->send(200, "text/plain", send_total_data_server_3().c_str());
+        if(server_bool[0],server_bool[1],server_bool[2])
+        {
+          server_bool[0] = false;
+          server_bool[1] = false;
+          server_bool[2] = false;
+        }
+      });*/      
       Server.begin();
     #endif
     Serial.println("\n\nTAG starting");
-    uint16_t antenna_delay = antenna_delay_start;
-    DW1000.setAntennaDelay(antenna_delay);//set the defined antenna delay
-    Serial.print(number);
+    DW1000.setAntennaDelay(16500);//set the defined antenna delay
     #ifndef RANGETEST
     DW1000.setAntennaDelay(ANTENNA_DELAY);
     #endif
