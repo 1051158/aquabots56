@@ -15,7 +15,7 @@ static String total_data = "";
 
 #define NUM_OF_SEND 4
 
-static uint8_t output_counter = 0;
+static uint8_t num_of_send_counter = 0;
 static uint8_t distance_counter_max = 2;
 static bool hulp_bool = true;
 static bool hulp_send_bool = false;
@@ -185,18 +185,18 @@ static String updateDataWiFi()
             #ifdef RANGETEST
                 if(anchors[i].distance_counter>=distance_counter_max)
                 {
-                    output_counter++;
-                    hulp++;
+                    num_of_send_counter++;
+                    hulp++;// for integration with WIFI_TAG.cpp to read every new value in the http-request
                     anchors[i].distance /= anchors[i].distance_counter;
-                    if(output_counter >= NUM_OF_SEND)
+                    if(num_of_send_counter >= NUM_OF_SEND)
                     //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
                     {
-                        distance_counter_max += 3;
-                        if(distance_counter_max >= 5)
+                        distance_counter_max++;
+                        if(distance_counter_max > 2)
                         {
-                            distance_counter_max = 2;
+                            distance_counter_max = 1;
                             total_data = total_data + anchors[i].ID + "ID" + anchors[i].distance + 'd'+ hulp + 'a';
-                            output_counter = 0;
+                            num_of_send_counter = 0;
                             hulp_bool = true;
                             hulp_change_delay = true;
                             anchors[i].distance = 0;
@@ -206,8 +206,9 @@ static String updateDataWiFi()
                         }
                         else
                         {
-                            output_counter = 0;
+                            num_of_send_counter = 0;
                             hulp_bool = true;
+                            hulp_change_delay = true;
                             total_data = total_data + anchors[i].ID + "ID" + anchors[i].distance + 'd'+ hulp + 'e';
                             //Serial.println(total_data);
                             anchors[i].distance = 0;

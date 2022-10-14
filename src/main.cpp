@@ -17,10 +17,10 @@ bool bool_nummer = false;
 
 #ifdef ANTENNA_DELAY
   #define NOV 14
-  uint16_t antenna_delay = 16510;
-  uint16_t antenna_delay_start = 16510;
-  uint16_t antenna_delay_end = 16580;
-  uint8_t antenna_interval = 2;//will be sended as ain(to prevent confusion of the meaning of AI which is not used here)
+  uint16_t antenna_delay = 16500;
+  uint16_t antenna_delay_start = 16500;
+  uint16_t antenna_delay_end = 16650;
+  uint8_t antenna_interval = 10;//will be sended as ain(to prevent confusion of the meaning of AI which is not used here)
   uint8_t number = 0;
 #endif
 
@@ -81,8 +81,8 @@ int outputInterval = 1000;////(comment out if not needed)
 #ifdef TYPE_ANCHOR
 //#define ANCHOR_CALIBRATION //choose to measure(comment) or calibrate the anchor(uncomment)
 //choose which anchor u want to flash
-//#define ANCHOR_1
-#define ANCHOR_2
+#define ANCHOR_1
+//#define ANCHOR_2
 //#define ANCHOR_3
 //#define ANCHOR_4
 //value calibrated antenna delays for the anchors and adresses to get detected by tag
@@ -107,7 +107,6 @@ int outputInterval = 1000;////(comment out if not needed)
 
 #ifdef TYPE_TAG
   #define WIFI_ON
-    //#define ANTENNA_DELAY 16384 // The tag code always has 16384 and the anchors gave the calibrated numbers
     #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
     static void initializeAnchors(){
       //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
@@ -171,55 +170,58 @@ void newRange()
         for(uint8_t i = 0; i<MAX_ANCHORS;i++)
         {
           if(anchors[i].active)
-            if(hulp_send_bool)//Press again to start the measurement of range or x_y
             {
-              outputDataJson();
-              button_send.pressed = false;
-              hulp_send_bool = false;
+              if(hulp_send_bool)//Press again to start the measurement of range or x_y
+              {
+                outputDataJson();
+                button_send.pressed = false;
+                hulp_send_bool = false;
+                break;
+              }
+              #ifdef RANGETEST
+              if(hulp_change_delay)
+              {
+                antenna_delay += antenna_interval;
+                DW1000.setAntennaDelay(antenna_delay);
+                if(antenna_delay >= antenna_delay_end)
+                {
+                  antenna_delay = antenna_delay_start;
+                  hulp_send_bool = true;
+                  total_data = "end";
+                  num_of_send_counter = 0;
+                  distance_counter_max = 2;
+                  delay(200);
+                }
+                hulp_change_delay = false;
+                //outputDataJson();//send data to i2c or uart
+              }
+              total_data = updateDataWiFi();//send data through wifi to wifi-tag
+              //Serial.print("main: ");
+              Serial.println(total_data);
               break;
             }
-            #ifdef RANGETEST
-            if(hulp_change_delay)
-            {
-              antenna_delay += antenna_interval;
-              DW1000.setAntennaDelay(antenna_delay);
-              if(antenna_delay >= antenna_delay_end)
-              {
-                uint16_t antenna_delay = antenna_delay_start;
-                hulp_send_bool = true;
-                total_data = "end";
-                delay(200);
-              }
-              hulp_change_delay = false;
-            }
-            //outputDataJson();//send data to i2c or uart
-            total_data = updateDataWiFi();//send data through wifi to wifi-tag
-            //Serial.print("main: ");
-            Serial.println(total_data);
-            #endif
+          }
+          #endif
+        if(button_backspace.pressed)
+        {
+          Serial.print("back");
+          button_backspace.pressed = false;
         }
-
       }
-      if(button_backspace.pressed)
-      {
-        Serial.print("back");
-        button_backspace.pressed = false;
-      }
-
       //average_counter++;
         //#ifdef USE_SERIAL
           //outputDataJson();
           //average_counter = 0;
     #endif
-    #ifdef USE_TIMER
-      if(millis() - lastTimestamp > outputInterval)
-      {
-        outputDataJson();
-        lastTimestamp = millis();
-      }
+      #ifdef USE_TIMER
+        if(millis() - lastTimestamp > outputInterval)
+        { 
+          outputDataJson();
+          lastTimestamp = millis();
+        }
     
-    #endif
-  }
+      #endif
+    }
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -250,6 +252,8 @@ void inactiveDevice(DW1000Device *device)
       setAnchorActive(device->getShortAddress(), false);
     #endif
 }
+
+////////////////////////////////////////////////////////////////////////
 
 String send_total_data(void)
 {
@@ -305,6 +309,10 @@ void setup()
       {
         request->send(200, "text/plain", send_total_data().c_str());
       });
+      /*Server.on("/anchor2", HTTP_GET, [](AsyncWebServerRequest *request)
+      {
+        request->send(200, "text/plain", send_total_data().c_str());
+      });*/
       Server.begin();
     #endif
     Serial.println("\n\nTAG starting");
@@ -331,13 +339,13 @@ void setup()
     Serial.println("\n\n\n\n\nANCHOR starting");
     DW1000Ranging.attachBlinkDevice(newBlink);
     #ifdef LOWPOWER
-    DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
+    DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
     #endif    
     #ifdef ANCHOR_CALIBRATION
     Serial.println("calibration mode started:");
     #endif
     #ifdef ACCURACY
-      DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
+      DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
     #endif
   #endif
 
