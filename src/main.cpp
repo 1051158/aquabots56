@@ -177,33 +177,37 @@ void newRange()
                 }
                 else
                 {
-                  if(anchors[i].hulp_change_delay)
-                {
-                  anchors[i].antenna_delay += ANTENNA_INTERVAL;
-                  //Serial.println(anchors[i].antenna_delay);
-                  DW1000.setAntennaDelay(anchors[i].antenna_delay);
-                  if(anchors[i].antenna_delay >= 16650)
-                  {
-                    for(int j = 0; j< MAX_ANCHORS; j++)
-                    {
-                    anchors[j].antenna_delay = ANTENNA_DELAY_START;
-                    anchors[j].total_data = "end";
-                    anchors[j].num_of_send_counter = 0;
-                    button_send.pressed = false;
-                    }
-                    distance_counter_max = DISTANCE_COUNTER_MIN;
-                    delay(200);
-                  }
-                  anchors[i].hulp_change_delay = false;
-                  //outputDataJson();//send data to i2c or uart
+                  anchors[i].done = true;
+                  //outputDataJson();//send data to i2c or uart-
                 }
                 }
                 //Serial.print("main: ");
                 //Serial.print(i);
                 //Serial.println(anchors[i].total_data);
 //distance is determined waiting for the distances of the other anchors in the array
-                anchors[i].done = true;
+                
               }
+              if(anchors[0].hulp_change_delay && anchors[1].hulp_change_delay && anchors[2].hulp_change_delay)
+                {
+                  antenna_delay += ANTENNA_INTERVAL;
+                  //Serial.println(anchors[i].antenna_delay);
+                  DW1000.setAntennaDelay(antenna_delay);
+                  if(antenna_delay >= 16650)
+                  {
+                    antenna_delay = ANTENNA_DELAY_START;
+                    for(int j = 0; j< MAX_ANCHORS; j++)
+                    {
+                      anchors[j].total_data = "end";
+                      anchors[j].num_of_send_counter = 0;
+                      anchors[j].distance_counter_max = DISTANCE_COUNTER_MIN;
+                      anchors[j].done = true;
+                      anchors[j].distance = 0;
+                      anchors[j].distance_counter = 0;
+                      button_send.pressed = false;
+                    }
+                    //delay(200);
+                  }
+                  anchors[0].hulp_change_delay, anchors[1].hulp_change_delay, anchors[2].hulp_change_delay= false;
               }
             }
             #endif
@@ -268,6 +272,12 @@ String send_total_data_server()
     {
       total_data_1 = total_data_1 + anchors[i].total_data;
       anchors[i].done = false;
+      if(anchors[i].total_data == "end")
+      {
+        button_send.pressed = false;
+        anchors[i].total_data = "";
+        anchors[i].done = false;
+      }
     }
   }
   else
@@ -313,6 +323,7 @@ void setup()
     interruptfunctions();
     #ifdef WIFI_ON
       const char* ssid = "ESP32-Access-Point";
+  
       const char* psswrd = "123456789";
       WiFi.mode(WIFI_AP);
       WiFi.softAP(ssid, psswrd);

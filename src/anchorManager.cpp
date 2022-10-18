@@ -15,7 +15,7 @@
 #define ANTENNA_DELAY_START 16500 //start value antenna delay
 #define ANTENNA_DELAY_END 16650 //end value antenna delay
 
-#define NUM_OF_SEND 4 //number of times the value is send for excel file\
+#define NUM_OF_SEND 4+1 //number of times the value is send for excel file\
 
 #define RESET_DISTANCE_COUNTER_MAX_VALUE 2 //value to reset distance counter max to DISTANCE_COUNTER_MIN
 #define DISTANCE_COUNTER_MIN 1
@@ -68,7 +68,6 @@ struct anchor{
     uint16_t ID;
     uint8_t x;
     uint8_t y;
-    uint16_t antenna_delay;
     float distance;
     uint8_t distance_counter;
     uint8_t distance_counter_max;
@@ -79,7 +78,10 @@ struct anchor{
     String total_data;
 };
 
-static anchor anchors[MAX_ANCHORS] = {0, 0, 0, ANTENNA_DELAY_START, 0.0, 0, 0, 0, false, false, false, ""};
+static uint16_t antenna_delay = ANTENNA_DELAY_START;
+
+
+static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, false, false, false, ""};
 static int anchorCount = 0;
 
 static double longest_range = 11;
@@ -87,7 +89,7 @@ static double longest_range = 11;
 
 static void addAnchor(uint16_t ID, uint8_t XCoordInMtr, uint8_t YCoordInMtr){
     if(anchorCount < MAX_ANCHORS){
-        anchors[anchorCount] = {ID, XCoordInMtr, YCoordInMtr, ANTENNA_DELAY_START, 0.0, 0, 0, 0, false, false, false, ""};
+        anchors[anchorCount] = {ID, XCoordInMtr, YCoordInMtr, 0.0, 0, 0, 0, false, false, false, ""};
         anchorCount++;
     }
 }
@@ -211,56 +213,59 @@ static void outputDataJson()
 static String updateDataWiFi(uint8_t anchornumber)
 {
     //Serial.println(hulp);
-        String hulp_total_data = "";
-            #ifdef RANGETEST
-                if(anchors[anchornumber].distance_counter >= distance_counter_max)
+    String hulp_total_data = "";
+    #ifdef RANGETEST
+        if(anchors[anchornumber].distance_counter >= distance_counter_max)
+        {
+            anchors[anchornumber].num_of_send_counter++;
+            hulp++;// for integration with WIFI_TAG.cpp to read every new value in the http-request
+            anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
+            String distance = ""; 
+            String ID = "";
+            ID = anchors[anchornumber].ID;
+            distance = anchors[anchornumber].distance;
+            if(anchors[anchornumber].num_of_send_counter >= NUM_OF_SEND)
+            //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
+            {
+                anchors[anchornumber].distance_counter_max++;
+                if(anchors[anchornumber].distance_counter_max > 2)
                 {
-                    anchors[anchornumber].num_of_send_counter++;
-                    hulp++;// for integration with WIFI_TAG.cpp to read every new value in the http-request
-                    anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
-                    String distance = ""; 
-                    String ID = "";
-                    ID = anchors[anchornumber].ID;
-                    distance = anchors[anchornumber].distance;
-                    if(anchors[anchornumber].num_of_send_counter >= NUM_OF_SEND)
-                    //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
+                    anchors[anchornumber].distance_counter_max = DISTANCE_COUNTER_MIN;
+                    hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'h' + "a\t";
+                    for(int i = 0;i<MAX_ANCHORS;i++)
                     {
-                        anchors[anchornumber].distance_counter_max++;
-                        if(anchors[anchornumber].distance_counter_max > 2)
-                        {
-                            anchors[anchornumber].distance_counter_max = DISTANCE_COUNTER_MIN;
-                            hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'a';
-                            anchors[anchornumber].num_of_send_counter = 0;
-                            hulp_bool = true;
-                            anchors[anchornumber].hulp_change_delay = true;
-                            anchors[anchornumber].distance = 0;
-                            anchors[anchornumber].distance_counter = 0;
-                            //Serial.println(hulp_total_data);
-                            return hulp_total_data;
-                        }
-                        else
-                        {
-                            anchors[anchornumber].num_of_send_counter = 0;
-                            hulp_bool = true;
-                            anchors[anchornumber].hulp_change_delay = true;
-                            hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'e';
-                            //Serial.println(hulp_total_data);
-                            anchors[anchornumber].distance = 0;
-                            anchors[anchornumber].distance_counter = 0;
-                            return hulp_total_data;
-                        }                 
-                    }
-                    hulp_total_data = ID + "ID" + distance + 'd'+ hulp;
-                    //Serial.println(hulp_total_data);
+                    anchors[anchornumber].num_of_send_counter = 0;
+                    hulp_bool = true;
+                    anchors[anchornumber].hulp_change_delay = true;
                     anchors[anchornumber].distance = 0;
                     anchors[anchornumber].distance_counter = 0;
+                    }
+                    //Serial.println(hulp_total_data);
                     return hulp_total_data;
-                #endif
-                #ifndef RANGETEST
-                dataX = anchors[anchornumber].x;
-                dataY = anchors[anchornumber].y;
-                anchors[anchornumber].total_data = anchors[anchornumber].total_data + dataID + "ID" + dataDistance + dataCounter +"dc" +'\t';//todo
-                #endif
-                } 
-            return "not";
+                }
+                if(anchors[anchornumber].distance_counter_max<=2)
+                {
+                    anchors[anchornumber].num_of_send_counter = 0;
+                    hulp_bool = true;
+                    anchors[anchornumber].distance = 0;
+                    anchors[anchornumber].distance_counter = 0;
+                    hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'h' + "e\t";
+                    //Serial.println(hulp_total_data);
+                    //Serial.println(hulp_total_data);
+                    return hulp_total_data;
+                }                 
             }
+            hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'h' + "\t";
+            //Serial.println(hulp_total_data);
+            anchors[anchornumber].distance = 0;
+            anchors[anchornumber].distance_counter = 0;
+            return hulp_total_data;
+        #endif
+        #ifndef RANGETEST
+        dataX = anchors[anchornumber].x;
+        dataY = anchors[anchornumber].y;
+        anchors[anchornumber].total_data = anchors[anchornumber].total_data + dataID + "ID" + dataDistance + dataCounter +"dc" +'\t';//todo
+        #endif
+    } 
+return "not";
+}
