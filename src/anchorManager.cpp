@@ -1,9 +1,11 @@
 #include <stdint.h>
 #include <Arduino.h>
-#include "U8g2lib.h"
 #include "DW1000.h"
 #include <Wire.h>
 #include <WiFi.h>
+#include <string.h>
+#include "i2c.cpp"
+
 
  //setting up u8g2 class from lib use static to use in other than main.cpp codes
 
@@ -30,16 +32,11 @@ static uint8_t hulp = 0;
 //Choose whether debug messages of the anchorManager should be printed
 //#define DEBUG_ANCHOR_MANAGER
 //choose which communication mode you want to use (multiple choises availible)
-//#define I2C
 //#define USE_SERIAL//display the distance through uart
-
-
-#ifdef I2C
-static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
-#endif
 
 //Choose the amount of anchors supported
 #define MAX_ANCHORS 3
+#define STRLEN 20 
 
 
 ///////////////////////anchor info for the tag(change for the right real-time situation)/////////////////////
@@ -178,37 +175,7 @@ static void outputDataJson()
     }
     Serial.println("]\n");
     #endif
-    #ifdef I2C
-    int y = 0;
-    for (int i = 0; i < MAX_ANCHORS; i++)// for statement to print the active anchors through i2c
-    {
-        if(anchors[i].active)
-        {
-        anchors[i].distance = anchors[i].distance/anchors[i].distance_counter;
-        Serial.print(anchors[i].distance_counter);
-        int IDlength = snprintf(NULL, 0, "%d", anchors[i].ID);
-        char* ID = (char*)malloc(IDlength+1);
-        snprintf(ID, IDlength+1, "%d", anchors[i].ID);
-        int length = snprintf(NULL, 0, "%g", anchors[i].distance);
-        char* convert = (char*)malloc(length+1);
-        snprintf(convert, length+1, "%g", anchors[i].distance);
-        int counterLength = snprintf(NULL, 0, "%d", anchors[i].distance_counter);
-        char* counter = (char*)malloc(length+1);
-        snprintf(counter, counterLength+1, "%d", anchors[i].distance_counter);
-        u8g2.setFont(u8g2_font_fancypixels_tf);
-        u8g2.drawStr(0,y, ID);
-        u8g2.drawStr(50,y,convert);
-        u8g2.drawStr(90,y, counter);
-        free(convert);
-        free(ID);
-        free(counter);
-        y += 10;
-        }
-        }
-        u8g2.sendBuffer();
-        u8g2.clearBuffer();
-    #endif
-}
+    }
 
 static String updateDataWiFi(uint8_t anchornumber)
 {
@@ -232,7 +199,7 @@ static String updateDataWiFi(uint8_t anchornumber)
                 {
                     anchors[anchornumber].distance_counter_max = DISTANCE_COUNTER_MIN;
                     hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'h' + "a\t";
-                    for(int i = 0;i<MAX_ANCHORS;i++)
+                    for(int i = 0; i <MAX_ANCHORS; i++)
                     {
                     anchors[anchornumber].num_of_send_counter = 0;
                     hulp_bool = true;
@@ -260,6 +227,7 @@ static String updateDataWiFi(uint8_t anchornumber)
             anchors[anchornumber].distance = 0;
             anchors[anchornumber].distance_counter = 0;
             return hulp_total_data;
+
         #endif
         #ifndef RANGETEST
         dataX = anchors[anchornumber].x;

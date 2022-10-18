@@ -43,3 +43,4 @@
 *.cab
 
 *.tmp # All sorts of temp
+.vscode/LICENSE

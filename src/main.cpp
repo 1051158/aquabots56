@@ -1,57 +1,15 @@
-#include "anchorManager.cpp"
 #include "calibration.cpp"
-#include "Wifi.cpp"
 #include <driver/uart.h>
+#include "Wifi.cpp"
 
-struct button
-{
-  const uint8_t interrupt_pin;
-  bool pressed;
-};
 ////////////////////////interrupt buttons////////////////////////////
 
 bool sendAntennaInfo = true;
 bool bool_nummer = false;
 
-#define ANTENNA_DELAY
-
-button button_send = {16,false};//interrupt button to send data to pyhonscript
-button button_end = {5,false};//interrupt to stop python script
-button button_backspace{17, false};//interrupt to skip latest uart value
-
-////////////////////////millis() variables//////////////////////////
 unsigned long lastTimestamp = millis();
-unsigned long button_time = 0;  
-unsigned long last_button_time = 0; 
 
-static void IRAM_ATTR backCode(void)//interruptfunction to go 1 row up in excel
-{
-  button_time = millis();
-  if (button_time - last_button_time > 250)//to prevent debouncing of the button
-  { 
-    button_backspace.pressed = true;
-    last_button_time = button_time;
-  }
-}
-
-static void IRAM_ATTR refresh(void)//interrupt code to refresh the http page
-{
-    button_time = millis();
-if (button_time - last_button_time > 250)
-{
-    button_send.pressed = true;
-    last_button_time = button_time;
-}
-}
-
-static void IRAM_ATTR endCode(void)//interrupt function to stop the code of the tag
-{
-  button_time = millis();
-  if (button_time - last_button_time > 250)//to prevent debouncing of the button
-  { 
-    button_end.pressed = true;
-  }
-}
+#define ANTENNA_DELAY
 
 //#define USE_TIMER////Choose if Serial output is required and interval in microseconds of output
 int outputInterval = 1000;////(comment out if not needed)
@@ -261,30 +219,6 @@ void inactiveDevice(DW1000Device *device)
     #endif
 }
 
-////////////////////////////////////////////////////////////////////////
-
-String send_total_data_server()
-{
-  String total_data_1; // use hulp string to store the array of strings of every anchor in
-  if(anchors[0].done && anchors[1].done && anchors[2].done)
-  {
-    for(int i = 0; i<MAX_ANCHORS;i++)
-    {
-      total_data_1 = total_data_1 + anchors[i].total_data;
-      anchors[i].done = false;
-      if(anchors[i].total_data == "end")
-      {
-        button_send.pressed = false;
-        anchors[i].total_data = "";
-        anchors[i].done = false;
-      }
-    }
-  }
-  else
-  total_data_1 = "ignore";
-  return total_data_1;
-}
-
 /////////////////////////////////////////////////////////////////////////
 
 void newBlink(DW1000Device *device)
@@ -294,16 +228,6 @@ void newBlink(DW1000Device *device)
     Serial.println(device->getShortAddress(), HEX);
 }
 
-/////////////////////////////////////////////////////////////////////////
-void interruptfunctions(void)
-{
-  pinMode(button_send.interrupt_pin, INPUT_PULLUP);//enable interrupt to send data when green button is pressed
-  attachInterrupt(button_send.interrupt_pin, refresh, FALLING);
-  pinMode(button_backspace.interrupt_pin, INPUT_PULLUP);//enable interrupt to use 'backspace' in python
-  attachInterrupt(button_backspace.interrupt_pin, backCode, FALLING);
-  pinMode(button_end.interrupt_pin, INPUT_PULLUP);//enable interrupt to end code when red button is pressed
-  attachInterrupt(button_end.interrupt_pin, endCode, FALLING);
-}
 //////////////////////////////////////////////////////////////////////////
 void setup() 
 {
@@ -322,32 +246,7 @@ void setup()
   #ifdef TYPE_TAG
     interruptfunctions();
     #ifdef WIFI_ON
-      const char* ssid = "ESP32-Access-Point";
-  
-      const char* psswrd = "123456789";
-      WiFi.mode(WIFI_AP);
-      WiFi.softAP(ssid, psswrd);
-      IPAddress IP = WiFi.softAPIP();
-      Serial.print(IP);//configure the wifi settings when 
-      Server.on("/anchor1", HTTP_GET, [](AsyncWebServerRequest *request)
-      {
-        String send;
-        send = send_total_data_server().c_str();
-        Serial.println("send");
-        Serial.print(send);
-        request->send(200, "text/plain", send);
-      });
-      /*Server.on("/anchor3", HTTP_GET, [](AsyncWebServerRequest *request)
-      {
-        request->send(200, "text/plain", send_total_data_server_3().c_str());
-        if(server_bool[0],server_bool[1],server_bool[2])
-        {
-          server_bool[0] = false;
-          server_bool[1] = false;
-          server_bool[2] = false;
-        }
-      });*/      
-      Server.begin();
+    WiFiSettings(); 
     #endif
     Serial.println("\n\nTAG starting");
     DW1000.setAntennaDelay(16500);//set the defined antenna delay
@@ -380,7 +279,6 @@ void setup()
       DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
     #endif
   #endif
-
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif
@@ -388,7 +286,18 @@ void setup()
 
 /////////////////////////////////////////////////////////////////////////
 
+void testi2c(void)
+{
+  String testString = "test\tString\ti2c";
+  i2cprint(testString.c_str());
+  testString = "";
+  i2cprint("test\twith\typing..");
+}
+
 void loop() 
 {
-  DW1000Ranging.loop();
+  //DW1000Ranging.loop();
+  testi2c();
+  delay(1000);
 }
+
