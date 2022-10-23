@@ -29,13 +29,13 @@ int outputInterval = 1000;////(comment out if not needed)
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
         #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
     #endif
-    //#define ANCHOR_2
+    #define ANCHOR_2
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_2
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #2
         #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
     #endif
-#define ANCHOR_3
+//#define ANCHOR_3
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_3
         #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
@@ -113,11 +113,19 @@ void newRange()
 
       if(button_end.pressed)
       {
-        Serial.print("end");
+        #ifdef DEBUG_INTERRUPT
+          Serial.print('E');
+          i2cprint("E", true);
+        #endif
         esp_deep_sleep_start();
       }
-      if(button_send.pressed)//press the interrupt button to start measurement
+      if(button_send.pressed && !button_backspace.pressed)//press the interrupt button to start measurement
       {
+        #ifdef DEBUG_INTERRUPT
+          Serial.print('S');
+          i2cprint("S", true);
+        #endif
+        #ifndef DEBUG_INTERRPUT
         //Serial.print('3');
         for(uint8_t i = 0; i<MAX_ANCHORS;i++)
         {
@@ -169,9 +177,13 @@ void newRange()
               }
             }
             #endif
+            #endif
           if(button_backspace.pressed)
           {
-            Serial.print("back");
+            #ifdef DEBUG_INTERRUPT
+              Serial.print('B');
+              i2cprint("B", true);
+            #endif
             button_backspace.pressed = false;
           }
         //average_counter++;
@@ -232,9 +244,7 @@ void newBlink(DW1000Device *device)
 void setup() 
 {
   #ifdef I2C  //setup the ug2b lib //ug2b class is defined in anchormanager.cpp//
-    u8g2.begin();
-    u8g2.setFontPosTop();
-    //init the configuration
+    i2cSettings();
   #endif
   //uart_set_wakeup_threshold(UART_NUM_0, 0xFF);
   //esp_sleep_enable_uart_wakeup(ESP_SLEEP_WAKEUP_UART);
@@ -245,8 +255,12 @@ void setup()
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
   #ifdef TYPE_TAG
     interruptfunctions();
-    #ifdef WIFI_ON
-    WiFiSettings(); 
+    ///////////defines underneath are in Wifi.cpp///////////////////
+    #ifdef WIFI_EXTERN_ON
+      WiFiSettingsExtern(); 
+    #endif
+    #ifdef WIFI_AP_ON
+      WiFiSettingsAP();
     #endif
     Serial.println("\n\nTAG starting");
     DW1000.setAntennaDelay(16500);//set the defined antenna delay
@@ -289,15 +303,20 @@ void setup()
 void testi2c(void)
 {
   String testString = "test\tString\ti2c";
-  i2cprint(testString.c_str());
+  i2cprint(testString.c_str(), true);
   testString = "";
-  i2cprint("test\twith\typing..");
+  i2cprint("test\twith\typing..", true);
 }
 
 void loop() 
 {
-  //DW1000Ranging.loop();
+  #ifndef TESTING
+  DW1000Ranging.loop();
+  #endif
+  #ifdef TESTING
   testi2c();
   delay(1000);
+  #endif
 }
+
 
