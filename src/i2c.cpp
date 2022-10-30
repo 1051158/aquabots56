@@ -22,6 +22,8 @@ static void i2cSettings(void)
 
 static void i2cprint(const char* total_data, bool unit_test)
 {
+    if(unit_test == false)
+        #define DEBUG_I2C_print
     if(!unit_test)
     {
         uint8_t y_axis = 0;

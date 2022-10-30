@@ -50,21 +50,26 @@ static uint8_t hulp = 0;
 #define ANCHOR_Y_2 10
 
 
+
 #define ANCHOR_ID_3 13107
 #define ANCHOR_X_3 10
 #define ANCHOR_Y_3 10
 
+//GIVE THE NUMBER OF DISTANCES THAT ARE BEING USED FOR CALIBRATION
+#define MAX_CAL_DIS 5 
 
 /*
 #define ANCHOR_ID_4 17476
 #define ANCHOR_X_4 10
 #define ANCHOR_Y_4 0*/    // ToDo when the chips arrive
 
+static float x_points[MAX_CAL_DIS] = {1, 7, 4, 1, 7};
+static float y_points[MAX_CAL_DIS] = {1, 1, 4, 7, 7};
 
 struct anchor{
     uint16_t ID;
-    uint8_t x;
-    uint8_t y;
+    float x;
+    float y;
     float distance;
     uint8_t distance_counter;
     uint8_t distance_counter_max;
@@ -73,20 +78,24 @@ struct anchor{
     bool hulp_change_delay;
     bool done;
     String total_data;
+    float calibrationDistances[MAX_CAL_DIS];
 };
 
 static uint16_t antenna_delay = ANTENNA_DELAY_START;
 
 
-static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, false, false, false, ""};
+static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, false, false, false, "",{0,0,0,0,0} };
 static int anchorCount = 0;
 
 static double longest_range = 11;
 
 
-static void addAnchor(uint16_t ID, uint8_t XCoordInMtr, uint8_t YCoordInMtr){
+static void addAnchor(uint16_t ID, float XCoordInMtr, float YCoordInMtr){
     if(anchorCount < MAX_ANCHORS){
-        anchors[anchorCount] = {ID, XCoordInMtr, YCoordInMtr, 0.0, 0, 0, 0, false, false, false, ""};
+        anchors[anchorCount].ID = ID;
+        anchors[anchorCount].x = XCoordInMtr;
+        anchors[anchorCount].y = YCoordInMtr;
+        Serial.print(anchors[anchorCount].ID);
         anchorCount++;
     }
 }
@@ -100,6 +109,38 @@ static void printAnchorArray(){
         }
     }
     Serial.println("\n\n");
+}
+
+static void CalibrationDistances()
+{
+    for(int j = 0; j < MAX_ANCHORS; j++)
+    {
+        for (int i = 0; i < MAX_CAL_DIS; i++)
+        {
+            float verschil = anchors[j].y - y_points[i];
+            Serial.print("vy:\t");
+            Serial.println(verschil);
+            verschil = anchors[j].x - x_points[i];
+            Serial.print("vx:\t");
+            Serial.println(verschil);
+            if(anchors[j].x - x_points[i] < 0)
+            {
+                if(anchors[j].y - y_points[i] < 0)
+                anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x + x_points[i], 2) + pow(anchors[j].y + y_points[i], 2));
+                else
+                anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x + x_points[i], 2) + pow(anchors[j].y - y_points[i], 2));
+                Serial.println(anchors[j].calibrationDistances[i]);
+            }
+            else
+            {
+                if(anchors[j].y - y_points[i] < 0)
+                    anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x - x_points[i], 2) + pow(anchors[j].y + y_points[i], 2));
+                else
+                    anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x - x_points[i], 2) + pow(anchors[j].y - y_points[i], 2));
+                Serial.println(anchors[j].calibrationDistances[i]);   
+            } 
+        }
+    }
 }
 
 static void setAnchorActive(uint16_t ID, bool isActive){

@@ -1,6 +1,7 @@
-#include "calibration.cpp"
 #include <driver/uart.h>
 #include "Wifi.cpp"
+#include <cmath>
+#include <DW1000Ranging.h>
 
 ////////////////////////interrupt buttons////////////////////////////
 
@@ -15,6 +16,8 @@ unsigned long lastTimestamp = millis();
 int outputInterval = 1000;////(comment out if not needed)
 
 //#define DEBUG_MAIN ////Choose whether debug output should be printed
+
+//#define TESTING
 
 ////Choose type of device
 #define TYPE_TAG
@@ -64,6 +67,7 @@ int outputInterval = 1000;////(comment out if not needed)
       addAnchor(ANCHOR_ID_1, ANCHOR_X_1, ANCHOR_Y_1);
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
+      CalibrationDistances();
       //addAnchor(ANCHOR_ID_4, 10.0, 10.0); ToDo
     // keep adding anchors this way to your likinG
   }
@@ -180,6 +184,11 @@ void newRange()
             #endif
           if(button_backspace.pressed)
           {
+            for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+              {
+                anchors[i].total_data = "back";
+                anchors[i].done = true;
+              }
             #ifdef DEBUG_INTERRUPT
               Serial.print('B');
               i2cprint("B", true);
@@ -249,6 +258,9 @@ void setup()
   //uart_set_wakeup_threshold(UART_NUM_0, 0xFF);
   //esp_sleep_enable_uart_wakeup(ESP_SLEEP_WAKEUP_UART);
   Serial.begin(115200);//baud rate
+  #ifdef WIFI_EXTERN_ON
+    WiFiSettingsExtern(); 
+  #endif
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
   DW1000Ranging.attachNewRange(newRange);
@@ -256,9 +268,6 @@ void setup()
   #ifdef TYPE_TAG
     interruptfunctions();
     ///////////defines underneath are in Wifi.cpp///////////////////
-    #ifdef WIFI_EXTERN_ON
-      WiFiSettingsExtern(); 
-    #endif
     #ifdef WIFI_AP_ON
       WiFiSettingsAP();
     #endif
@@ -269,6 +278,7 @@ void setup()
     #endif
     //initialize all anchors
     initializeAnchors();
+    
     //printAnchorArray();//uncomment to check if all anchors are initilized
     DW1000Ranging.attachNewDevice(newDevice);
     #ifdef LOWPOWER
@@ -304,8 +314,11 @@ void testi2c(void)
 {
   String testString = "test\tString\ti2c";
   i2cprint(testString.c_str(), true);
+  delay(1000);
   testString = "";
   i2cprint("test\twith\typing..", true);
+  delay(1000);
+
 }
 
 void loop() 
@@ -315,7 +328,6 @@ void loop()
   #endif
   #ifdef TESTING
   testi2c();
-  delay(1000);
   #endif
 }
 

@@ -1,8 +1,8 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "anchorManager.cpp"
 #include "buttons.cpp"
+#include "calibration.cpp"
 
 /////////////////////choose between AP or extern router(comment both to disable wifi on esp///////////////
 //#define WIFI_AP_ON
@@ -13,6 +13,25 @@
 #define PSSWRD "Donjer01"
 
 static AsyncWebServer Server(80);
+static AsyncWebServer Server1(81);
+
+
+static String sendCalibrationDistances()
+{
+    String total_data_cal;
+    for(uint8_t j = 0; j < MAX_ANCHORS; j++)
+    {
+      Serial.print('a');
+        total_data_cal = total_data_cal + anchors[j].ID;
+        for (uint8_t i = 0; i < MAX_CAL_DIS; i++)
+        {
+            total_data_cal = total_data_cal + anchors[j].calibrationDistances[i] + '\t';
+        }
+        total_data_cal = total_data_cal + '\n'; // newline to send 
+    }
+    Serial.print(total_data_cal);
+    return total_data_cal;
+}
 
 static String send_total_data_server()
 {
@@ -28,6 +47,7 @@ static String send_total_data_server()
         button_send.pressed = false;
         anchors[i].total_data = "";
         anchors[i].done = false;
+        i2cprint("done", false);
       }
     }
     total_data_1 = total_data_1 + '\n';
@@ -55,6 +75,7 @@ static void WiFiSettingsExtern(void)
     delay(1000);
     Serial.println("Connecting to WiFi..");
   }
+  Serial.println(WiFi.localIP());
   Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     #ifdef WIFI_TEST
@@ -71,12 +92,23 @@ static void WiFiSettingsExtern(void)
       request->send(200, "text/plain", send);
       }
     else
+      Serial.print("not");
       request->send(200, "text/plain", "not");
     #endif
     });
+  Server1.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
+  {
+    Serial.println("send");
+    String send;
+    send = sendCalibrationDistances().c_str();
+    i2cprint(send.c_str(), false);
+    Serial.print(send);
+    request->send(200, "text/plain", send);
+  });
     IPAddress IP = WiFi.localIP();
     Serial.print(IP);
     Server.begin();
+    Server1.begin();
 }
 #endif
 
