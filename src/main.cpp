@@ -154,7 +154,7 @@ void newRange()
                 }
                 //Serial.print("main: ");
                 //Serial.print(i);
-                Serial.println(anchors[i].total_data);
+                //Serial.println(anchors[i].total_data);
                 //distance is determined waiting for the distances of the other anchors in the array
               }
               if(anchors[0].hulp_change_delay && anchors[1].hulp_change_delay && anchors[2].hulp_change_delay)

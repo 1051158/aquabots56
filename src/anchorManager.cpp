@@ -221,7 +221,7 @@ static String updateDataWiFi(uint8_t anchornumber)
                     //Serial.println(hulp_total_data);
                     return hulp_total_data;
                 }
-                if(anchors[anchornumber].distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE)
+                if(anchors[anchornumber].distance_counter_max <= RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
                     anchors[anchornumber].num_of_send_counter = 0;
                     hulp_bool = true;
