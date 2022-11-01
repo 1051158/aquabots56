@@ -17,7 +17,7 @@ int outputInterval = 1000;////(comment out if not needed)
 
 //#define DEBUG_MAIN ////Choose whether debug output should be printed
 
-//#define TESTING
+//#define TESTING_I2C
 
 ////Choose type of device
 #define TYPE_TAG
@@ -67,8 +67,8 @@ int outputInterval = 1000;////(comment out if not needed)
       addAnchor(ANCHOR_ID_1, ANCHOR_X_1, ANCHOR_Y_1);
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
+      addAnchor(ANCHOR_ID_4, ANCHOR_X_4, ANCHOR_Y_4);
       CalibrationDistances();
-      //addAnchor(ANCHOR_ID_4, 10.0, 10.0); ToDo
     // keep adding anchors this way to your likinG
   }
 #endif
@@ -83,6 +83,7 @@ int outputInterval = 1000;////(comment out if not needed)
  
 unsigned long rangetime = millis();
 
+uint8_t pos = 0;
 
 // connection pins
 const uint8_t PIN_RST = 27; // reset pin
@@ -153,17 +154,17 @@ void newRange()
                 }
                 //Serial.print("main: ");
                 //Serial.print(i);
-                //Serial.println(anchors[i].total_data);
-//distance is determined waiting for the distances of the other anchors in the array
-                
+                Serial.println(anchors[i].total_data);
+                //distance is determined waiting for the distances of the other anchors in the array
               }
               if(anchors[0].hulp_change_delay && anchors[1].hulp_change_delay && anchors[2].hulp_change_delay)
                 {
                   antenna_delay += ANTENNA_INTERVAL;
                   //Serial.println(anchors[i].antenna_delay);
                   DW1000.setAntennaDelay(antenna_delay);
-                  if(antenna_delay >= 16650)
+                  if(antenna_delay >= ANTENNA_DELAY_END)
                   {
+                    ///Reset all the anchors for the measurement at the new coördinates//////////////
                     antenna_delay = ANTENNA_DELAY_START;
                     for(int j = 0; j< MAX_ANCHORS; j++)
                     {
@@ -174,10 +175,19 @@ void newRange()
                       anchors[j].distance = 0;
                       anchors[j].distance_counter = 0;
                       button_send.pressed = false;
+                      /*if(j + 1 == MAX_ANCHORS)
+                      {
+                        String i2c_data = "";
+                        i2c_data += '(' + x_y_points[pos][0] + ',' + x_y_points[pos][1] + ')';
+                        i2cprint(i2c_data.c_str(), true);
+                        pos++;
+                      }*/
                     }
                     //delay(200);
                   }
-                  anchors[0].hulp_change_delay, anchors[1].hulp_change_delay, anchors[2].hulp_change_delay= false;
+                  anchors[0].hulp_change_delay = false; 
+                  anchors[1].hulp_change_delay = false; 
+                  anchors[2].hulp_change_delay = false;
               }
             }
             #endif
@@ -188,6 +198,7 @@ void newRange()
               {
                 anchors[i].total_data = "back";
                 anchors[i].done = true;
+                pos--;
               }
             #ifdef DEBUG_INTERRUPT
               Serial.print('B');
@@ -252,12 +263,12 @@ void newBlink(DW1000Device *device)
 //////////////////////////////////////////////////////////////////////////
 void setup() 
 {
-  #ifdef I2C  //setup the ug2b lib //ug2b class is defined in anchormanager.cpp//
+  Serial.begin(115200);//baud rate
+  #ifdef I2C  //setup the ug2b lib //ug2b class is defined in i2c.cpp//
     i2cSettings();
   #endif
   //uart_set_wakeup_threshold(UART_NUM_0, 0xFF);
   //esp_sleep_enable_uart_wakeup(ESP_SLEEP_WAKEUP_UART);
-  Serial.begin(115200);//baud rate
   #ifdef WIFI_EXTERN_ON
     WiFiSettingsExtern(); 
   #endif
@@ -309,24 +320,24 @@ void setup()
 }
 
 /////////////////////////////////////////////////////////////////////////
-
+#ifdef TESTING_I2C
 void testi2c(void)
 {
   String testString = "test\tString\ti2c";
-  i2cprint(testString.c_str(), true);
+  i2cprint("abc", true);
   delay(1000);
   testString = "";
   i2cprint("test\twith\typing..", true);
   delay(1000);
-
 }
+#endif
 
 void loop() 
 {
-  #ifndef TESTING
+  #ifndef TESTING_I2C
   DW1000Ranging.loop();
   #endif
-  #ifdef TESTING
+  #ifdef TESTING_I2C
   testi2c();
   #endif
 }

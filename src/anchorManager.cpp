@@ -4,7 +4,6 @@
 #include <Wire.h>
 #include <WiFi.h>
 #include <string.h>
-#include "i2c.cpp"
 
 
  //setting up u8g2 class from lib use static to use in other than main.cpp codes
@@ -22,7 +21,6 @@
 #define RESET_DISTANCE_COUNTER_MAX_VALUE 2 //value to reset distance counter max to DISTANCE_COUNTER_MIN
 #define DISTANCE_COUNTER_MIN 1
 
-
 ///////////////////Variables needed for antenna delay range tests////////////////////////////////////////////
 
 static uint8_t distance_counter_max = 1;
@@ -34,37 +32,39 @@ static uint8_t hulp = 0;
 //choose which communication mode you want to use (multiple choises availible)
 //#define USE_SERIAL//display the distance through uart
 
-//Choose the amount of anchors supported
-#define MAX_ANCHORS 3
+
 #define STRLEN 20 
+
 
 
 ///////////////////////anchor info for the tag(change for the right real-time situation)/////////////////////
 
 #define ANCHOR_ID_1 4369
-#define ANCHOR_X_1 10
+#define ANCHOR_X_1 8
 #define ANCHOR_Y_1 0
 
 #define ANCHOR_ID_2 8738
 #define ANCHOR_X_2 0
-#define ANCHOR_Y_2 10
-
-
+#define ANCHOR_Y_2 8
 
 #define ANCHOR_ID_3 13107
-#define ANCHOR_X_3 10
-#define ANCHOR_Y_3 10
+#define ANCHOR_X_3 8
+#define ANCHOR_Y_3 8
+
+#define ANCHOR_ID_4 17476
+#define ANCHOR_X_4 16
+#define ANCHOR_Y_4 16
+
+#define X 0
+#define Y 1
+
+//Choose the amount of anchors supported
+#define MAX_ANCHORS 3
 
 //GIVE THE NUMBER OF DISTANCES THAT ARE BEING USED FOR CALIBRATION
-#define MAX_CAL_DIS 5 
+#define MAX_CAL_DIS 10 
 
-/*
-#define ANCHOR_ID_4 17476
-#define ANCHOR_X_4 10
-#define ANCHOR_Y_4 0*/    // ToDo when the chips arrive
-
-static float x_points[MAX_CAL_DIS] = {1, 7, 4, 1, 7};
-static float y_points[MAX_CAL_DIS] = {1, 1, 4, 7, 7};
+static float x_y_points [MAX_CAL_DIS][2] = {{1,1},{7,1},{4,4},{1,7},{7,7},{1,9},{7,9},{4,12},{1,15},{7,15}};
 
 struct anchor{
     uint16_t ID;
@@ -84,7 +84,7 @@ struct anchor{
 static uint16_t antenna_delay = ANTENNA_DELAY_START;
 
 
-static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, false, false, false, "",{0,0,0,0,0} };
+static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, false, false, false, "",{0,0,0,0,0,0,0,0,0,0} };
 static int anchorCount = 0;
 
 static double longest_range = 11;
@@ -95,7 +95,7 @@ static void addAnchor(uint16_t ID, float XCoordInMtr, float YCoordInMtr){
         anchors[anchorCount].ID = ID;
         anchors[anchorCount].x = XCoordInMtr;
         anchors[anchorCount].y = YCoordInMtr;
-        Serial.print(anchors[anchorCount].ID);
+        //Serial.print(anchors[anchorCount].ID);
         anchorCount++;
     }
 }
@@ -111,37 +111,7 @@ static void printAnchorArray(){
     Serial.println("\n\n");
 }
 
-static void CalibrationDistances()
-{
-    for(int j = 0; j < MAX_ANCHORS; j++)
-    {
-        for (int i = 0; i < MAX_CAL_DIS; i++)
-        {
-            float verschil = anchors[j].y - y_points[i];
-            Serial.print("vy:\t");
-            Serial.println(verschil);
-            verschil = anchors[j].x - x_points[i];
-            Serial.print("vx:\t");
-            Serial.println(verschil);
-            if(anchors[j].x - x_points[i] < 0)
-            {
-                if(anchors[j].y - y_points[i] < 0)
-                anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x + x_points[i], 2) + pow(anchors[j].y + y_points[i], 2));
-                else
-                anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x + x_points[i], 2) + pow(anchors[j].y - y_points[i], 2));
-                Serial.println(anchors[j].calibrationDistances[i]);
-            }
-            else
-            {
-                if(anchors[j].y - y_points[i] < 0)
-                    anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x - x_points[i], 2) + pow(anchors[j].y + y_points[i], 2));
-                else
-                    anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x - x_points[i], 2) + pow(anchors[j].y - y_points[i], 2));
-                Serial.println(anchors[j].calibrationDistances[i]);   
-            } 
-        }
-    }
-}
+
 
 static void setAnchorActive(uint16_t ID, bool isActive){
     for (int i = 0; i < MAX_ANCHORS; i++)
@@ -170,7 +140,7 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance)
         
         if (anchors[i].ID == ID)
         {
-            if(distance <=0)
+            if(distance <= 0)
             distance = 0;
             if(distance>longest_range)//if the measured value is bigger than the maximum range
             {anchors[i].distance += longest_range;//set is to max range
@@ -236,7 +206,7 @@ static String updateDataWiFi(uint8_t anchornumber)
             //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
             {
                 anchors[anchornumber].distance_counter_max++;
-                if(anchors[anchornumber].distance_counter_max > 2)
+                if(anchors[anchornumber].distance_counter_max > RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
                     anchors[anchornumber].distance_counter_max = DISTANCE_COUNTER_MIN;
                     hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'h' + "a\t";
@@ -251,7 +221,7 @@ static String updateDataWiFi(uint8_t anchornumber)
                     //Serial.println(hulp_total_data);
                     return hulp_total_data;
                 }
-                if(anchors[anchornumber].distance_counter_max<=2)
+                if(anchors[anchornumber].distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
                     anchors[anchornumber].num_of_send_counter = 0;
                     hulp_bool = true;

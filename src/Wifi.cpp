@@ -3,6 +3,7 @@
 #include <ESPAsyncWebServer.h>
 #include "buttons.cpp"
 #include "calibration.cpp"
+#include "i2c.cpp"
 
 /////////////////////choose between AP or extern router(comment both to disable wifi on esp///////////////
 //#define WIFI_AP_ON
@@ -19,13 +20,16 @@ static AsyncWebServer Server1(81);
 static String sendCalibrationDistances()
 {
     String total_data_cal;
+    for(uint8_t i = 0; i < MAX_CAL_DIS; i++)
+      total_data_cal = total_data_cal +  '(' + x_y_points[i][X] + ',' + x_y_points[i][Y] + ')' + ';';
+    total_data_cal = total_data_cal + "\t\n" + ANTENNA_DELAY_START + 'S' + ANTENNA_DELAY_END + 'E' + ANTENNA_INTERVAL + "I\t\n";
+    //Serial.print(total_data_cal);
     for(uint8_t j = 0; j < MAX_ANCHORS; j++)
     {
-      Serial.print('a');
-        total_data_cal = total_data_cal + anchors[j].ID;
+        total_data_cal = total_data_cal + anchors[j].ID + 'i' + anchors[j].x + 'x' + anchors[j].y + "y\t";
         for (uint8_t i = 0; i < MAX_CAL_DIS; i++)
         {
-            total_data_cal = total_data_cal + anchors[j].calibrationDistances[i] + '\t';
+            total_data_cal = total_data_cal + anchors[j].calibrationDistances[i] + "\t";
         }
         total_data_cal = total_data_cal + '\n'; // newline to send 
     }
@@ -35,23 +39,33 @@ static String sendCalibrationDistances()
 
 static String send_total_data_server()
 {
+  uint8_t send_count = 0;
   String total_data_1; // use hulp string to store the array of strings of every anchor in
-  if(anchors[0].done && anchors[1].done && anchors[2].done)
+
+  //////////////check how many anchors are done with measuring//////////////////////////////////////////////
+  for(uint8_t i = 0; i<MAX_ANCHORS; i++)
   {
-    for(int i = 0; i<MAX_ANCHORS;i++)
-    {
-      total_data_1 = total_data_1 + anchors[i].total_data;
-      anchors[i].done = false;
-      if(anchors[i].total_data == "end")
-      {
-        button_send.pressed = false;
-        anchors[i].total_data = "";
-        anchors[i].done = false;
-        i2cprint("done", false);
-      }
-    }
-    total_data_1 = total_data_1 + '\n';
+    if(anchors[i].done == true)
+      send_count++;
   }
+
+  //////////////send signal if 3 out of MAX_ANCHORS anchors are done sending/////////////////////////////////
+  if(send_count >= 3)
+    {
+      for(int i = 0; i<MAX_ANCHORS;i++)
+      {
+        total_data_1 = total_data_1 + anchors[i].total_data;
+        anchors[i].done = false;
+        ////////send "end" to pythonCode to go to next worksheet an calibrate the next point in the pool//////
+        if(anchors[i].total_data == "end")
+        {
+          button_send.pressed = false;
+          anchors[i].total_data = "";
+          anchors[i].done = false;
+        }
+      }
+      total_data_1 = total_data_1 + '\n';
+    }
   else
   {
     total_data_1 = "ignore";
@@ -66,16 +80,14 @@ static String send_total_data_server()
 #ifdef WIFI_EXTERN_ON///////////////////When the ESP32 is not an acces point(AP) use this function in void setup() of main.cpp////////////////////
 static void WiFiSettingsExtern(void)
 {
-  const char* ssid = SSID;
-  const char* psswrd = PSSWRD;
   ////////////log in into the router for extern wifi connection///////////////
-  WiFi.begin(ssid, psswrd);
+  WiFi.begin(SSID, PSSWRD);
   while (WiFi.status() != WL_CONNECTED) 
   {
     delay(1000);
     Serial.println("Connecting to WiFi..");
   }
-  Serial.println(WiFi.localIP());
+  //Serial.println(WiFi.localIP());
   Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     #ifdef WIFI_TEST
@@ -86,23 +98,24 @@ static void WiFiSettingsExtern(void)
       {
       String send;
       send = send_total_data_server().c_str();
-      i2cprint(send.c_str(), true);
-      Serial.println("send");
-      Serial.print(send);
+      //i2cprint(send.c_str(), true);
+      //Serial.println("send");
+      //Serial.print(send);
       request->send(200, "text/plain", send);
       }
     else
-      Serial.print("not");
+      //Serial.print("not");
       request->send(200, "text/plain", "not");
     #endif
     });
+  
   Server1.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
   {
-    Serial.println("send");
+    //Serial.println("send");
     String send;
     send = sendCalibrationDistances().c_str();
-    i2cprint(send.c_str(), false);
-    Serial.print(send);
+    //i2cprint(send.c_str(), false);
+    //Serial.print(send);
     request->send(200, "text/plain", send);
   });
     IPAddress IP = WiFi.localIP();
