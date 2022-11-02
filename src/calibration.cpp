@@ -27,21 +27,7 @@ static void CalibrationDistances()
             Serial.print(i+1);
             Serial.print(":\t");
             #endif
-            
-            if(anchors[j].x - x_y_points[i][X] < 0)
-            {
-                if(anchors[j].y - x_y_points[i][Y] < 0)
-                    anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x + x_y_points[i][X], 2) + pow(anchors[j].y + x_y_points[i][Y], 2));
-                else
-                    anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x + x_y_points[i][X], 2) + pow(anchors[j].y - x_y_points[i][Y], 2));
-            }
-            else
-            {
-                if(anchors[j].y - x_y_points[i][Y] < 0)
-                    anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x - x_y_points[i][X], 2) + pow(anchors[j].y + x_y_points[i][Y], 2));
-                else
                     anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x - x_y_points[i][X], 2) + pow(anchors[j].y - x_y_points[i][Y], 2));
-            }
             Serial.println(anchors[j].calibrationDistances[i]); 
         }
     }

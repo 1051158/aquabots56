@@ -17,6 +17,8 @@ int outputInterval = 1000;////(comment out if not needed)
 
 //#define DEBUG_MAIN ////Choose whether debug output should be printed
 
+///uncomment if u want to do unit test i2c///////////////////////////////////////////////////////////////////
+
 //#define TESTING_I2C
 
 ////Choose type of device
@@ -81,9 +83,8 @@ int outputInterval = 1000;////(comment out if not needed)
 #define SPI_MOSI 23
 #define DW_CS 4
  
-unsigned long rangetime = millis();
 
-uint8_t pos = 0;
+uint8_t pos = 1;
 
 // connection pins
 const uint8_t PIN_RST = 27; // reset pin
@@ -114,7 +115,6 @@ void newRange()
     #endif
     // if new range is found by Tag it should store the distance in the anchorManager
     #ifdef TYPE_TAG
-      setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange()); 
 
       if(button_end.pressed)
       {
@@ -130,14 +130,17 @@ void newRange()
           Serial.print('S');
           i2cprint("S", true);
         #endif
+        i2cprint("cal", false);
         #ifndef DEBUG_INTERRPUT
         //Serial.print('3');
-        for(uint8_t i = 0; i<MAX_ANCHORS;i++)
+        for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+        for(uint8_t i = 0; i < MAX_ANCHORS;i++)
         {
 //when ID's match and the distance hasn't been created in the pas yet go further into funtion
               if(anchors[i].ID == DW1000Ranging.getDistantDevice()->getShortAddress() && !anchors[i].done)
 //start with renewing http if the last http of the defined anchor array hasn't been made yet
               {
+                setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange()); 
                 //Serial.print('4');
                 #ifdef RANGETEST
                 anchors[i].total_data = updateDataWiFi(i);//send data through wifi to wifi-tag(i stands for the anchor number)
@@ -177,12 +180,10 @@ void newRange()
                       button_send.pressed = false;
                       /*if(j + 1 == MAX_ANCHORS)
                       {
-                        String i2c_data = "";
-                        i2c_data += '(' + x_y_points[pos][0] + ',' + x_y_points[pos][1] + ')';
-                        i2cprint(i2c_data.c_str(), true);
-                        pos++;
+                        
                       }*/
                     }
+                    i2cprint("next", true);
                     //delay(200);
                   }
                   anchors[0].hulp_change_delay = false; 
@@ -317,6 +318,7 @@ void setup()
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif
+  i2cprint("start: (1.5,6)", true);
 }
 
 /////////////////////////////////////////////////////////////////////////

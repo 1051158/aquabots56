@@ -10,9 +10,9 @@ struct button
 
 //#define DEBUG_INTERRUPT
 
-static button button_send = {17,false};//interrupt button to send data to pyhonscript
+static button button_send = {26,false};//interrupt button to send data to pyhonscript
 static button button_end = {5,false};//interrupt to stop python script
-static button button_backspace{16, false};//interrupt to skip latest uart value
+static button button_backspace{14, false};//interrupt to skip latest uart value
 
 ////////////////////////millis() variables//////////////////////////
 static unsigned long button_time = 0;  

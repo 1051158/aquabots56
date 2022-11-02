@@ -10,8 +10,8 @@
 #define WIFI_EXTERN_ON
 //#define WIFI_TEST
 
-#define SSID "Machelina"
-#define PSSWRD "Donjer01"
+#define SSID "Galaxy S20 FEA37E"
+#define PSSWRD "cooa7104"
 
 static AsyncWebServer Server(80);
 static AsyncWebServer Server1(81);
@@ -43,33 +43,21 @@ static String send_total_data_server()
   String total_data_1; // use hulp string to store the array of strings of every anchor in
 
   //////////////check how many anchors are done with measuring//////////////////////////////////////////////
-  for(uint8_t i = 0; i<MAX_ANCHORS; i++)
-  {
-    if(anchors[i].done == true)
-      send_count++;
-  }
 
   //////////////send signal if 3 out of MAX_ANCHORS anchors are done sending/////////////////////////////////
-  if(send_count >= 3)
-    {
-      for(int i = 0; i<MAX_ANCHORS;i++)
-      {
-        total_data_1 = total_data_1 + anchors[i].total_data;
-        anchors[i].done = false;
-        ////////send "end" to pythonCode to go to next worksheet an calibrate the next point in the pool//////
-        if(anchors[i].total_data == "end")
-        {
-          button_send.pressed = false;
-          anchors[i].total_data = "";
-          anchors[i].done = false;
-        }
-      }
-      total_data_1 = total_data_1 + '\n';
-    }
-  else
+  for(int i = 0; i<MAX_ANCHORS;i++)
   {
-    total_data_1 = "ignore";
+    total_data_1 = total_data_1 + anchors[i].total_data;
+    anchors[i].done = false;
+    ////////send "end" to pythonCode to go to next worksheet an calibrate the next point in the pool//////
+    if(anchors[i].total_data == "end")
+    {
+      button_send.pressed = false;
+      anchors[i].total_data = "";
+      anchors[i].done = false;
+    }
   }
+  total_data_1 = total_data_1 + '\n';
   return total_data_1;
 }
 
@@ -80,12 +68,18 @@ static String send_total_data_server()
 #ifdef WIFI_EXTERN_ON///////////////////When the ESP32 is not an acces point(AP) use this function in void setup() of main.cpp////////////////////
 static void WiFiSettingsExtern(void)
 {
+  uint8_t wifiCounter = 0;
+  const char* ssid = SSID;
+  const char* psswrd = PSSWRD;
   ////////////log in into the router for extern wifi connection///////////////
-  WiFi.begin(SSID, PSSWRD);
+  WiFi.begin(ssid, psswrd);
   while (WiFi.status() != WL_CONNECTED) 
   {
+    if(wifiCounter == 5)
+      esp_deep_sleep(5);
     delay(1000);
     Serial.println("Connecting to WiFi..");
+    wifiCounter++;
   }
   //Serial.println(WiFi.localIP());
   Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)

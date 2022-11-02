@@ -11,10 +11,10 @@
 //#define X_Y_TEST
 ////////////////////All defines underneath are neccesary for rangetests////////////////////////////////
 #define RANGETEST
-#define ANTENNA_INTERVAL 10 //interval between 2 antenna delays
+#define ANTENNA_INTERVAL 20 //interval between 2 antenna delays
 
 #define ANTENNA_DELAY_START 16500 //start value antenna delay
-#define ANTENNA_DELAY_END 16650 //end value antenna delay
+#define ANTENNA_DELAY_END 16800 //end value antenna delay
 
 #define NUM_OF_SEND 4+1 //number of times the value is send for excel file\
 
@@ -40,7 +40,7 @@ static uint8_t hulp = 0;
 ///////////////////////anchor info for the tag(change for the right real-time situation)/////////////////////
 
 #define ANCHOR_ID_1 4369
-#define ANCHOR_X_1 8
+#define ANCHOR_X_1 10.5
 #define ANCHOR_Y_1 0
 
 #define ANCHOR_ID_2 8738
@@ -48,7 +48,7 @@ static uint8_t hulp = 0;
 #define ANCHOR_Y_2 8
 
 #define ANCHOR_ID_3 13107
-#define ANCHOR_X_3 8
+#define ANCHOR_X_3 10.5
 #define ANCHOR_Y_3 8
 
 #define ANCHOR_ID_4 17476
@@ -62,15 +62,16 @@ static uint8_t hulp = 0;
 #define MAX_ANCHORS 3
 
 //GIVE THE NUMBER OF DISTANCES THAT ARE BEING USED FOR CALIBRATION
-#define MAX_CAL_DIS 10 
+#define MAX_CAL_DIS 7 
 
-static float x_y_points [MAX_CAL_DIS][2] = {{1,1},{7,1},{4,4},{1,7},{7,7},{1,9},{7,9},{4,12},{1,15},{7,15}};
+static float x_y_points [MAX_CAL_DIS][2] = {{1.5,6},{3,6},{4.5,6},{6,6},{7.5,6},{9,6},{10,6}};
 
 struct anchor{
     uint16_t ID;
     float x;
     float y;
     float distance;
+    unsigned long sendTime;
     uint8_t distance_counter;
     uint8_t distance_counter_max;
     uint8_t num_of_send_counter;
@@ -84,10 +85,10 @@ struct anchor{
 static uint16_t antenna_delay = ANTENNA_DELAY_START;
 
 
-static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, false, false, false, "",{0,0,0,0,0,0,0,0,0,0} };
+static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, 0, false, false, false, "",{0,0,0,0,0,0,0} };
 static int anchorCount = 0;
 
-static double longest_range = 11;
+static float longest_range = 12;
 
 
 static void addAnchor(uint16_t ID, float XCoordInMtr, float YCoordInMtr){
@@ -142,7 +143,7 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance)
         {
             if(distance <= 0)
             distance = 0;
-            if(distance>longest_range)//if the measured value is bigger than the maximum range
+            if(distance > longest_range)//if the measured value is bigger than the maximum range
             {anchors[i].distance += longest_range;//set is to max range
             anchors[i].distance_counter++;
             return;}
@@ -221,7 +222,7 @@ static String updateDataWiFi(uint8_t anchornumber)
                     //Serial.println(hulp_total_data);
                     return hulp_total_data;
                 }
-                if(anchors[anchornumber].distance_counter_max <= RESET_DISTANCE_COUNTER_MAX_VALUE)
+                if (anchors[anchornumber].distance_counter_max <= RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
                     anchors[anchornumber].num_of_send_counter = 0;
                     hulp_bool = true;
