@@ -13,10 +13,10 @@
 #define RANGETEST
 #define ANTENNA_INTERVAL 20 //interval between 2 antenna delays
 
-#define ANTENNA_DELAY_START 16500 //start value antenna delay
-#define ANTENNA_DELAY_END 16800 //end value antenna delay
+#define ANTENNA_DELAY_START 16480 //start value antenna delay
+#define ANTENNA_DELAY_END 16520 //end value antenna delay
 
-#define NUM_OF_SEND 4+1 //number of times the value is send for excel file\
+#define NUM_OF_SEND 2+1 //number of times the value is send for excel file\
 
 #define RESET_DISTANCE_COUNTER_MAX_VALUE 2 //value to reset distance counter max to DISTANCE_COUNTER_MIN
 #define DISTANCE_COUNTER_MIN 1
@@ -64,14 +64,16 @@ static uint8_t hulp = 0;
 //GIVE THE NUMBER OF DISTANCES THAT ARE BEING USED FOR CALIBRATION
 #define MAX_CAL_DIS 7 
 
-static float x_y_points [MAX_CAL_DIS][2] = {{1.5,6},{3,6},{4.5,6},{6,6},{7.5,6},{9,6},{10,6}};
+static float x_y_points [MAX_CAL_DIS][2] = {{1.5,12},{3,14},{4.5,16},{6,6},{7.5,6},{9,6},{10,6}};
 
 struct anchor{
     uint16_t ID;
     float x;
     float y;
     float distance;
-    unsigned long sendTime;
+    unsigned long meas_time;
+    unsigned long total_time;
+    unsigned long total_time_1;
     uint8_t distance_counter;
     uint8_t distance_counter_max;
     uint8_t num_of_send_counter;
@@ -85,7 +87,7 @@ struct anchor{
 static uint16_t antenna_delay = ANTENNA_DELAY_START;
 
 
-static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, 0, false, false, false, "",{0,0,0,0,0,0,0} };
+static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, 0, 0, 0, false, false, false, "",{0,0,0,0,0,0,0} };
 static int anchorCount = 0;
 
 static float longest_range = 12;
@@ -199,10 +201,8 @@ static String updateDataWiFi(uint8_t anchornumber)
             anchors[anchornumber].num_of_send_counter++;
             hulp++;// for integration with WIFI_TAG.cpp to read every new value in the http-request
             anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
-            String distance = ""; 
-            String ID = "";
-            ID = anchors[anchornumber].ID;
-            distance = anchors[anchornumber].distance;
+            anchors[anchornumber].meas_time = anchors[anchornumber].total_time - anchors[anchornumber].total_time_1;
+            anchors[anchornumber].total_time_1 = anchors[anchornumber].total_time;
             if(anchors[anchornumber].num_of_send_counter >= NUM_OF_SEND)
             //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
             {
@@ -210,7 +210,7 @@ static String updateDataWiFi(uint8_t anchornumber)
                 if(anchors[anchornumber].distance_counter_max > RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
                     anchors[anchornumber].distance_counter_max = DISTANCE_COUNTER_MIN;
-                    hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'h' + "a\t";
+                    hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd'+ hulp + 'h' + anchors[anchornumber].meas_time + "ms" "a\t";
                     for(int i = 0; i <MAX_ANCHORS; i++)
                     {
                     anchors[anchornumber].num_of_send_counter = 0;
@@ -224,17 +224,16 @@ static String updateDataWiFi(uint8_t anchornumber)
                 }
                 if (anchors[anchornumber].distance_counter_max <= RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
-                    anchors[anchornumber].num_of_send_counter = 0;
                     hulp_bool = true;
                     anchors[anchornumber].distance = 0;
                     anchors[anchornumber].distance_counter = 0;
-                    hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'h' + "e\t";
+                    hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd'+ hulp + 'h' + anchors[anchornumber].meas_time + "ms" + "e\t";
                     //Serial.println(hulp_total_data);
                     //Serial.println(hulp_total_data);
                     return hulp_total_data;
                 }                 
             }
-            hulp_total_data = ID + "ID" + distance + 'd'+ hulp + 'h' + "\t";
+            hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + hulp + 'h' + anchors[anchornumber].meas_time + "ms" + "\t";
             //Serial.println(hulp_total_data);
             anchors[anchornumber].distance = 0;
             anchors[anchornumber].distance_counter = 0;

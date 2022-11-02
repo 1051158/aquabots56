@@ -28,6 +28,10 @@ static void CalibrationDistances()
             Serial.print(":\t");
             #endif
                     anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x - x_y_points[i][X], 2) + pow(anchors[j].y - x_y_points[i][Y], 2));
+            Serial.print("anchor:\t");
+            Serial.print(j);
+            Serial.print("cal_number:\t");
+            Serial.print(i);
             Serial.println(anchors[j].calibrationDistances[i]); 
         }
     }

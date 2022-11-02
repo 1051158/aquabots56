@@ -10,8 +10,8 @@
 #define WIFI_EXTERN_ON
 //#define WIFI_TEST
 
-#define SSID "Galaxy S20 FEA37E"
-#define PSSWRD "cooa7104"
+#define SSID "Machelina"
+#define PSSWRD "Donjer01"
 
 static AsyncWebServer Server(80);
 static AsyncWebServer Server1(81);

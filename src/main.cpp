@@ -17,6 +17,7 @@ int outputInterval = 1000;////(comment out if not needed)
 
 //#define DEBUG_MAIN ////Choose whether debug output should be printed
 
+
 ///uncomment if u want to do unit test i2c///////////////////////////////////////////////////////////////////
 
 //#define TESTING_I2C
@@ -60,17 +61,26 @@ int outputInterval = 1000;////(comment out if not needed)
 
 //#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
+i2c main_i2c;
 
 #ifdef TYPE_TAG
   #define WIFI_ON
     #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
-    static void initializeAnchors(){
+    static void initializeAnchors()
+  {
       //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
       addAnchor(ANCHOR_ID_1, ANCHOR_X_1, ANCHOR_Y_1);
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
       addAnchor(ANCHOR_ID_4, ANCHOR_X_4, ANCHOR_Y_4);
-      CalibrationDistances();
+      CalibrationDistances();/*
+      for(uint8_t i = 0; i < MAX_CAL_DIS; i++)
+      {       
+        String i2c = "";
+        i2c = anchors[0].calibrationDistances[i];
+        i2cprint(i2c.c_str());
+        delay(1000);
+      }*/
     // keep adding anchors this way to your likinG
   }
 #endif
@@ -120,17 +130,22 @@ void newRange()
       {
         #ifdef DEBUG_INTERRUPT
           Serial.print('E');
-          i2cprint("E", true);
+          i2cprint("E");
         #endif
         esp_deep_sleep_start();
       }
       if(button_send.pressed && !button_backspace.pressed)//press the interrupt button to start measurement
       {
+        for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+        {
+          anchors[i].total_time = millis();
+          anchors[i].total_time_1 = anchors[i].total_time;
+        }
         #ifdef DEBUG_INTERRUPT
           Serial.print('S');
-          i2cprint("S", true);
+          i2cprint("S");
         #endif
-        i2cprint("cal", false);
+        main_i2c.print("cal");
         #ifndef DEBUG_INTERRPUT
         //Serial.print('3');
         for(uint8_t i = 0; i < MAX_ANCHORS; i++)
@@ -183,7 +198,7 @@ void newRange()
                         
                       }*/
                     }
-                    i2cprint("next", true);
+                    main_i2c.print("next");
                     //delay(200);
                   }
                   anchors[0].hulp_change_delay = false; 
@@ -203,7 +218,7 @@ void newRange()
               }
             #ifdef DEBUG_INTERRUPT
               Serial.print('B');
-              i2cprint("B", true);
+              i2cprint("B");
             #endif
             button_backspace.pressed = false;
           }
@@ -266,7 +281,7 @@ void setup()
 {
   Serial.begin(115200);//baud rate
   #ifdef I2C  //setup the ug2b lib //ug2b class is defined in i2c.cpp//
-    i2cSettings();
+    main_i2c.settings();
   #endif
   //uart_set_wakeup_threshold(UART_NUM_0, 0xFF);
   //esp_sleep_enable_uart_wakeup(ESP_SLEEP_WAKEUP_UART);
@@ -318,7 +333,11 @@ void setup()
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif
-  i2cprint("start: (1.5,6)", true);
+  String i2c_data = "";
+  i2c_data = i2c_data + '(' + x_y_points[0][0] + ',' + x_y_points[0][1] + ')';
+  main_i2c.print(i2c_data.c_str());
+  delay(3000);
+  
 }
 
 /////////////////////////////////////////////////////////////////////////
