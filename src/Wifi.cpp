@@ -10,8 +10,8 @@
 #define WIFI_EXTERN_ON
 //#define WIFI_TEST
 
-#define SSID "Machelina"
-#define PSSWRD "Donjer01"
+#define HOTSPOT "Galaxy S20 FEA37E"
+#define H_PSSWRD "cooa7104"
 
 static AsyncWebServer Server(80);
 static AsyncWebServer Server1(81);
@@ -33,7 +33,7 @@ static String sendCalibrationDistances()
         }
         total_data_cal = total_data_cal + '\n'; // newline to send 
     }
-    Serial.print(total_data_cal);
+    //Serial.print(total_data_cal);
     return total_data_cal;
 }
 
@@ -69,8 +69,8 @@ static String send_total_data_server()
 static void WiFiSettingsExtern(void)
 {
   uint8_t wifiCounter = 0;
-  const char* ssid = SSID;
-  const char* psswrd = PSSWRD;
+  const char* ssid = HOTSPOT;
+  const char* psswrd = H_PSSWRD;
   ////////////log in into the router for extern wifi connection///////////////
   WiFi.begin(ssid, psswrd);
   while (WiFi.status() != WL_CONNECTED) 

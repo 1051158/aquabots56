@@ -73,14 +73,7 @@ i2c main_i2c;
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
       addAnchor(ANCHOR_ID_4, ANCHOR_X_4, ANCHOR_Y_4);
-      CalibrationDistances();/*
-      for(uint8_t i = 0; i < MAX_CAL_DIS; i++)
-      {       
-        String i2c = "";
-        i2c = anchors[0].calibrationDistances[i];
-        i2cprint(i2c.c_str());
-        delay(1000);
-      }*/
+      CalibrationDistances();
     // keep adding anchors this way to your likinG
   }
 #endif
@@ -333,11 +326,6 @@ void setup()
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif
-  String i2c_data = "";
-  i2c_data = i2c_data + '(' + x_y_points[0][0] + ',' + x_y_points[0][1] + ')';
-  main_i2c.print(i2c_data.c_str());
-  delay(3000);
-  
 }
 
 /////////////////////////////////////////////////////////////////////////
