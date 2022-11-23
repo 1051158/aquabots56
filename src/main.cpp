@@ -8,9 +8,10 @@
 bool sendAntennaInfo = true;
 bool bool_nummer = false;
 
+
 unsigned long lastTimestamp = millis();
 
-#define ANTENNA_DELAY
+//#define ANTENNA_DELAY
 
 //#define USE_TIMER////Choose if Serial output is required and interval in microseconds of output
 int outputInterval = 1000;////(comment out if not needed)
@@ -22,7 +23,7 @@ int outputInterval = 1000;////(comment out if not needed)
 
 //#define TESTING_I2C
 
-////Choose type of device
+////Choose type of device////////////////////////////////////////////////////////////////////////////////////
 #define TYPE_TAG
 //#define TYPE_ANCHOR
 
@@ -35,19 +36,19 @@ int outputInterval = 1000;////(comment out if not needed)
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
         #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
     #endif
-    #define ANCHOR_2
+    //#define ANCHOR_2
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_2
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #2
         #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
     #endif
-//#define ANCHOR_3
+    //#define ANCHOR_3
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_3
         #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #3
     #endif
-//#define ANCHOR_4
+    #define ANCHOR_4
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_4
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
@@ -61,7 +62,6 @@ int outputInterval = 1000;////(comment out if not needed)
 
 //#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
 
-i2c main_i2c;
 
 #ifdef TYPE_TAG
   #define WIFI_ON
@@ -125,23 +125,33 @@ void newRange()
           Serial.print('E');
           i2cprint("E");
         #endif
-        esp_deep_sleep_start();
+        for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+        {
+          anchors[i].total_data = "stop";
+        }
+        _i2c.print("program ended", true);
+        while(1)
+        {}
       }
       if(button_send.pressed && !button_backspace.pressed)//press the interrupt button to start measurement
-      {
+      {/*
         for(uint8_t i = 0; i < MAX_ANCHORS; i++)
         {
           anchors[i].total_time = millis();
           anchors[i].total_time_1 = anchors[i].total_time;
+        }*/
+        change_delay_counter = 0;
+        if(!start_test)
+        {
+          _i2c.print("not connected", true);
+          button_send.pressed = false;
         }
         #ifdef DEBUG_INTERRUPT
           Serial.print('S');
-          i2cprint("S");
+          _i2c.print("S");
         #endif
-        main_i2c.print("cal");
         #ifndef DEBUG_INTERRPUT
         //Serial.print('3');
-        for(uint8_t i = 0; i < MAX_ANCHORS; i++)
         for(uint8_t i = 0; i < MAX_ANCHORS;i++)
         {
 //when ID's match and the distance hasn't been created in the pas yet go further into funtion
@@ -151,29 +161,30 @@ void newRange()
                 setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange()); 
                 //Serial.print('4');
                 #ifdef RANGETEST
-                anchors[i].total_data = updateDataWiFi(i);//send data through wifi to wifi-tag(i stands for the anchor number)
-                if(anchors[i].total_data == "not")
-                {
-                  //Serial.print('n');
-                  anchors[i].total_data = "";
-                }
-                else
-                {
-                  anchors[i].done = true;
-                  //outputDataJson();//send data to i2c or uart-
-                }
-                }
-                //Serial.print("main: ");
-                //Serial.print(i);
-                //Serial.println(anchors[i].total_data);
-                //distance is determined waiting for the distances of the other anchors in the array
+              anchors[i].total_data = updateDataWiFi(i);//send data through wifi to wifi-tag(i stands for the anchor number)
+              if(anchors[i].total_data == "not")
+              {
+                //Serial.print('n');
+                anchors[i].total_data = "";
               }
-              if(anchors[0].hulp_change_delay && anchors[1].hulp_change_delay && anchors[2].hulp_change_delay)
+              }
+              //Serial.print("main: ");
+              //Serial.print(i);
+              //Serial.println(anchors[i].total_data);
+              //distance is determined waiting for the distances of the other anchors in the array
+              if(anchors[i].hulp_change_delay)
+                change_delay_counter++;
+            }
+            Serial.print(change_delay_counter);
+              if(change_delay_counter >= MAX_ANCHORS)
                 {
                   antenna_delay += ANTENNA_INTERVAL;
+                  String AD = "";
+                  AD = AD + antenna_delay;
+                  _i2c.print(AD.c_str(), true);
                   //Serial.println(anchors[i].antenna_delay);
                   DW1000.setAntennaDelay(antenna_delay);
-                  if(antenna_delay >= ANTENNA_DELAY_END)
+                  if(antenna_delay > ANTENNA_DELAY_END)
                   {
                     ///Reset all the anchors for the measurement at the new coördinates//////////////
                     antenna_delay = ANTENNA_DELAY_START;
@@ -186,17 +197,13 @@ void newRange()
                       anchors[j].distance = 0;
                       anchors[j].distance_counter = 0;
                       button_send.pressed = false;
-                      /*if(j + 1 == MAX_ANCHORS)
-                      {
-                        
-                      }*/
                     }
-                    main_i2c.print("next");
                     //delay(200);
+                  }   
+                  for(uint8_t i = 0; i<MAX_ANCHORS;i++)
+                  {
+                      anchors[i].hulp_change_delay = false;                    
                   }
-                  anchors[0].hulp_change_delay = false; 
-                  anchors[1].hulp_change_delay = false; 
-                  anchors[2].hulp_change_delay = false;
               }
             }
             #endif
@@ -273,41 +280,58 @@ void newBlink(DW1000Device *device)
 void setup() 
 {
   Serial.begin(115200);//baud rate
+
   #ifdef I2C  //setup the ug2b lib //ug2b class is defined in i2c.cpp//
-    main_i2c.settings();
+    _i2c.settings();
   #endif
+
   //uart_set_wakeup_threshold(UART_NUM_0, 0xFF);
   //esp_sleep_enable_uart_wakeup(ESP_SLEEP_WAKEUP_UART);
   #ifdef WIFI_EXTERN_ON
+    #ifdef TYPE_TAG
     WiFiSettingsExtern(); 
+    #endif
   #endif
+  
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
   DW1000Ranging.attachNewRange(newRange);
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
+  
   #ifdef TYPE_TAG
     interruptfunctions();
     ///////////defines underneath are in Wifi.cpp///////////////////
     #ifdef WIFI_AP_ON
       WiFiSettingsAP();
     #endif
+
     Serial.println("\n\nTAG starting");
-    DW1000.setAntennaDelay(16500);//set the defined antenna delay
+    DW1000.setAntennaDelay(ANTENNA_DELAY_START);//set the defined antenna delay
+
     #ifndef RANGETEST
-    DW1000.setAntennaDelay(ANTENNA_DELAY);
+    DW1000.setAntennaDelay(ANTENNA_DELAY_START);
     #endif
+
     //initialize all anchors
     initializeAnchors();
-    
-    //printAnchorArray();//uncomment to check if all anchors are initilized
+
+    //uncomment printAnchorArray(); to check if all anchors are initilized
+    //printAnchorArray();
+
     DW1000Ranging.attachNewDevice(newDevice);
+
     #ifdef LOWPOWER
     DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
     #endif
+
     #ifdef ACCURACY
       DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
     #endif
 
+    #ifdef I2C
+  //print on display end of setup
+    _i2c.print("end of tag setup!", true);
+    #endif
   #endif
   #ifdef TYPE_ANCHOR
     DW1000.setAntennaDelay(ANTENNA_DELAY);
@@ -322,6 +346,8 @@ void setup()
     #ifdef ACCURACY
       DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
     #endif
+    //print on display end of setup
+    _i2c.print("end of anchor setup!", true);
   #endif
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
@@ -332,12 +358,12 @@ void setup()
 #ifdef TESTING_I2C
 void testi2c(void)
 {
-  String testString = "test\tString\ti2c";
-  i2cprint("abc", true);
+  String testString = "test\tString\ti2c\n";
   delay(1000);
+  _i2c.print("test\twith\ttyping..\n", false);
+  delay(1000);
+  _i2c.print(testString.c_str(), false);
   testString = "";
-  i2cprint("test\twith\typing..", true);
-  delay(1000);
 }
 #endif
 

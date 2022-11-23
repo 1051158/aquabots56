@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include <WiFi.h>
 #include <string.h>
+#include "i2c.cpp"
 
 
  //setting up u8g2 class from lib use static to use in other than main.cpp codes
@@ -11,20 +12,20 @@
 //#define X_Y_TEST
 ////////////////////All defines underneath are neccesary for rangetests////////////////////////////////
 #define RANGETEST
-#define ANTENNA_INTERVAL 2 //interval between 2 antenna delays
+#define ANTENNA_INTERVAL 5 //interval between 2 antenna delays
 
-#define ANTENNA_DELAY_START 16480 //start value antenna delay
-#define ANTENNA_DELAY_END 16520 //end value antenna delay
+#define ANTENNA_DELAY_START 16500 //start value antenna delay
+#define ANTENNA_DELAY_END 16525 //end value antenna delay
 
-#define NUM_OF_SEND 2 //number of times the value is send for excel file\
+#define NUM_OF_SEND 6 //number of times the value is send for excel file\
 
-#define RESET_DISTANCE_COUNTER_MAX_VALUE 2 //value to reset distance counter max to DISTANCE_COUNTER_MIN
-#define DISTANCE_COUNTER_MIN 1
+#define RESET_DISTANCE_COUNTER_MAX_VALUE 4 //value to reset distance counter max to DISTANCE_COUNTER_MIN
+#define DISTANCE_COUNTER_MIN 2
+#define DISTANCE_COUNTER_INTERVAL 1
 
 ///////////////////Variables needed for antenna delay range tests////////////////////////////////////////////
 
-static uint8_t distance_counter_max = 1;
-static bool hulp_bool = true;
+static uint8_t distance_counter_max = DISTANCE_COUNTER_MIN;
 static uint8_t hulp = 0;
 
 //Choose whether debug messages of the anchorManager should be printed
@@ -40,16 +41,16 @@ static uint8_t hulp = 0;
 ///////////////////////anchor info for the tag(change for the right real-time situation)/////////////////////
 
 #define ANCHOR_ID_1 4369
-#define ANCHOR_X_1 10
+#define ANCHOR_X_1 10.5
 #define ANCHOR_Y_1 0
 
 #define ANCHOR_ID_2 8738
 #define ANCHOR_X_2 0
-#define ANCHOR_Y_2 8
+#define ANCHOR_Y_2 10
 
 #define ANCHOR_ID_3 13107
-#define ANCHOR_X_3 10
-#define ANCHOR_Y_3 8
+#define ANCHOR_X_3 10.5
+#define ANCHOR_Y_3 10
 
 #define ANCHOR_ID_4 17476
 #define ANCHOR_X_4 16
@@ -62,18 +63,17 @@ static uint8_t hulp = 0;
 #define MAX_ANCHORS 3
 
 //GIVE THE NUMBER OF DISTANCES THAT ARE BEING USED FOR CALIBRATION
-#define MAX_CAL_DIS 7 
+#define MAX_CAL_DIS 6 
 
-static float x_y_points [MAX_CAL_DIS][2] = {{1.5,2},{3,2},{4.5,2},{6,2},{7.5,2},{9,2},{10,2}};
+static float x_y_points [MAX_CAL_DIS][2] = {{1.5,3},{3,3},{4.5,3},{6,3},{7.5,3},{9,3}};
 
 struct anchor{
     uint16_t ID;
     float x;
     float y;
     float distance;
-    unsigned long meas_time;
-    unsigned long total_time;
-    unsigned long total_time_1;
+    unsigned long sendTime;
+    unsigned long lastSendTime;
     uint8_t distance_counter;
     uint8_t distance_counter_max;
     uint8_t num_of_send_counter;
@@ -87,7 +87,7 @@ struct anchor{
 static uint16_t antenna_delay = ANTENNA_DELAY_START;
 
 
-static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, 0, 0, 0, false, false, false, "",{0,0,0,0,0,0,0} };
+static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, 0, 0, false, false, false, "",{0,0,0,0,0,0} };
 static int anchorCount = 0;
 
 static float longest_range = 12;
@@ -198,45 +198,47 @@ static String updateDataWiFi(uint8_t anchornumber)
     #ifdef RANGETEST
         if(anchors[anchornumber].distance_counter >= distance_counter_max)
         {
-            anchors[anchornumber].num_of_send_counter++;
-            hulp++;// for integration with WIFI_TAG.cpp to read every new value in the http-request
+            anchors[anchornumber].sendTime = millis();
+            anchors[anchornumber].sendTime -= anchors[anchornumber].lastSendTime;
+            anchors[anchornumber].lastSendTime = millis();
+            //hulp++;// for integration with WIFI_TAG.cpp to read every new value in the http-request
             anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
-            anchors[anchornumber].total_time = millis();
-            anchors[anchornumber].meas_time = anchors[anchornumber].total_time - anchors[anchornumber].total_time_1;
-            anchors[anchornumber].total_time_1 = anchors[anchornumber].total_time;
-            if(anchors[anchornumber].num_of_send_counter >= NUM_OF_SEND)
+            
+            if(anchors[anchornumber].num_of_send_counter >= (NUM_OF_SEND-1))
             //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
             {
-                if(anchors[anchornumber].distance_counter_max == RESET_DISTANCE_COUNTER_MAX_VALUE)
+                if (anchors[anchornumber].distance_counter_max < (RESET_DISTANCE_COUNTER_MAX_VALUE))
+                {
+                    hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].distance_counter + "Dc" + anchors[anchornumber].sendTime + "mse\t";//+2
+                    anchors[anchornumber].num_of_send_counter = 0;
+                    anchors[anchornumber].distance = 0;
+                    anchors[anchornumber].distance_counter = 0;
+                    anchors[anchornumber].distance_counter_max += DISTANCE_COUNTER_INTERVAL;
+                    anchors[anchornumber].done = true;
+                    //Serial.println(hulp_total_data);
+                    return hulp_total_data;
+                }  
+                if(anchors[anchornumber].distance_counter_max >= RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
                     anchors[anchornumber].distance_counter_max = DISTANCE_COUNTER_MIN;
-                    hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd'+ hulp + 'h' + anchors[anchornumber].meas_time + "ms" "a\t";
+                    hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd'+ anchors[anchornumber].distance_counter + "Dc" + anchors[anchornumber].sendTime + "msa\t";//+3 in excel
                     anchors[anchornumber].num_of_send_counter = 0;
-                    hulp_bool = true;
                     anchors[anchornumber].hulp_change_delay = true;
                     anchors[anchornumber].distance = 0;
                     anchors[anchornumber].distance_counter = 0;
+                    anchors[anchornumber].done = true;
                     //Serial.println(hulp_total_data);
                     return hulp_total_data;
-                }
-                if (anchors[anchornumber].distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE)
-                {
-                    hulp_bool = true;
-                    anchors[anchornumber].distance = 0;
-                    anchors[anchornumber].distance_counter = 0;
-                    hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd'+ hulp + 'h' + anchors[anchornumber].meas_time + "ms" + "e\t";
-                    //Serial.println(hulp_total_data);
-                    //Serial.println(hulp_total_data);
-                    anchors[anchornumber].num_of_send_counter = 0;
-                    anchors[anchornumber].distance_counter_max++;
-                    return hulp_total_data;
-                }                 
+                }               
             }
-            hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + hulp + 'h' + anchors[anchornumber].meas_time + "ms" + "\t";
+            hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance  + 'd' + anchors[anchornumber].distance_counter + "Dc" + anchors[anchornumber].sendTime + "ms\t";
             //Serial.println(hulp_total_data);
+            anchors[anchornumber].num_of_send_counter++;
             anchors[anchornumber].distance = 0;
             anchors[anchornumber].distance_counter = 0;
+            anchors[anchornumber].done = true;
             return hulp_total_data;
+
         #endif
         #ifndef RANGETEST
         dataX = anchors[anchornumber].x;

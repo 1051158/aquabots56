@@ -11,8 +11,8 @@ struct button
 //#define DEBUG_INTERRUPT
 
 static button button_send = {26,false};//interrupt button to send data to pyhonscript
-static button button_end = {5,false};//interrupt to stop python script
-static button button_backspace{14, false};//interrupt to skip latest uart value
+static button button_end = {14,false};//interrupt to stop python script
+static button button_backspace{5, false};//interrupt to skip latest uart value
 
 ////////////////////////millis() variables//////////////////////////
 static unsigned long button_time = 0;  
@@ -43,7 +43,7 @@ static void IRAM_ATTR endCode(void)//interrupt function to stop the code of the 
   button_time = millis();
   if (button_time - last_button_time > 250)//to prevent debouncing of the button
   { 
-    //button_end.pressed = true; // ToDo change pin number hardware
+    button_end.pressed = true; // ToDo change pin number hardware
   }
 }
 
