@@ -1,13 +1,10 @@
 #include <driver/uart.h>
-#include "Wifi.cpp"
+#include "antennaDelayExcel.cpp"
 #include <cmath>
-#include <DW1000Ranging.h>
 
 ////////////////////////interrupt buttons////////////////////////////
 
 bool sendAntennaInfo = true;
-bool bool_nummer = false;
-
 
 unsigned long lastTimestamp = millis();
 
@@ -30,7 +27,8 @@ int outputInterval = 1000;////(comment out if not needed)
 
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
 #ifdef TYPE_ANCHOR
-    //#define ANCHOR_1
+  uint8_t range_counter = 0;
+    #define ANCHOR_1
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_1
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
@@ -54,6 +52,15 @@ int outputInterval = 1000;////(comment out if not needed)
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
         #define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
     #endif
+    //#define ANCHOR_5
+    #ifdef ANCHOR_5
+      #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
+      #define UNIQUE_ADRESS "55:55:5B:D5:A9:9A:E2:9C"
+    #endif
+    #ifdef ANCHOR_6
+      #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
+      #define UNIQUE_ADRESS "66:66:5B:D5:A9:9A:E2:9C"
+    #endif
 #endif
 
 ////Choose measure mode
@@ -73,7 +80,11 @@ int outputInterval = 1000;////(comment out if not needed)
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
       addAnchor(ANCHOR_ID_4, ANCHOR_X_4, ANCHOR_Y_4);
+      //addAnchor(ANCHOR_ID_5, ANCHOR_X_5, ANCHOR_Y_5);
+      //addAnchor(ANCHOR_ID_6, ANCHOR_X_6, ANCHOR_Y_6);
+      #ifdef X_Y_TEST
       CalibrationDistances();
+      #endif
     // keep adding anchors this way to your likinG
   }
 #endif
@@ -86,156 +97,76 @@ int outputInterval = 1000;////(comment out if not needed)
 #define SPI_MOSI 23
 #define DW_CS 4
  
-
-uint8_t pos = 1;
-
 // connection pins
 const uint8_t PIN_RST = 27; // reset pin
 const uint8_t PIN_IRQ = 34; // irq pin
 const uint8_t PIN_SS = 4;   // spi select pin
+//timing variable
 
-// timing variable
 
 void newRange()
 {
   //Serial.print('2');
-    #ifdef TYPE_ANCHOR
-      #ifdef ANCHOR_CALIBRATION
-        calibration();//calibrate the anchor when antenna delay is unknown
+  #ifdef TYPE_ANCHOR
+  String range = "";
+  range = range + range_counter;
+  range_counter++;
+  _i2c.print(range.c_str(), true);
+    #ifdef ANCHOR_CALIBRATION
+      calibration();//calibrate the anchor when antenna delay is unknown
+    #endif
+    #ifndef ANCHOR_CALIBRATION
+  //DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
+  //Serial.print(DW1000Ranging.getDistantDevice()->getRange());
+  //Serial.print("from: ");
+  //Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
+  //Serial.print("Range: ");
+  //Serial.println(DW1000Ranging.getDistantDevice()->getRange());
+  //Serial.print(" m");
+  //Serial.print("\t RX power: ");
+  //Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
+  //Serial.println(" dBm");
+  #endif
+  #endif
+  // if new range is found by Tag it should store the distance in the anchorManager
+  #ifdef TYPE_TAG
+    if(button_end.pressed)
+    {
+      #ifdef DEBUG_INTERRUPT
+        Serial.print('E');
+        i2cprint("E");
       #endif
-      #ifndef ANCHOR_CALIBRATION
-//    DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
-    //Serial.print(DW1000Ranging.getDistantDevice()->getRange());
-      //Serial.print("from: ");
-      //Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
-      //Serial.print("Range: ");
-      //Serial.println(DW1000Ranging.getDistantDevice()->getRange());
-      //Serial.print(" m");
-      //Serial.print("\t RX power: ");
-      //Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
-      //Serial.println(" dBm");
+      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+      {
+        anchors[i].total_data = "stop";
+      }
+      _i2c.print("program ended", true);
+      while(1)
+      {}
+    }
+    if(button_send.pressed && !button_backspace.pressed)//press the interrupt button to start measurement
+    {  
+      //Serial.print('3');   
+      SendDistancesAD();
+    }
+        if(button_backspace.pressed)
+        {
+          backspaceDistances();
+        }
+      //average_counter++;
+        //#ifdef USE_SERIAL
+          //outputDataJson();
+          //average_counter = 0;
+      #ifdef USE_TIMER
+        if(millis() - lastTimestamp > outputInterval)
+        { 
+          outputDataJson();
+          lastTimestamp = millis();
+        }
       #endif
     #endif
-    // if new range is found by Tag it should store the distance in the anchorManager
-    #ifdef TYPE_TAG
 
-      if(button_end.pressed)
-      {
-        #ifdef DEBUG_INTERRUPT
-          Serial.print('E');
-          i2cprint("E");
-        #endif
-        for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-        {
-          anchors[i].total_data = "stop";
-        }
-        _i2c.print("program ended", true);
-        while(1)
-        {}
-      }
-      if(button_send.pressed && !button_backspace.pressed)//press the interrupt button to start measurement
-      {/*
-        for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-        {
-          anchors[i].total_time = millis();
-          anchors[i].total_time_1 = anchors[i].total_time;
-        }*/
-        change_delay_counter = 0;
-        if(!start_test)
-        {
-          _i2c.print("not connected", true);
-          button_send.pressed = false;
-        }
-        #ifdef DEBUG_INTERRUPT
-          Serial.print('S');
-          _i2c.print("S");
-        #endif
-        #ifndef DEBUG_INTERRPUT
-        //Serial.print('3');
-        for(uint8_t i = 0; i < MAX_ANCHORS;i++)
-        {
-//when ID's match and the distance hasn't been created in the pas yet go further into funtion
-              if(anchors[i].ID == DW1000Ranging.getDistantDevice()->getShortAddress() && !anchors[i].done)
-//start with renewing http if the last http of the defined anchor array hasn't been made yet
-              {
-                setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange()); 
-                //Serial.print('4');
-                #ifdef RANGETEST
-              anchors[i].total_data = updateDataWiFi(i);//send data through wifi to wifi-tag(i stands for the anchor number)
-              if(anchors[i].total_data == "not")
-              {
-                //Serial.print('n');
-                anchors[i].total_data = "";
-              }
-              }
-              //Serial.print("main: ");
-              //Serial.print(i);
-              //Serial.println(anchors[i].total_data);
-              //distance is determined waiting for the distances of the other anchors in the array
-              if(anchors[i].hulp_change_delay)
-                change_delay_counter++;
-            }
-            Serial.print(change_delay_counter);
-              if(change_delay_counter >= MAX_ANCHORS)
-                {
-                  antenna_delay += ANTENNA_INTERVAL;
-                  String AD = "";
-                  AD = AD + antenna_delay;
-                  _i2c.print(AD.c_str(), true);
-                  //Serial.println(anchors[i].antenna_delay);
-                  DW1000.setAntennaDelay(antenna_delay);
-                  if(antenna_delay > ANTENNA_DELAY_END)
-                  {
-                    ///Reset all the anchors for the measurement at the new coördinates//////////////
-                    antenna_delay = ANTENNA_DELAY_START;
-                    for(int j = 0; j< MAX_ANCHORS; j++)
-                    {
-                      anchors[j].total_data = "end";
-                      anchors[j].num_of_send_counter = 0;
-                      anchors[j].distance_counter_max = DISTANCE_COUNTER_MIN;
-                      anchors[j].done = true;
-                      anchors[j].distance = 0;
-                      anchors[j].distance_counter = 0;
-                      button_send.pressed = false;
-                    }
-                    //delay(200);
-                  }   
-                  for(uint8_t i = 0; i<MAX_ANCHORS;i++)
-                  {
-                      anchors[i].hulp_change_delay = false;                    
-                  }
-              }
-            }
-            #endif
-            #endif
-          if(button_backspace.pressed)
-          {
-            for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-              {
-                anchors[i].total_data = "back";
-                anchors[i].done = true;
-                pos--;
-              }
-            #ifdef DEBUG_INTERRUPT
-              Serial.print('B');
-              i2cprint("B");
-            #endif
-            button_backspace.pressed = false;
-          }
-        //average_counter++;
-          //#ifdef USE_SERIAL
-            //outputDataJson();
-            //average_counter = 0;
-      #endif
-        #ifdef USE_TIMER
-          if(millis() - lastTimestamp > outputInterval)
-          { 
-            outputDataJson();
-            lastTimestamp = millis();
-          }
-
-      #endif
-    }
+}
 
 /////////////////////////////////////////////////////////////////////////
 
