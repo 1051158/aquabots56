@@ -7,12 +7,13 @@
 static bool end_done = false;
 static bool send_done = false;
 
+
 /////////////////////choose between AP or extern router(comment both to disable wifi on esp///////////////
 //#define WIFI_AP_ON
 #define WIFI_EXTERN_ON
 //#define WIFI_TEST
 
-static bool rdy2send = false;
+static bool rdy2send;
 
 //bool that will only let the tag measure the distances when the python program has started
 static bool start_test = false;
@@ -25,6 +26,13 @@ static bool start_program = false;
 
 #define WIFI "Machelina"
 #define W_PSSWRD "Donjer01"
+
+#define ANTENNA_INTERVAL 5 //interval between 2 antenna delays
+
+#define ANTENNA_DELAY_START 16540 //start value antenna delay
+#define ANTENNA_DELAY_END 16560 //end value antenna delay
+
+static uint16_t antenna_delay = ANTENNA_DELAY_START;
 
 static AsyncWebServer Server(80);
 static AsyncWebServer Server1(81);
@@ -65,37 +73,14 @@ static String send_total_data_server()
 {
   //////////////check how many anchors are done with measuring//////////////////////////////////////////////
   String total_data_1;
-  uint8_t synchornise = 0;
-  for (uint8_t i = 0; i < MAX_ANCHORS; i++)
-  {
-    if(anchors[i].done)
-      {
-        synchornise = i;
-        break;}
-  }
   //////////////send signal if 3 out of MAX_ANCHORS anchors are done sending/////////////////////////////////
   for(uint8_t i = 0; i<MAX_ANCHORS;i++)
   {
-    if(anchors[i].done)
-      total_data_1 = total_data_1 + anchors[i].total_data;
+    total_data_1 = total_data_1 + anchors[i].total_data;
     anchors[i].total_data = "";
     anchors[i].done = false;
-    anchors[i].num_of_send_counter = anchors[synchornise].num_of_send_counter;
-    anchors[i].distance_counter_max = anchors[synchornise].distance_counter_max;
-    ////////send "end" to pythonCode to go to next worksheet an calibrate the next point in the pool//////
-    if(anchors[i].total_data == "end")
-    {
-      //button_send.pressed = false;
-      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-      {
-        anchors[i].total_data = "";
-        anchors[i].hulp_change_delay = false;
-        end_done = true;
-      }
-      total_data_1 = "end";
-      return total_data_1;
-    }
   }
+    ////////send "end" to pythonCode to go to next worksheet an calibrate the next point in the pool//////
   total_data_1 = total_data_1 + '\n';
   return total_data_1;
 }
@@ -126,42 +111,40 @@ static void WiFiSettingsExtern(void)
   Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     //variables to get the three closest anchors for x-y calculation
-    static uint8_t anchors_to_calculate_counter = 0;
+    uint8_t anchors_to_calculate_counter = 0;
     bool cal_counter_bool = false;
-
-    for(uint8_t i = 0; i<MAX_ANCHORS; i++)
-    {
-      if(anchors[i].total_data == "stop")
+      if(button_end.pressed)
       {
         request->send(200, "text/plain", "stop");
         delay(3000);
         esp_deep_sleep_start();
       }
-    }
-    
-    #ifndef WIFI_TEST
-    if(start_program && button_send.pressed)
+      if(end_done)
       {
-        for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+      //button_send.pressed = false;
+      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+      {
+        anchors[i].total_data = "";
+        anchors[i].hulp_change_delay = false;
+      }
+      request->send(200, "text/plain", "end");
+      end_done = false;
+      }
+      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
         {
           if(anchors[i].done)
             anchors_to_calculate_counter++;
         }
         if(anchors_to_calculate_counter >= 3)
-        {
-          anchors_to_calculate_counter = 0;
           rdy2send = true;
-        }
-        if(rdy2send)
+      if(rdy2send)
         {
           //x_y_cal(anchors[anchors_to_calculate[0]], anchors[anchors_to_calculate[1]], anchors[anchors_to_calculate[2]]);
-          String send;
-          send = send_total_data_server().c_str();
-          request->send(200, "text/plain", send);
+          request->send(200, "text/plain", send_total_data_server().c_str()); 
+          rdy2send = false;
         }
-        else
+      else
           request->send(200, "text/plain", "not");
-        rdy2send = false;
       #ifndef X_Y_TEST
         if(done_counter == MAX_ANCHORS)
         {
@@ -173,7 +156,6 @@ static void WiFiSettingsExtern(void)
           request->send(200, "text/plain", send);
         }
       #endif
-      }
       if(!start_program)
         {
           for(uint8_t i = 0; i < MAX_ANCHORS; i++)
@@ -186,11 +168,7 @@ static void WiFiSettingsExtern(void)
           start_program = true;
           request->send(200, "text/plain", "start");
         }
-      if(!button_send.pressed)
-        request->send(200, "text/plain", "not");
-      #endif
 });
-  
   Server1.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     //Serial.println("send");
@@ -205,9 +183,8 @@ static void WiFiSettingsExtern(void)
     Serial.print(IP);
     Server.begin();
     Server1.begin();
-  }
   #endif
-
+}
 
 #ifdef WIFI_AP_ON
 ///////////////////When the ESP32 is an acces point(AP) use this function in void setup() of main.cpp////////////////////

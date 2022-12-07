@@ -20,11 +20,6 @@ int outputInterval = 1000;////(comment out if not needed)
 
 //#define TESTING_I2C
 
-////Choose type of device////////////////////////////////////////////////////////////////////////////////////
-#define TYPE_TAG
-//#define TYPE_ANCHOR
-
-
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
 #ifdef TYPE_ANCHOR
   uint8_t range_counter = 0;
@@ -80,7 +75,7 @@ int outputInterval = 1000;////(comment out if not needed)
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
       addAnchor(ANCHOR_ID_4, ANCHOR_X_4, ANCHOR_Y_4);
-      //addAnchor(ANCHOR_ID_5, ANCHOR_X_5, ANCHOR_Y_5);
+      addAnchor(ANCHOR_ID_5, ANCHOR_X_5, ANCHOR_Y_5);
       //addAnchor(ANCHOR_ID_6, ANCHOR_X_6, ANCHOR_Y_6);
       #ifdef X_Y_TEST
       CalibrationDistances();
@@ -130,42 +125,36 @@ void newRange()
   #endif
   // if new range is found by Tag it should store the distance in the anchorManager
   #ifdef TYPE_TAG
+  for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+  {
+    if(anchors[i].active)
+      {active_counter++;}
+  }
     if(button_end.pressed)
     {
       #ifdef DEBUG_INTERRUPT
         Serial.print('E');
         i2cprint("E");
       #endif
-      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-      {
-        anchors[i].total_data = "stop";
-      }
       _i2c.print("program ended", true);
       while(1)
       {}
     }
-    if(button_send.pressed && !button_backspace.pressed)//press the interrupt button to start measurement
-    {  
+    if(button_send.pressed && !button_backspace.pressed && active_counter >= 3)//press the interrupt button to start measurement
+    { 
       //Serial.print('3');   
       SendDistancesAD();
     }
-        if(button_backspace.pressed)
-        {
-          backspaceDistances();
-        }
-      //average_counter++;
-        //#ifdef USE_SERIAL
-          //outputDataJson();
-          //average_counter = 0;
-      #ifdef USE_TIMER
-        if(millis() - lastTimestamp > outputInterval)
-        { 
-          outputDataJson();
-          lastTimestamp = millis();
-        }
-      #endif
+    if(button_backspace.pressed)
+    {
+      backspaceDistances();
+    }
+    //average_counter++;
+      //#ifdef USE_SERIAL
+        //outputDataUart();
+        //average_counter = 0;
     #endif
-
+  active_counter = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////

@@ -1,21 +1,20 @@
 #include <stdint.h>
 #include <Arduino.h>
+#include <DW1000Ranging.h>
 #include "DW1000.h"
 #include <Wire.h>
 #include <WiFi.h>
 #include <string.h>
 
 static bool hulp_bool;
+static uint8_t min_send = 0;
 
+static uint8_t active_counter = 0;
  //setting up u8g2 class from lib use static to use in other than main.cpp codes
 
 #define X_Y_TEST
 ////////////////////All defines underneath are neccesary for rangetests////////////////////////////////
 #define RANGETEST
-#define ANTENNA_INTERVAL 5 //interval between 2 antenna delays
-
-#define ANTENNA_DELAY_START 16540 //start value antenna delay
-#define ANTENNA_DELAY_END 16545 //end value antenna delay
 
 #define NUM_OF_SEND 4 //number of times the value is send for excel file
 
@@ -29,7 +28,7 @@ static uint8_t distance_counter_max = DISTANCE_COUNTER_MIN;
 static uint8_t hulp = 0;
 
 //Choose whether debug messages of the anchorManager should be printed
-//#define DEBUG_ANCHOR_MANAGER
+#define DEBUG_ANCHOR_MANAGER
 //choose which communication mode you want to use (multiple choises availible)
 //#define USE_SERIAL//display the distance through uart
 
@@ -109,10 +108,6 @@ static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, 0, 0, false, false,
 static float height_difference = 0.40;
 #endif
 
-
-
-static uint16_t antenna_delay = ANTENNA_DELAY_START;
-
 #ifndef X_Y_TEST
     static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, 0, 0, false, false, false, ""};
 #endif
@@ -162,13 +157,8 @@ static void setAnchorActive(uint16_t ID, bool isActive){
     #endif
 }
 
-static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance)
+static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t anchornumber)
 {
-    for (int i = 0; i < MAX_ANCHORS; i++)
-    {
-        
-        if (anchors[i].ID == ID)
-        {
             if(distance <= 0)
             distance = 0;
 
@@ -178,31 +168,24 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance)
             Serial.print(distance);
             #endif
             if(distance > LONGEST_RANGE)//if the measured value is bigger than the maximum range
-            {anchors[i].distance += LONGEST_RANGE;//set is to max range
-            anchors[i].distance_counter++;
+            {anchors[anchornumber].distance += LONGEST_RANGE;//set is to max range
+            anchors[anchornumber].distance_counter++;
             return;}
-            anchors[i].distance += distance;//add distance 
-            anchors[i].distance_counter++;//add 1 to distance_counter
+            anchors[anchornumber].distance += distance;//add distance 
+            anchors[anchornumber].distance_counter++;//add 1 to distance_counter
             #ifdef DEBUG_ANCHOR_MANAGER
-                Serial.print("Set distance of ");
                 Serial.print(ID);
                 Serial.print(" to ");
                 Serial.print(distance);
-                Serial.print(" at rxPower ");
-                Serial.print(rxPower);
+                //Serial.print(" at rxPower ");
+                //Serial.print(rxPower);
                 Serial.print("\n");
             #endif
-            return;
-        }
-    }
-    #ifdef DEBUG_ANCHOR_MANAGER
-        Serial.printf("anchor %u not registered\n", ID);
-    #endif
 }
 
-static void outputDataJson()
-{
 #ifdef USE_SERIAL//print the distances through serial
+static void outputDataUart()
+{
    Serial.print("[");
     for (int i = 0; i < 3; i++)
     {
@@ -220,18 +203,18 @@ static void outputDataJson()
         }
     }
     Serial.println("]\n");
-    #endif
     }
+#endif
 
 static String generateWiFiString(uint8_t anchornumber)
 {
+    setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange(), anchornumber); 
     //Serial.println(hulp);
-    String hulp_total_data = "";
     #ifdef RANGETEST
         if(anchors[anchornumber].distance_counter >= distance_counter_max)
         {
+            String hulp_total_data = "";
             anchors[anchornumber].num_of_send_counter++;
-            hulp++;// for integration with WIFI_TAG.cpp to read every new value in the http-request
             anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
             anchors[anchornumber].sendTime = millis();
             anchors[anchornumber].sendTime = anchors[anchornumber].sendTime - anchors[anchornumber].lastSendTime;
@@ -244,12 +227,12 @@ static String generateWiFiString(uint8_t anchornumber)
                     anchors[anchornumber].distance_counter_max = DISTANCE_COUNTER_MIN;
                     hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].sendTime + "ms" "a\t";
                     anchors[anchornumber].num_of_send_counter = 0;
-                    anchors[anchornumber].done = true;
                     hulp_bool = true;
                     anchors[anchornumber].hulp_change_delay = true;
                     anchors[anchornumber].distance = 0;
                     anchors[anchornumber].distance_counter = 0;
                     //Serial.println(hulp_total_data);
+                    anchors[anchornumber].done = true;
                     return hulp_total_data;
                 }
                 if (anchors[anchornumber].distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE)
@@ -259,19 +242,19 @@ static String generateWiFiString(uint8_t anchornumber)
                     anchors[anchornumber].distance = 0;
                     anchors[anchornumber].distance_counter = 0;
                     anchors[anchornumber].hulp_change_delay = false;
-                    anchors[anchornumber].done = true;
                     //Serial.println(hulp_total_data);
                     //Serial.println(hulp_total_data);
                     anchors[anchornumber].num_of_send_counter = 0;
                     anchors[anchornumber].distance_counter_max++;
+                    anchors[anchornumber].done = true;
                     return hulp_total_data;
                 }                 
             }
             hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].sendTime + "ms" + "\t";
             //Serial.println(hulp_total_data);
-            anchors[anchornumber].done = true;
             anchors[anchornumber].distance = 0;
             anchors[anchornumber].distance_counter = 0;
+             anchors[anchornumber].done = true;
             return hulp_total_data;
         #endif
         #ifndef RANGETEST
