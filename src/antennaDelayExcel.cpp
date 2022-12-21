@@ -12,11 +12,6 @@ static uint8_t anchors_to_calculate_counter = 0;
 
 static void changeAD()
 {
-  for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-  {
-    anchors[i].hulp_change_delay = false;
-    anchors[i].done = true;
-  }
   antenna_delay += ANTENNA_INTERVAL;
   //When it changes the tester will notice on the i2c screen
   String AD = "";
@@ -44,8 +39,17 @@ static void changeAD()
     //the String in every struct from the array will send "end" for the integration with python
     button_send.pressed = false;
     end_done = true;
+    for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+    {
+    anchors[i].hulp_change_delay = false;
+    anchors[i].done = true;
+    }
     while(end_done)
-    {Serial.print('1');}
+    {
+      #ifdef DEBUG_SYNCHRONIZE
+      Serial.print('1');
+      #endif
+    }
     //delay(200);
   }
 }
@@ -92,8 +96,10 @@ static void SendDistancesAD()
     if(anchors[i].hulp_change_delay)
     change_delay_counter++;
   }
+  #ifdef DEBUG_SYNCHRONIZE
   Serial.print("delay");
   Serial.println(change_delay_counter);
+  #endif
 //when for statement to check distances is done check if Antenna Delay needs to be changed
     if(change_delay_counter >= 3)
       changeAD();
@@ -111,17 +117,21 @@ static void SendDistancesAD()
     }
       for(uint8_t i = 0; i < MAX_ANCHORS; i++)
       {
+        #ifdef DEBUG_SYNCHRONISE
         Serial.print("before:");
         Serial.print(anchors[i].num_of_send_counter);
         Serial.print("    ");
         Serial.println(anchors[i].distance_counter_max);
+        #endif
         ///////////When more then three anchors are used but only 3 were measured set the anchors not measure equal for excel file//////////
         anchors[i].num_of_send_counter = anchors[synchornise].num_of_send_counter;
         anchors[i].distance_counter_max = anchors[synchornise].distance_counter_max;
+        #ifdef DEBUG_SYNCHRONISE
         Serial.print("after:");
         Serial.print(anchors[i].num_of_send_counter);
         Serial.print("    ");
         Serial.println(anchors[i].distance_counter_max);
+        #endif
     }
   
   #endif
@@ -139,4 +149,11 @@ static void backspaceDistances()
     i2cprint("B");
   #endif
   button_backspace.pressed = false;
+}
+
+static void endProgram(void)
+{
+  _i2c.print("program ended", true);
+  while(1)//keep program running until server interrupt has been handled(chip will be set to deepSleep there)
+  {}
 }

@@ -15,13 +15,11 @@ struct button
 #define TYPE_TAG
 //#define TYPE_ANCHOR
 
-#ifdef TYPE_TAG
-static button button_send = {17,false};//interrupt button to send data to pyhonscript
-static button button_end = {5,false};//interrupt to stop python script
+static button button_send = {26,false};//interrupt button to send data to pyhonscript
 static button button_backspace{16, false};//interrupt to skip latest uart value
-#endif
+static button button_end = {14,false};//interrupt to stop python script
 static button ACCURACY{15, false};
-static button LOWPOWER{14, false};
+static button LOWPOWER{9, false};
 
 ////////////////////////millis() variables//////////////////////////
 static unsigned long button_time = 0;  
