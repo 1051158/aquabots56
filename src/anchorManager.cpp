@@ -12,9 +12,9 @@ static uint8_t min_send = 0;
 static uint8_t active_counter = 0;
  //setting up u8g2 class from lib use static to use in other than main.cpp codes
 
-#define X_Y_TEST
 ////////////////////All defines underneath are neccesary for rangetests////////////////////////////////
-#define RANGETEST
+#define X_Y_TEST
+
 
 #define NUM_OF_SEND 4 //number of times the value is send for excel file
 
@@ -28,7 +28,7 @@ static uint8_t distance_counter_max = DISTANCE_COUNTER_MIN;
 static uint8_t hulp = 0;
 
 //Choose whether debug messages of the anchorManager should be printed
-#define DEBUG_ANCHOR_MANAGER
+//#define DEBUG_ANCHOR_MANAGER
 //choose which communication mode you want to use (multiple choises availible)
 //#define USE_SERIAL//display the distance through uart
 
@@ -206,11 +206,18 @@ static void outputDataUart()
     }
 #endif
 
+static void getDistances()
+{
+    
+}
+
 static String generateWiFiString(uint8_t anchornumber)
 {
+    //get the distance and add one up to the distanceCounter.
     setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange(), anchornumber); 
     //Serial.println(hulp);
-    #ifdef RANGETEST
+    #ifndef RANGETEST
+    //when the distance counter max has been reached convert the right string will be constructed
         if(anchors[anchornumber].distance_counter >= distance_counter_max)
         {
             String hulp_total_data = "";
@@ -254,13 +261,8 @@ static String generateWiFiString(uint8_t anchornumber)
             //Serial.println(hulp_total_data);
             anchors[anchornumber].distance = 0;
             anchors[anchornumber].distance_counter = 0;
-             anchors[anchornumber].done = true;
+            anchors[anchornumber].done = true;
             return hulp_total_data;
-        #endif
-        #ifndef RANGETEST
-        dataX = anchors[anchornumber].x;
-        dataY = anchors[anchornumber].y;
-        anchors[anchornumber].total_data = anchors[anchornumber].total_data + dataID + "ID" + dataDistance + dataCounter +"dc" +'\t';//todo
         #endif
     } 
 return "not";

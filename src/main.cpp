@@ -6,6 +6,9 @@
 
 bool sendAntennaInfo = true;
 
+bool excel_mode = false;
+
+
 unsigned long lastTimestamp = millis();
 
 //#define ANTENNA_DELAY
@@ -23,7 +26,7 @@ int outputInterval = 1000;////(comment out if not needed)
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
 #ifdef TYPE_ANCHOR
   uint8_t range_counter = 0;
-    #define ANCHOR_1
+    //#define ANCHOR_1
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_1
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
@@ -75,7 +78,7 @@ int outputInterval = 1000;////(comment out if not needed)
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
       addAnchor(ANCHOR_ID_4, ANCHOR_X_4, ANCHOR_Y_4);
-      addAnchor(ANCHOR_ID_5, ANCHOR_X_5, ANCHOR_Y_5);
+      //addAnchor(ANCHOR_ID_5, ANCHOR_X_5, ANCHOR_Y_5);
       //addAnchor(ANCHOR_ID_6, ANCHOR_X_6, ANCHOR_Y_6);
       #ifdef X_Y_TEST
       CalibrationDistances();
@@ -90,7 +93,7 @@ int outputInterval = 1000;////(comment out if not needed)
 #define SPI_SCK 18
 #define SPI_MISO 19
 #define SPI_MOSI 23
-#define DW_CS 4
+#define DW_CS 4SendDistancesAD
  
 // connection pins
 const uint8_t PIN_RST = 27; // reset pin
@@ -103,10 +106,12 @@ void newRange()
 {
   //Serial.print('2');
   #ifdef TYPE_ANCHOR
-  String range = "";
+  #ifdef I2C
+  /*String range = "";
   range = range + range_counter;
   range_counter++;
-  _i2c.print(range.c_str(), true);
+  _i2c.print(range.c_str(), true);*/
+  #endif
     #ifdef ANCHOR_CALIBRATION
       calibration();//calibrate the anchor when antenna delay is unknown
     #endif
@@ -125,36 +130,42 @@ void newRange()
   #endif
   // if new range is found by Tag it should store the distance in the anchorManager
   #ifdef TYPE_TAG
+  if(button_end.pressed)
+    {
+      endProgram();
+    }
   for(uint8_t i = 0; i < MAX_ANCHORS; i++)
   {
     if(anchors[i].active)
       {active_counter++;}
   }
-    if(button_end.pressed)
+  if(excel_mode)
     {
-      #ifdef DEBUG_INTERRUPT
-        Serial.print('E');
-        i2cprint("E");
-      #endif
-      _i2c.print("program ended", true);
-      while(1)
-      {}
-    }
+      if(button_send.pressed && !button_backspace.pressed && active_counter >= 3)//press the interrupt button to start measurement
+      { 
+        //Serial.print('3');   
+        SendDistancesAD();
+      }
+      if(button_backspace.pressed)
+      {
+        backspaceDistances();
+      }
+      //average_counter++;
+        //#ifdef USE_SERIAL
+          //outputDataUart();
+          //average_counter = 0;
+
+      }
+  #endif
+  if(!excel_mode)
+    {
     if(button_send.pressed && !button_backspace.pressed && active_counter >= 3)//press the interrupt button to start measurement
     { 
       //Serial.print('3');   
-      SendDistancesAD();
+      getDistances();
     }
-    if(button_backspace.pressed)
-    {
-      backspaceDistances();
-    }
-    //average_counter++;
-      //#ifdef USE_SERIAL
-        //outputDataUart();
-        //average_counter = 0;
-    #endif
   active_counter = 0;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -267,7 +278,7 @@ void setup()
       DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
     #endif
     //print on display end of setup
-    _i2c.print("end of anchor setup!", true);
+    _i2c.print(UNIQUE_ADRESS, true);
   #endif
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
