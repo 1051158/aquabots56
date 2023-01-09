@@ -113,7 +113,7 @@ static void WiFiSettingsExtern(void)
     //variables to get the three closest anchors for x-y calculation
     uint8_t anchors_to_calculate_counter = 0;
     bool cal_counter_bool = false;
-      if(button_end.pressed)
+      if(i2cMenu[3].status)
       {
         request->send(200, "text/plain", "stop");
         delay(3000);

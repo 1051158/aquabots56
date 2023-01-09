@@ -2,9 +2,7 @@
 #include <Arduino.h>
 #include <DW1000Ranging.h>
 #include "DW1000.h"
-#include <Wire.h>
-#include <WiFi.h>
-#include <string.h>
+
 
 static bool hulp_bool;
 static uint8_t min_send = 0;
@@ -14,7 +12,6 @@ static uint8_t active_counter = 0;
 
 ////////////////////All defines underneath are neccesary for rangetests////////////////////////////////
 #define X_Y_TEST
-
 
 #define NUM_OF_SEND 4 //number of times the value is send for excel file
 

@@ -37,7 +37,7 @@ static void changeAD()
     }
     #endif
     //the String in every struct from the array will send "end" for the integration with python
-    button_send.pressed = false;
+    i2cMenu[1].status = false;
     end_done = true;
     for(uint8_t i = 0; i < MAX_ANCHORS; i++)
     {
@@ -64,7 +64,7 @@ static void SendDistancesAD()
   if(!start_test)
   {
     _i2c.print("not connected", true);
-    button_send.pressed = false;
+    i2cMenu[1].status = false;
   }
   #ifdef DEBUG_INTERRUPT
     Serial.print('S');
@@ -100,7 +100,7 @@ static void SendDistancesAD()
   Serial.print("delay");
   Serial.println(change_delay_counter);
   #endif
-//when for statement to check distances is done check if Antenna Delay needs to be changed
+  //when for statement to check distances is done check if Antenna Delay needs to be changed
     if(change_delay_counter >= 3)
       changeAD();
      
@@ -148,7 +148,7 @@ static void backspaceDistances()
     Serial.print('B');
     i2cprint("B");
   #endif
-  button_backspace.pressed = false;
+  i2cMenu[1].status = false;
 }
 
 static void endProgram(void)

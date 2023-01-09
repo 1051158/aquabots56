@@ -3,9 +3,8 @@
 #include <Arduino.h>
 #include <stdio.h>
 
-
+#define MAX_STRLEN 20 
 #define I2C
-#define MAX_STRLEN 50 
 
 #define MAX_X_POS 128
 #define MAX_Y_POS 32

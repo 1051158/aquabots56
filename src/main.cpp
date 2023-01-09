@@ -93,7 +93,7 @@ int outputInterval = 1000;////(comment out if not needed)
 #define SPI_SCK 18
 #define SPI_MISO 19
 #define SPI_MOSI 23
-#define DW_CS 4SendDistancesAD
+#define DW_CS 4
  
 // connection pins
 const uint8_t PIN_RST = 27; // reset pin
@@ -130,7 +130,7 @@ void newRange()
   #endif
   // if new range is found by Tag it should store the distance in the anchorManager
   #ifdef TYPE_TAG
-  if(button_end.pressed)
+  if(i2cMenu[3].status)
     {
       endProgram();
     }
@@ -141,12 +141,12 @@ void newRange()
   }
   if(excel_mode)
     {
-      if(button_send.pressed && !button_backspace.pressed && active_counter >= 3)//press the interrupt button to start measurement
+      if(i2cMenu[START_SEND].status && active_counter >= 3)
       { 
         //Serial.print('3');   
         SendDistancesAD();
       }
-      if(button_backspace.pressed)
+      if(i2cMenu[BACKSPACE].status && active_counter >= 3)
       {
         backspaceDistances();
       }
@@ -159,7 +159,7 @@ void newRange()
   #endif
   if(!excel_mode)
     {
-    if(button_send.pressed && !button_backspace.pressed && active_counter >= 3)//press the interrupt button to start measurement
+    if(i2cMenu[START_SEND].status && active_counter >= 3)//press the interrupt button to start measurement
     { 
       //Serial.print('3');   
       getDistances();
@@ -298,9 +298,52 @@ void testi2c(void)
 }
 #endif
 
+int i2c_menuNumber = 0;
+
+
 void loop() 
 {
   #ifndef TESTING_I2C
+  if(button_enter.pressed && !button_down.pressed && !button_up.pressed)
+  {
+    if(!i2cMenu[i2c_menuNumber].status)
+      i2cMenu[i2c_menuNumber].status = true;
+
+    else  
+      i2cMenu[i2c_menuNumber].status = false;
+  }
+
+  if(button_down.pressed && !button_up.pressed && !button_enter.pressed)
+  {
+    i2c_menuNumber--;
+    if(i2c_menuNumber < 0)
+      i2c_menuNumber = 3;
+  }
+
+  if(button_up.pressed && !button_enter.pressed && !button_down.pressed)
+  {
+    i2c_menuNumber++;
+    if(i2c_menuNumber > 3)
+      i2c_menuNumber = 0;
+  }
+  if(button_down.pressed || button_up.pressed || button_enter.pressed)
+  {
+    Serial.print(i2c_menuNumber);
+    String help = "";
+    if(i2cMenu[i2c_menuNumber].status)
+    {
+      help = help + i2cMenu[i2c_menuNumber].menuName + " = on";
+      _i2c.print(help.c_str(), true);
+    }
+    else
+    {
+      help = help + i2cMenu[i2c_menuNumber].menuName + " = off";
+      _i2c.print(help.c_str(), true);
+    }
+    button_down.pressed = false;
+    button_up.pressed = false;
+    button_enter.pressed = false;
+  }
   DW1000Ranging.loop();
   #endif
   #ifdef TESTING_I2C
