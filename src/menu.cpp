@@ -10,14 +10,13 @@
 
 struct menu
 {
-    int menuNumber;
     bool status;
     String menuName;
 };
 
 static menu i2cMenu[MENUSIZE] = {
-                                {0, false, "start_send"},
-                                {1, false, "back_send"},
-                                {2, false, "excel_mode"},
-                                {3, false, "end_code"}
+                                {false, "start_send"},
+                                {false, "back_send"},
+                                {true, "excel_mode"},
+                                {false, "end_code"}
                                 };

@@ -236,7 +236,6 @@ static String generateWiFiString(uint8_t anchornumber)
                     anchors[anchornumber].distance = 0;
                     anchors[anchornumber].distance_counter = 0;
                     //Serial.println(hulp_total_data);
-                    anchors[anchornumber].done = true;
                     return hulp_total_data;
                 }
                 if (anchors[anchornumber].distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE)
@@ -250,7 +249,6 @@ static String generateWiFiString(uint8_t anchornumber)
                     //Serial.println(hulp_total_data);
                     anchors[anchornumber].num_of_send_counter = 0;
                     anchors[anchornumber].distance_counter_max++;
-                    anchors[anchornumber].done = true;
                     return hulp_total_data;
                 }                 
             }
@@ -258,7 +256,6 @@ static String generateWiFiString(uint8_t anchornumber)
             //Serial.println(hulp_total_data);
             anchors[anchornumber].distance = 0;
             anchors[anchornumber].distance_counter = 0;
-            anchors[anchornumber].done = true;
             return hulp_total_data;
         #endif
     } 

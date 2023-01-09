@@ -104,13 +104,12 @@ const uint8_t PIN_SS = 4;   // spi select pin
 
 void newRange()
 {
-  //Serial.print('2');
   #ifdef TYPE_ANCHOR
   #ifdef I2C
-  /*String range = "";
+  String range = "";
   range = range + range_counter;
   range_counter++;
-  _i2c.print(range.c_str(), true);*/
+  _i2c.print(range.c_str(), true);
   #endif
     #ifdef ANCHOR_CALIBRATION
       calibration();//calibrate the anchor when antenna delay is unknown
@@ -130,7 +129,7 @@ void newRange()
   #endif
   // if new range is found by Tag it should store the distance in the anchorManager
   #ifdef TYPE_TAG
-  if(i2cMenu[3].status)
+  if(i2cMenu[END_CODE].status)
     {
       endProgram();
     }
@@ -139,7 +138,9 @@ void newRange()
     if(anchors[i].active)
       {active_counter++;}
   }
-  if(excel_mode)
+    Serial.print(active_counter);
+
+  if(i2cMenu[EXCEL_MODE].status)
     {
       if(i2cMenu[START_SEND].status && active_counter >= 3)
       { 
@@ -164,8 +165,8 @@ void newRange()
       //Serial.print('3');   
       getDistances();
     }
-  active_counter = 0;
   }
+    active_counter = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -298,52 +299,11 @@ void testi2c(void)
 }
 #endif
 
-int i2c_menuNumber = 0;
-
-
 void loop() 
 {
   #ifndef TESTING_I2C
-  if(button_enter.pressed && !button_down.pressed && !button_up.pressed)
-  {
-    if(!i2cMenu[i2c_menuNumber].status)
-      i2cMenu[i2c_menuNumber].status = true;
-
-    else  
-      i2cMenu[i2c_menuNumber].status = false;
-  }
-
-  if(button_down.pressed && !button_up.pressed && !button_enter.pressed)
-  {
-    i2c_menuNumber--;
-    if(i2c_menuNumber < 0)
-      i2c_menuNumber = 3;
-  }
-
-  if(button_up.pressed && !button_enter.pressed && !button_down.pressed)
-  {
-    i2c_menuNumber++;
-    if(i2c_menuNumber > 3)
-      i2c_menuNumber = 0;
-  }
-  if(button_down.pressed || button_up.pressed || button_enter.pressed)
-  {
-    Serial.print(i2c_menuNumber);
-    String help = "";
-    if(i2cMenu[i2c_menuNumber].status)
-    {
-      help = help + i2cMenu[i2c_menuNumber].menuName + " = on";
-      _i2c.print(help.c_str(), true);
-    }
-    else
-    {
-      help = help + i2cMenu[i2c_menuNumber].menuName + " = off";
-      _i2c.print(help.c_str(), true);
-    }
-    button_down.pressed = false;
-    button_up.pressed = false;
-    button_enter.pressed = false;
-  }
+  if(start_program)
+    checkInterrupts();
   DW1000Ranging.loop();
   #endif
   #ifdef TESTING_I2C

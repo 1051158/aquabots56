@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <stdio.h>
 
-#define MAX_STRLEN 20 
+#define MAX_STRLEN 120 
 #define I2C
 
 #define MAX_X_POS 128
@@ -22,6 +22,7 @@ static uint8_t y_pos;
 class i2c
 {
     public:
+    //all the necessary setting for the i2c screens
         static void settings(void)
         {
             u8g2.begin();

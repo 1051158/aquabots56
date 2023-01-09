@@ -13,7 +13,8 @@ static bool send_done = false;
 #define WIFI_EXTERN_ON
 //#define WIFI_TEST
 
-static bool rdy2send;
+static bool rdy2send = false;
+static bool done_send = false;
 
 //bool that will only let the tag measure the distances when the python program has started
 static bool start_test = false;
@@ -111,7 +112,6 @@ static void WiFiSettingsExtern(void)
   Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     //variables to get the three closest anchors for x-y calculation
-    uint8_t anchors_to_calculate_counter = 0;
     bool cal_counter_bool = false;
       if(i2cMenu[3].status)
       {
@@ -126,23 +126,22 @@ static void WiFiSettingsExtern(void)
       {
         anchors[i].total_data = "";
         anchors[i].hulp_change_delay = false;
+        anchors[i].done = false;
       }
       request->send(200, "text/plain", "end");
       end_done = false;
+      rdy2send = false;
       }
-      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-        {
-          if(anchors[i].done)
-            anchors_to_calculate_counter++;
-        }
-        if(anchors_to_calculate_counter >= 3)
-          rdy2send = true;
+
       if(rdy2send)
         {
+
           //x_y_cal(anchors[anchors_to_calculate[0]], anchors[anchors_to_calculate[1]], anchors[anchors_to_calculate[2]]);
           request->send(200, "text/plain", send_total_data_server().c_str()); 
           rdy2send = false;
+          done_send = true;
         }
+        
       else
           request->send(200, "text/plain", "not");
       #ifndef X_Y_TEST

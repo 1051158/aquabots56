@@ -1,11 +1,11 @@
 #include "Wifi.cpp"
-#include "i2c.cpp"
 
 static uint8_t change_delay_counter = 0;
 static uint8_t cal_points_counter = 1;
 static uint8_t anchors_to_calculate_counter = 0;
 
-#define DEBUG_SYNCHRONISE
+
+#define DEBUG_SYNCHRONIZE
 
 
 /////////////////////////////////Function to send distances for the x-y calculation in python///////////////////////////////
@@ -37,13 +37,8 @@ static void changeAD()
     }
     #endif
     //the String in every struct from the array will send "end" for the integration with python
-    i2cMenu[1].status = false;
+    i2cMenu[0].status = false;
     end_done = true;
-    for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-    {
-    anchors[i].hulp_change_delay = false;
-    anchors[i].done = true;
-    }
     while(end_done)
     {
       #ifdef DEBUG_SYNCHRONIZE
@@ -52,14 +47,16 @@ static void changeAD()
     }
     //delay(200);
   }
+  for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+    {
+    anchors[i].hulp_change_delay = false;
+    }
 }
 
 static void SendDistancesAD()
 {
   //counter to make sure all anchors who send distances are synchronised  
-  uint8_t synchronise = 0;
   change_delay_counter = 0;
-  anchors_to_calculate_counter = 0;
   //check if python code has started yet if not skip measuring distance with making the interrupt bool false
   if(!start_test)
   {
@@ -69,7 +66,7 @@ static void SendDistancesAD()
   #ifdef DEBUG_INTERRUPT
     Serial.print('S');
     _i2c.print("S");
-  #endif
+  #endif      
 
   #ifndef DEBUG_INTERRPUT
   //get ranges from all the anchors in a for statement
@@ -81,16 +78,46 @@ static void SendDistancesAD()
     {
       //convert all the variables into a String to send over wifi
       anchors[i].total_data = generateWiFiString(i);
-      //Serial.print(anchors[i].total_data);
       //when the function has not been succeeded empty the string in anchor struct
       if(anchors[i].total_data == "not")
       {
-        Serial.println('n');
+        //Serial.println('n');
         anchors[i].total_data = "";
+        anchors[i].done = false;
       }
-    }
+      else
+        {
+          anchors[i].done = true;
+          anchors_to_calculate_counter++;
+          Serial.print(anchors_to_calculate_counter);
+        }
     //when all the data of the antenna_delay for one anchor is done a counter is used for synchronisation
   }
+  }
+  if(anchors_to_calculate_counter >=3)
+  {
+    rdy2send = true;
+    anchors_to_calculate_counter = 0;
+    if(done_send)
+    {
+      for(int i = 0; i < MAX_ANCHORS; i++)
+      {
+        if(anchors[i].done)
+        {
+          anchors[i].done = false;
+          for(uint8_t j = 0; j < MAX_ANCHORS; j++)
+          {
+            if(j != i)
+            {
+              anchors[j].num_of_send_counter = anchors[i].num_of_send_counter;
+              anchors[j].distance_counter_max = anchors[i].distance_counter_max;
+              anchors[j].distance_counter = anchors[i].distance_counter;
+            }
+          }
+        }
+      } 
+    done_send = false;
+    }
   for(uint8_t i = 0; i < MAX_ANCHORS; i++)
   {
     if(anchors[i].hulp_change_delay)
@@ -105,36 +132,8 @@ static void SendDistancesAD()
       changeAD();
      
 //if the AD doesn't need to be changed there will be checked if the anchors are done with measuring
-    uint8_t synchornise = 0;
-    for (uint8_t i = 0; i < MAX_ANCHORS; i++)
-    {
-    //check which anchor is done with measuring to synchonise with those who didn't
-      if(anchors[i].done)
-      {
-        synchornise = i;
-        break;
-      }
-    }
-      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-      {
-        #ifdef DEBUG_SYNCHRONISE
-        Serial.print("before:");
-        Serial.print(anchors[i].num_of_send_counter);
-        Serial.print("    ");
-        Serial.println(anchors[i].distance_counter_max);
-        #endif
-        ///////////When more then three anchors are used but only 3 were measured set the anchors not measure equal for excel file//////////
-        anchors[i].num_of_send_counter = anchors[synchornise].num_of_send_counter;
-        anchors[i].distance_counter_max = anchors[synchornise].distance_counter_max;
-        #ifdef DEBUG_SYNCHRONISE
-        Serial.print("after:");
-        Serial.print(anchors[i].num_of_send_counter);
-        Serial.print("    ");
-        Serial.println(anchors[i].distance_counter_max);
-        #endif
-    }
-  
   #endif
+  }
 }    
 static void backspaceDistances()
 {
