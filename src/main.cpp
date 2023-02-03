@@ -106,10 +106,10 @@ void newRange()
 {
   #ifdef TYPE_ANCHOR
   #ifdef I2C
-  String range = "";
+  /*String range = "";
   range = range + range_counter;
   range_counter++;
-  _i2c.print(range.c_str(), true);
+  _i2c.print(range.c_str(), true);*/
   #endif
     #ifdef ANCHOR_CALIBRATION
       calibration();//calibrate the anchor when antenna delay is unknown
@@ -138,7 +138,7 @@ void newRange()
     if(anchors[i].active)
       {active_counter++;}
   }
-    Serial.print(active_counter);
+    //Serial.print(active_counter);
 
   if(i2cMenu[EXCEL_MODE].status)
     {
@@ -157,16 +157,13 @@ void newRange()
           //average_counter = 0;
 
       }
-  #endif
-  if(!excel_mode)
-    {
     if(i2cMenu[START_SEND].status && active_counter >= 3)//press the interrupt button to start measurement
     { 
-      //Serial.print('3');   
-      getDistances();
+      //Serial.print('3');
     }
-  }
     active_counter = 0;
+  #endif
+  
 }
 
 /////////////////////////////////////////////////////////////////////////

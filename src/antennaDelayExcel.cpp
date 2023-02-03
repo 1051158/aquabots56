@@ -5,7 +5,7 @@ static uint8_t cal_points_counter = 1;
 static uint8_t anchors_to_calculate_counter = 0;
 
 
-#define DEBUG_SYNCHRONIZE
+//#define DEBUG_SYNCHRONIZE
 
 
 /////////////////////////////////Function to send distances for the x-y calculation in python///////////////////////////////
@@ -41,9 +41,7 @@ static void changeAD()
     end_done = true;
     while(end_done)
     {
-      #ifdef DEBUG_SYNCHRONIZE
-      Serial.print('1');
-      #endif
+      checkInterrupts();
     }
     //delay(200);
   }
@@ -72,6 +70,7 @@ static void SendDistancesAD()
   //get ranges from all the anchors in a for statement
   for(uint8_t i = 0; i < MAX_ANCHORS;i++)
   {
+    
   //check if the measured ID of the found distance is equal to the right anchor
   //also check if the found distance has been send already(for synchronising)
     if(!anchors[i].done && anchors[i].ID == DW1000Ranging.getDistantDevice()->getShortAddress())
@@ -89,33 +88,62 @@ static void SendDistancesAD()
         {
           anchors[i].done = true;
           anchors_to_calculate_counter++;
-          Serial.print(anchors_to_calculate_counter);
+          //Serial.print(anchors_to_calculate_counter);
         }
+      if(anchors_to_calculate_counter >= 3)
+    break;
     //when all the data of the antenna_delay for one anchor is done a counter is used for synchronisation
   }
   }
   if(anchors_to_calculate_counter >=3)
   {
+    uint8_t anchornumbers[3];
+    uint8_t j = 0;
+    if(anchors_to_calculate_counter >= 4)
+    {
+      uint8_t highest_anchor_number;
+      float highest_anchor_value = anchors[0].distance;
+      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+      {
+        if(highest_anchor_value < anchors[i].distance)
+        {
+          highest_anchor_value = anchors[i].distance;
+          highest_anchor_number = i;
+        }
+      }
+    anchors[highest_anchor_number].done = false;
+    Serial.print("highest anchor = ");
+    Serial.println(highest_anchor_number);
+    Serial.print("highest anchor value = ");
+    Serial.println(highest_anchor_value);
+    for(uint8_t i = 0; i<MAX_ANCHORS;i++)
+    {
+      if(anchors[i].done)
+      {
+        anchornumbers[j] = i;
+        Serial.println(anchornumbers[j]);
+        j++;
+      }
+    }
+    }
     rdy2send = true;
     anchors_to_calculate_counter = 0;
+    while(rdy2send)
+    {checkInterrupts();}
     if(done_send)
     {
       for(int i = 0; i < MAX_ANCHORS; i++)
       {
-        if(anchors[i].done)
+        anchors[i].done = false;
+        anchors[i].distance_counter = 0;
+        anchors[i].distance = 0;
+        if(syncNumber != i)
         {
-          anchors[i].done = false;
-          for(uint8_t j = 0; j < MAX_ANCHORS; j++)
-          {
-            if(j != i)
-            {
-              anchors[j].num_of_send_counter = anchors[i].num_of_send_counter;
-              anchors[j].distance_counter_max = anchors[i].distance_counter_max;
-              anchors[j].distance_counter = anchors[i].distance_counter;
-            }
-          }
-        }
-      } 
+          anchors[i].num_of_send_counter = anchors[syncNumber].num_of_send_counter;
+          anchors[i].distance_counter_max = anchors[syncNumber].distance_counter_max; 
+        }  
+      }
+    } 
     done_send = false;
     }
   for(uint8_t i = 0; i < MAX_ANCHORS; i++)
@@ -134,7 +162,7 @@ static void SendDistancesAD()
 //if the AD doesn't need to be changed there will be checked if the anchors are done with measuring
   #endif
   }
-}    
+    
 static void backspaceDistances()
 {
   for(uint8_t i = 0; i < MAX_ANCHORS; i++)

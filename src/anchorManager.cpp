@@ -15,7 +15,7 @@ static uint8_t active_counter = 0;
 
 #define NUM_OF_SEND 4 //number of times the value is send for excel file
 
-#define RESET_DISTANCE_COUNTER_MAX_VALUE 2 //value to reset distance counter max to DISTANCE_COUNTER_MIN
+#define RESET_DISTANCE_COUNTER_MAX_VALUE 1 //value to reset distance counter max to DISTANCE_COUNTER_MIN
 #define DISTANCE_COUNTER_MIN 1
 #define DISTANCE_COUNTER_INTERVAL 1
 
@@ -154,11 +154,15 @@ static void setAnchorActive(uint16_t ID, bool isActive){
     #endif
 }
 
-static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t anchornumber)
+static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t anchornumber)
 {
-            if(distance <= 0)
-            distance = 0;
-
+    Serial.print("distance: ");
+    Serial.println(distance);
+    //Serial.println(anchors[anchornumber].distance_counter);
+            if(distance <= -1 || distance>=13)
+            {
+                return false;
+            }
             //calculate real distance with pythagoras when there is a height difference
             #ifdef HEIGHT_DIFFERENCE
             distance = sqrt(pow(distance,2) - pow(height_difference, 2));
@@ -167,7 +171,7 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
             if(distance > LONGEST_RANGE)//if the measured value is bigger than the maximum range
             {anchors[anchornumber].distance += LONGEST_RANGE;//set is to max range
             anchors[anchornumber].distance_counter++;
-            return;}
+            return true;}
             anchors[anchornumber].distance += distance;//add distance 
             anchors[anchornumber].distance_counter++;//add 1 to distance_counter
             #ifdef DEBUG_ANCHOR_MANAGER
@@ -178,6 +182,7 @@ static void setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
                 //Serial.print(rxPower);
                 Serial.print("\n");
             #endif
+            return true;
 }
 
 #ifdef USE_SERIAL//print the distances through serial
@@ -203,16 +208,11 @@ static void outputDataUart()
     }
 #endif
 
-static void getDistances()
-{
-    
-}
-
 static String generateWiFiString(uint8_t anchornumber)
 {
     //get the distance and add one up to the distanceCounter.
-    setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange(), anchornumber); 
-    //Serial.println(hulp);
+    if(setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange(), anchornumber)) 
+    {//Serial.println(hulp);
     #ifndef RANGETEST
     //when the distance counter max has been reached convert the right string will be constructed
         if(anchors[anchornumber].distance_counter >= distance_counter_max)
@@ -220,11 +220,13 @@ static String generateWiFiString(uint8_t anchornumber)
             String hulp_total_data = "";
             anchors[anchornumber].num_of_send_counter++;
             anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
+            //Serial.print("divided distance: ");
+            //Serial.println(anchors[anchornumber].distance);
             anchors[anchornumber].sendTime = millis();
             anchors[anchornumber].sendTime = anchors[anchornumber].sendTime - anchors[anchornumber].lastSendTime;
             anchors[anchornumber].lastSendTime = millis();
             if(anchors[anchornumber].num_of_send_counter >= NUM_OF_SEND)
-            //after the amount of outputs requested by de #define NUM_OF_SEND button needs to be pressed again
+            //after the amount of outputs requested by de #define NUM_OF_SEND the outputs get resetted for the next antenna delay
             {
                 if(anchors[anchornumber].distance_counter_max >= RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
@@ -241,11 +243,10 @@ static String generateWiFiString(uint8_t anchornumber)
                 if (anchors[anchornumber].distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
                     hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd'+  anchors[anchornumber].sendTime + "ms" + "e\t";
-                    hulp_bool = true;
                     anchors[anchornumber].distance = 0;
                     anchors[anchornumber].distance_counter = 0;
+                    hulp_bool = true;
                     anchors[anchornumber].hulp_change_delay = false;
-                    //Serial.println(hulp_total_data);
                     //Serial.println(hulp_total_data);
                     anchors[anchornumber].num_of_send_counter = 0;
                     anchors[anchornumber].distance_counter_max++;
@@ -253,11 +254,12 @@ static String generateWiFiString(uint8_t anchornumber)
                 }                 
             }
             hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].sendTime + "ms" + "\t";
-            //Serial.println(hulp_total_data);
             anchors[anchornumber].distance = 0;
             anchors[anchornumber].distance_counter = 0;
+            //Serial.println(hulp_total_data);
             return hulp_total_data;
         #endif
-    } 
+        }
+    }
 return "not";
 }

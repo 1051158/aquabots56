@@ -15,6 +15,7 @@ static bool send_done = false;
 
 static bool rdy2send = false;
 static bool done_send = false;
+static uint8_t syncNumber = 0;
 
 //bool that will only let the tag measure the distances when the python program has started
 static bool start_test = false;
@@ -74,16 +75,29 @@ static String send_total_data_server()
 {
   //////////////check how many anchors are done with measuring//////////////////////////////////////////////
   String total_data_1;
+  uint8_t dataCounter = 0;
   //////////////send signal if 3 out of MAX_ANCHORS anchors are done sending/////////////////////////////////
   for(uint8_t i = 0; i<MAX_ANCHORS;i++)
   {
-    total_data_1 = total_data_1 + anchors[i].total_data;
-    anchors[i].total_data = "";
-    anchors[i].done = false;
+    if(anchors[i].done)
+    {
+      total_data_1 = total_data_1 + anchors[i].total_data;
+      syncNumber = i;
+      dataCounter++;
+      if(dataCounter>=3)
+        {
+          total_data_1 = total_data_1 + '\n';
+          for(uint8_t j = 0; j<MAX_ANCHORS;j++)
+          {
+            anchors[j].total_data = "";
+            anchors[j].done = false;
+          }
+          return total_data_1;
+    }
+    } 
   }
+    return "not";
     ////////send "end" to pythonCode to go to next worksheet an calibrate the next point in the pool//////
-  total_data_1 = total_data_1 + '\n';
-  return total_data_1;
 }
 
 #ifdef WIFI_TEST
@@ -119,42 +133,6 @@ static void WiFiSettingsExtern(void)
         delay(3000);
         esp_deep_sleep_start();
       }
-      if(end_done)
-      {
-      //button_send.pressed = false;
-      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-      {
-        anchors[i].total_data = "";
-        anchors[i].hulp_change_delay = false;
-        anchors[i].done = false;
-      }
-      request->send(200, "text/plain", "end");
-      end_done = false;
-      rdy2send = false;
-      }
-
-      if(rdy2send)
-        {
-
-          //x_y_cal(anchors[anchors_to_calculate[0]], anchors[anchors_to_calculate[1]], anchors[anchors_to_calculate[2]]);
-          request->send(200, "text/plain", send_total_data_server().c_str()); 
-          rdy2send = false;
-          done_send = true;
-        }
-        
-      else
-          request->send(200, "text/plain", "not");
-      #ifndef X_Y_TEST
-        if(done_counter == MAX_ANCHORS)
-        {
-          String send;
-          send = send_total_data_server().c_str();
-          //i2cprint(send.c_str(), true);
-          //Serial.println("send");
-          //Serial.print(send);
-          request->send(200, "text/plain", send);
-        }
-      #endif
       if(!start_program)
         {
           for(uint8_t i = 0; i < MAX_ANCHORS; i++)
@@ -166,7 +144,47 @@ static void WiFiSettingsExtern(void)
           }
           start_program = true;
           request->send(200, "text/plain", "start");
+          return;
         }
+        if(end_done)
+      {
+      //button_send.pressed = false;
+      for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+      {
+        anchors[i].total_data = "";
+        anchors[i].hulp_change_delay = false;
+        anchors[i].done = false;
+      }
+      request->send(200, "text/plain", "end");
+      end_done = false;
+      rdy2send = false;
+      return;
+      }
+      if(!i2cMenu[START_SEND].status)
+      {
+        request->send(200, "text/plain", "not");
+        return;
+      }
+      if(rdy2send)
+        {
+          //x_y_cal(anchors[anchors_to_calculate[0]], anchors[anchors_to_calculate[1]], anchors[anchors_to_calculate[2]]);
+          request->send(200, "text/plain", send_total_data_server().c_str()); 
+          rdy2send = false;
+          done_send = true;
+          return;
+        }
+      #ifndef X_Y_TEST
+        if(done_counter == MAX_ANCHORS)
+        {
+          String send;
+          send = send_total_data_server().c_str();
+          //i2cprint(send.c_str(), true);
+          //Serial.println("send");
+          //Serial.print(send);
+          request->send(200, "text/plain", send);
+        }
+      #endif
+    request->send(200, "text/plain", "not");
 });
   Server1.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
   {
