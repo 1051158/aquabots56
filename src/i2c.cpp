@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #define MAX_STRLEN 120 
-#define I2C
+//#define I2C
 
 #define MAX_X_POS 128
 #define MAX_Y_POS 32
@@ -13,7 +13,6 @@
 
 #ifdef I2C
 static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
-#endif
 
 static bool clear;
 static uint8_t x_pos;
@@ -123,3 +122,4 @@ class i2c
         }
 };
     static i2c _i2c;
+#endif

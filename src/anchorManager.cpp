@@ -4,6 +4,7 @@
 #include "DW1000.h"
 
 
+
 static bool hulp_bool;
 static uint8_t min_send = 0;
 
@@ -11,7 +12,7 @@ static uint8_t active_counter = 0;
  //setting up u8g2 class from lib use static to use in other than main.cpp codes
 
 ////////////////////All defines underneath are neccesary for rangetests////////////////////////////////
-#define X_Y_TEST
+#define X_Y_Z_TEST
 
 #define NUM_OF_SEND 4 //number of times the value is send for excel file
 
@@ -38,16 +39,21 @@ static uint8_t hulp = 0;
 ///////////////////////anchor info for the tag(change for the right real-time situation)/////////////////////
 
 #define ANCHOR_ID_1 4369
-#define ANCHOR_X_1 10
+#define ANCHOR_X_1 2
 #define ANCHOR_Y_1 0
+#define ANCHOR_Z_1 0.8
 
 #define ANCHOR_ID_2 8738
 #define ANCHOR_X_2 0
-#define ANCHOR_Y_2 5
+#define ANCHOR_Y_2 2
+#define ANCHOR_Z_2 0.5
+
 
 #define ANCHOR_ID_3 13107
-#define ANCHOR_X_3 10
-#define ANCHOR_Y_3 5
+#define ANCHOR_X_3 2
+#define ANCHOR_Y_3 2
+#define ANCHOR_Z_3 0.5
+
 
 #define ANCHOR_ID_4 17476
 #define ANCHOR_X_4 10
@@ -63,9 +69,10 @@ static uint8_t hulp = 0;
 */
 #define X 0
 #define Y 1
+#define Z 2
 
 //Choose the amount of anchors supported
-#ifndef X_Y_TEST
+#ifdef RANGETEST
     #define MAX_RANGE_DIS 10
     #define MAX_ANCHORS 1
     static float range_points [MAX_RANGE_DIS] = {1,2,3,4,5,6,7,8,9,10};
@@ -74,13 +81,18 @@ static uint8_t hulp = 0;
     //GIVE THE NUMBER OF DISTANCES THAT ARE BEING USED FOR CALIBRATION
     #define MAX_CAL_DIS 6 
     #define MAX_ANCHORS 4
-    static float x_y_points [MAX_CAL_DIS][2] = {{1.5,1},{3,1},{4.5,1},{6,1},{7.5,1},{9,1}};
+    static float x_y_points [MAX_CAL_DIS][3] = {{0.25,0.25,0.25},{0.5,0.5},{0.75,0.75},{1,1},{1.25,1.25},{1.5,1.5}};
 #endif
-
+#ifdef X_Y_Z_TEST
+    #define MAX_CAL_DIS 6 
+    #define MAX_ANCHORS 3
+    static float x_y_points [MAX_CAL_DIS][3] = {{0.25,0.25,0.25},{0.5,0.5,0.5},{0.75,0.75,0.75},{1,1,1},{1.25,1.25,1.25},{1.5,1.5,1.5}};
+#endif
 struct anchor{
     uint16_t ID;
     float x;
     float y;
+    float z;
     float distance;
     unsigned long sendTime;
     unsigned long lastSendTime;
@@ -91,7 +103,7 @@ struct anchor{
     bool hulp_change_delay;
     bool done;
     String total_data;
-    #ifdef X_Y_TEST
+    #ifndef RANGETEST
     float calibrationDistances[MAX_CAL_DIS];
     #endif
 };
@@ -105,12 +117,30 @@ static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, 0, 0, false, false,
 static float height_difference = 0.40;
 #endif
 
-#ifndef X_Y_TEST
+//when testing with 1 anchor the struct will change
+#ifdef RANGETEST
     static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, 0, 0, false, false, false, ""};
+#endif
+
+#ifdef X_Y_Z_TEST
+    static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0, 0.0, 0, 0, 0, 0, 0, false, false, false, "",{0,0,0,0,0,0} };
 #endif
 static int anchorCount = 0;
 
+#ifdef X_Y_Z_TEST
+static void addAnchor(uint16_t ID, float XCoordInMtr, float YCoordInMtr, float ZCoordInMtr){
+    if(anchorCount < MAX_ANCHORS){
+        anchors[anchorCount].ID = ID;
+        anchors[anchorCount].x = XCoordInMtr;
+        anchors[anchorCount].y = YCoordInMtr;
+        anchors[anchorCount].z = ZCoordInMtr;
+        //Serial.print(anchors[anchorCount].ID);
+        anchorCount++;
+    }
+}
+#endif
 
+#ifdef X_Y_TEST
 static void addAnchor(uint16_t ID, float XCoordInMtr, float YCoordInMtr){
     if(anchorCount < MAX_ANCHORS){
         anchors[anchorCount].ID = ID;
@@ -120,6 +150,7 @@ static void addAnchor(uint16_t ID, float XCoordInMtr, float YCoordInMtr){
         anchorCount++;
     }
 }
+#endif
 ////uncomment in main to check which anchors are connected(commented for faster performance)
 static void printAnchorArray(){
     Serial.println("\n\nInitialized anchors:");
@@ -156,10 +187,14 @@ static void setAnchorActive(uint16_t ID, bool isActive){
 
 static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t anchornumber)
 {
-    Serial.print("distance: ");
-    Serial.println(distance);
+    //for debugging:
+    //Serial.print("distance: ");
+    //Serial.println(distance);
     //Serial.println(anchors[anchornumber].distance_counter);
-            if(distance <= -1 || distance>=13)
+
+    //filter to skip the wrong measurements
+    //if the measured distance is smaller than -1 or bigger than sqrt(x² + y²)
+            if(distance <= -1 || distance>=15)
             {
                 return false;
             }
@@ -208,7 +243,7 @@ static void outputDataUart()
     }
 #endif
 
-static String generateWiFiString(uint8_t anchornumber)
+static bool generateWiFiString(uint8_t anchornumber)
 {
     //get the distance and add one up to the distanceCounter.
     if(setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange(), anchornumber)) 
@@ -217,7 +252,6 @@ static String generateWiFiString(uint8_t anchornumber)
     //when the distance counter max has been reached convert the right string will be constructed
         if(anchors[anchornumber].distance_counter >= distance_counter_max)
         {
-            String hulp_total_data = "";
             anchors[anchornumber].num_of_send_counter++;
             anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
             //Serial.print("divided distance: ");
@@ -231,35 +265,39 @@ static String generateWiFiString(uint8_t anchornumber)
                 if(anchors[anchornumber].distance_counter_max >= RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
                     anchors[anchornumber].distance_counter_max = DISTANCE_COUNTER_MIN;
-                    hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].sendTime + "ms" "a\t";
+                    anchors[anchornumber].total_data = anchors[anchornumber].total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].sendTime + "ms" "a\t";
                     anchors[anchornumber].num_of_send_counter = 0;
                     hulp_bool = true;
                     anchors[anchornumber].hulp_change_delay = true;
                     anchors[anchornumber].distance = 0;
                     anchors[anchornumber].distance_counter = 0;
                     //Serial.println(hulp_total_data);
-                    return hulp_total_data;
+                    return true;
                 }
                 if (anchors[anchornumber].distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE)
                 {
-                    hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd'+  anchors[anchornumber].sendTime + "ms" + "e\t";
+                    //make the string
+                    anchors[anchornumber].total_data = anchors[anchornumber].total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd'+  anchors[anchornumber].sendTime + "ms" + "e\t";
+                    //reset the anchors
                     anchors[anchornumber].distance = 0;
                     anchors[anchornumber].distance_counter = 0;
                     hulp_bool = true;
                     anchors[anchornumber].hulp_change_delay = false;
                     //Serial.println(hulp_total_data);
                     anchors[anchornumber].num_of_send_counter = 0;
+                    //add one to the distance counter max and measure again with more samples
                     anchors[anchornumber].distance_counter_max++;
-                    return hulp_total_data;
+                    return true;
                 }                 
             }
-            hulp_total_data = hulp_total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].sendTime + "ms" + "\t";
+            anchors[anchornumber].total_data = anchors[anchornumber].total_data + anchors[anchornumber].ID + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].sendTime + "ms" + "\t";
             anchors[anchornumber].distance = 0;
             anchors[anchornumber].distance_counter = 0;
             //Serial.println(hulp_total_data);
-            return hulp_total_data;
+            return true;
         #endif
         }
     }
-return "not";
+    //when the distance counter max hasn't been reached send back false to measure again untill the maximum has been reached
+return false;
 }

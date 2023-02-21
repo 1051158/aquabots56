@@ -16,7 +16,9 @@ static void changeAD()
   //When it changes the tester will notice on the i2c screen
   String AD = "";
   AD = AD + antenna_delay;
+  #ifdef I2C
   _i2c.print(AD.c_str(), true);
+  #endif
   //change the antenna delay on tag
   DW1000.setAntennaDelay(antenna_delay);
   //when all the antenna delays on the secified coördinates have been tested:
@@ -41,7 +43,9 @@ static void changeAD()
     end_done = true;
     while(end_done)
     {
-      checkInterrupts();
+      #ifdef I2C
+      checkMenuInterrupts();
+      #endif
     }
     //delay(200);
   }
@@ -58,7 +62,9 @@ static void SendDistancesAD()
   //check if python code has started yet if not skip measuring distance with making the interrupt bool false
   if(!start_test)
   {
+    #ifdef I2C
     _i2c.print("not connected", true);
+    #endif
     i2cMenu[1].status = false;
   }
   #ifdef DEBUG_INTERRUPT
@@ -69,27 +75,24 @@ static void SendDistancesAD()
   #ifndef DEBUG_INTERRPUT
   //get ranges from all the anchors in a for statement
   for(uint8_t i = 0; i < MAX_ANCHORS;i++)
-  {
-    
+  {    
   //check if the measured ID of the found distance is equal to the right anchor
   //also check if the found distance has been send already(for synchronising)
     if(!anchors[i].done && anchors[i].ID == DW1000Ranging.getDistantDevice()->getShortAddress())
     {
       //convert all the variables into a String to send over wifi
-      anchors[i].total_data = generateWiFiString(i);
-      //when the function has not been succeeded empty the string in anchor struct
-      if(anchors[i].total_data == "not")
-      {
-        //Serial.println('n');
+      if(!setDistanceIfRegisterdAnchor)
+      {  //Serial.println('n');
         anchors[i].total_data = "";
         anchors[i].done = false;
       }
       else
-        {
-          anchors[i].done = true;
-          anchors_to_calculate_counter++;
-          //Serial.print(anchors_to_calculate_counter);
-        }
+      {
+        anchors[i].done = true;
+        anchors_to_calculate_counter++;
+        //Serial.print(anchors_to_calculate_counter);
+      }
+      //When 3 anchors are found stop measuring(to increase speed)
       if(anchors_to_calculate_counter >= 3)
     break;
     //when all the data of the antenna_delay for one anchor is done a counter is used for synchronisation
@@ -125,11 +128,17 @@ static void SendDistancesAD()
         j++;
       }
     }
-    }
+  }
     rdy2send = true;
     anchors_to_calculate_counter = 0;
+    //check menu when program is waiting for sending the data
     while(rdy2send)
-    {checkInterrupts();}
+    {
+    #ifdef I2C
+    checkMenuInterrupts();
+    #endif
+    }
+
     if(done_send)
     {
       for(int i = 0; i < MAX_ANCHORS; i++)
@@ -178,9 +187,18 @@ static void backspaceDistances()
   i2cMenu[1].status = false;
 }
 
+static void printDistancesI2C(void)
+{
+  
+}
+
 static void endProgram(void)
 {
+
+  #ifdef I2C
   _i2c.print("program ended", true);
+  #endif
+
   while(1)//keep program running until server interrupt has been handled(chip will be set to deepSleep there)
   {}
 }

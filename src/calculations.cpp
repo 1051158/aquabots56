@@ -8,12 +8,12 @@
 //#define DEBUG_CAL
 
 
-#ifdef X_Y_TEST
 //////////////////Calculate the distances at every X and Y point for the calibration of Antenna Delay///////
 static void CalibrationDistances()
 {
     for(uint8_t j = 0; j < MAX_ANCHORS; j++)
     {
+        #ifdef X_Y_TEST
         for (uint8_t i = 0; i < MAX_CAL_DIS; i++)
         {
             #ifdef DEBUG_CAL
@@ -35,7 +35,32 @@ static void CalibrationDistances()
             Serial.print(i);
             Serial.println(anchors[j].calibrationDistances[i]); 
         }
+        #endif
+        #ifdef X_Y_Z_TEST
+        for (uint8_t i = 0; i < MAX_CAL_DIS; i++)
+        {
+            #ifdef DEBUG_CAL
+            float verschil = anchors[j].y - x_y_points[i][Y];
+            Serial.print("vy:\t");
+            Serial.println(verschil);
+            verschil = anchors[j].x - x_y_points[i][Y];
+            Serial.print("vx:\t");
+            Serial.println(verschil);
+            Serial.print(j+1);
+            Serial.print(":\t");
+            Serial.print(i+1);
+            Serial.print(":\t");
+            #endif
+            anchors[j].calibrationDistances[i] = sqrt(pow(anchors[j].x - x_y_points[i][X], 2) + pow(anchors[j].y - x_y_points[i][Y], 2) + pow(anchors[j].z - x_y_points[i][Z], 2));
+            Serial.print("anchor:\t");
+            Serial.print(j);
+            Serial.print("cal_number:\t");
+            Serial.print(i);
+            Serial.print('\t');
+            Serial.println(anchors[j].calibrationDistances[i]); 
+        #endif
     }
+}
 }
 /*
 static void x_y_cal(anchor anchor1, anchor anchor2, anchor anchor3)
@@ -51,4 +76,3 @@ static void x_y_cal(anchor anchor1, anchor anchor2, anchor anchor3)
     x = ((C*E) - (F*B))/((E*A) - (B*D));
     y = ((C*D) - (A*F))/((B*D) - (A*E));
 }*/
-#endif

@@ -4,6 +4,7 @@
 #include "buttons.cpp"
 #include "calculations.cpp"
 
+
 static bool end_done = false;
 static bool send_done = false;
 
@@ -26,6 +27,7 @@ static bool start_program = false;
 #define HOTSPOT "Galaxy S20 FEA37E"
 #define H_PSSWRD "cooa7104"
 
+
 #define WIFI "Machelina"
 #define W_PSSWRD "Donjer01"
 
@@ -42,23 +44,25 @@ static AsyncWebServer Server1(81);
 
 static String sendCalibrationDistances()
 {
+  
     String total_data_cal;
-    #ifndef X_Y_TEST
+    #ifdef RANGETEST
     for(uint8_t i = 0; i < MAX_RANGE_DIS; i++)
       total_data_cal = total_data_cal + range_points[i] + ';';
     #endif
-    #ifdef  X_Y_TEST
+    #ifdef  X_Y_Z_TEST
     if(MAX_ANCHORS >= 3)
       for(uint8_t i = 0; i < MAX_CAL_DIS; i++)
-        total_data_cal = total_data_cal +  '(' + x_y_points[i][X] + ',' + x_y_points[i][Y] + ')' + ';';
+        total_data_cal = total_data_cal +  '(' + x_y_points[i][X] + ',' + x_y_points[i][Y] + ',' + x_y_points[i][Z] + ')' +';';
     #endif
     total_data_cal = total_data_cal + "\t\n"+ MAX_ANCHORS + "max" + ANTENNA_DELAY_START + 'S' + ANTENNA_DELAY_END + 'E' + ANTENNA_INTERVAL + "I";
     total_data_cal = total_data_cal + NUM_OF_SEND + "nos" + DISTANCE_COUNTER_MIN + '-' + RESET_DISTANCE_COUNTER_MAX_VALUE + "r+" + DISTANCE_COUNTER_INTERVAL + "in" + "\t\n";
     //Serial.print(total_data_cal);
-    #ifdef X_Y_TEST
+    #ifdef X_Y_Z_TEST
     for(uint8_t j = 0; j < MAX_ANCHORS; j++)
     {
-        total_data_cal = total_data_cal + anchors[j].ID + 'i' + anchors[j].x + 'x' + anchors[j].y + "y\t";
+      //send the coordinates of the anchors and the distances at every measurepoint
+        total_data_cal = total_data_cal + anchors[j].ID + 'i' + anchors[j].x + 'x' + anchors[j].y + "y" + anchors[j].z +"z\t";
         for (uint8_t i = 0; i < MAX_CAL_DIS; i++)
         {
             total_data_cal = total_data_cal + anchors[j].calibrationDistances[i] + "\t";
@@ -108,9 +112,9 @@ static String send_total_data_server()
 static void WiFiSettingsExtern(void)
 {
   uint8_t wifiCounter = 0;
+  //Serial.println(ssid);
   const char* ssid = WIFI;
   const char* psswrd = W_PSSWRD;
-  //Serial.println(ssid);
   ////////////log in into the router for extern wifi connection///////////////
   WiFi.begin(ssid, psswrd);
   while (WiFi.status() != WL_CONNECTED) 
@@ -174,7 +178,7 @@ static void WiFiSettingsExtern(void)
           return;
         }
       #ifndef X_Y_TEST
-        if(done_counter == MAX_ANCHORS)
+        if(anchors[0].done)
         {
           String send;
           send = send_total_data_server().c_str();
@@ -182,6 +186,7 @@ static void WiFiSettingsExtern(void)
           //Serial.println("send");
           //Serial.print(send);
           request->send(200, "text/plain", send);
+          return;
         }
       #endif
     request->send(200, "text/plain", "not");

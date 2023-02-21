@@ -38,13 +38,13 @@ int outputInterval = 1000;////(comment out if not needed)
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #2
         #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
     #endif
-    //#define ANCHOR_3
+    #define ANCHOR_3
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_3
         #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #3
     #endif
-    #define ANCHOR_4
+    //#define ANCHOR_4
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_4
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
@@ -74,13 +74,19 @@ int outputInterval = 1000;////(comment out if not needed)
     static void initializeAnchors()
   {
       //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
+      #ifdef X_Y_TEST
       addAnchor(ANCHOR_ID_1, ANCHOR_X_1, ANCHOR_Y_1);
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
       addAnchor(ANCHOR_ID_4, ANCHOR_X_4, ANCHOR_Y_4);
       //addAnchor(ANCHOR_ID_5, ANCHOR_X_5, ANCHOR_Y_5);
       //addAnchor(ANCHOR_ID_6, ANCHOR_X_6, ANCHOR_Y_6);
-      #ifdef X_Y_TEST
+      CalibrationDistances();
+      #endif
+      #ifdef X_Y_Z_TEST
+      addAnchor(ANCHOR_ID_1, ANCHOR_X_1, ANCHOR_Y_1, ANCHOR_Z_1);
+      addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2, ANCHOR_Z_2);
+      addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3, ANCHOR_Z_3);
       CalibrationDistances();
       #endif
     // keep adding anchors this way to your likinG
@@ -209,13 +215,13 @@ void newBlink(DW1000Device *device)
 void setup() 
 {
   Serial.begin(115200);//baud rate
-
+  
   #ifdef I2C  //setup the ug2b lib //ug2b class is defined in i2c.cpp//
     _i2c.settings();
   #endif
-
   //uart_set_wakeup_threshold(UART_NUM_0, 0xFF);
   //esp_sleep_enable_uart_wakeup(ESP_SLEEP_WAKEUP_UART);
+  //when wifi is desired uncomment the WIFI_EXTERN_ON in
   #ifdef WIFI_EXTERN_ON
     #ifdef TYPE_TAG
     WiFiSettingsExtern(); 
@@ -228,7 +234,9 @@ void setup()
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
   
   #ifdef TYPE_TAG
+  #ifdef I2C
     interruptfunctions();
+  #endif
     ///////////defines underneath are in Wifi.cpp///////////////////
     #ifdef WIFI_AP_ON
       WiFiSettingsAP();
@@ -276,7 +284,9 @@ void setup()
       DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
     #endif
     //print on display end of setup
+    #ifdef I2C
     _i2c.print(UNIQUE_ADRESS, true);
+    #endif
   #endif
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
@@ -299,8 +309,10 @@ void testi2c(void)
 void loop() 
 {
   #ifndef TESTING_I2C
-  if(start_program)
-    checkInterrupts();
+  //when the wifi integration is complete the menu can be used
+  #ifdef I2C
+    checkMenuInterrupts();
+  #endif
   DW1000Ranging.loop();
   #endif
   #ifdef TESTING_I2C

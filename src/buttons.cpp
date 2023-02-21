@@ -4,7 +4,6 @@
 #include "menu.cpp"
 #include "i2c.cpp"
 
-
 struct button
 {
   const uint8_t interrupt_pin;
@@ -17,10 +16,11 @@ struct button
 
 #define TYPE_TAG
 //#define TYPE_ANCHOR
+#ifdef I2C
 
-static button button_up = {13,false};//interrupt button to send data to pyhonscript
+static button button_up = {15,false};//interrupt button to send data to pyhonscript
 static button button_enter{14, false};//interrupt to skip latest uart value
-static button button_down = {15,false};//interrupt to stop python script
+static button button_down = {13,false};//interrupt to stop python script
 
 
 ////////////////////////millis() variables//////////////////////////
@@ -72,21 +72,23 @@ static void interruptfunctions(void)
 
 static int i2c_menuNumber = 0;
 
-static void checkInterrupts(void)
+//check which button has been pressed to scroll into i2c menu
+static void checkMenuInterrupts(void)
 {
+  //go up
   if(button_enter.pressed && !button_down.pressed && !button_up.pressed)
   {
     if(!i2cMenu[i2c_menuNumber].status)
       i2cMenu[i2c_menuNumber].status = true;
   }
-
+  //go down
   if(button_down.pressed && !button_up.pressed && !button_enter.pressed)
   {
     i2c_menuNumber--;
     if(i2c_menuNumber < 0)
       i2c_menuNumber = 3;
   }
-
+  //press enter
   if(button_up.pressed && !button_enter.pressed && !button_down.pressed)
   {
     i2c_menuNumber++;
@@ -111,3 +113,4 @@ static void checkInterrupts(void)
     button_enter.pressed = false;
   }
 }
+#endif
