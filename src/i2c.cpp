@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #define MAX_STRLEN 120 
-//#define I2C
+#define I2C
 
 #define MAX_X_POS 128
 #define MAX_Y_POS 32

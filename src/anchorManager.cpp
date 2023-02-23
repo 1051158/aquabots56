@@ -86,7 +86,7 @@ static uint8_t hulp = 0;
 #ifdef X_Y_Z_TEST
     #define MAX_CAL_DIS 6 
     #define MAX_ANCHORS 3
-    static float x_y_points [MAX_CAL_DIS][3] = {{0.25,0.25,0.25},{0.5,0.5,0.5},{0.75,0.75,0.75},{1,1,1},{1.25,1.25,1.25},{1.5,1.5,1.5}};
+    static float x_y_points [MAX_CAL_DIS][3] = {{1.07,0,0.8},{0.5,0.5,0.5},{0.75,0.75,0.75},{1,1,1},{1.25,1.25,1.25},{1.5,1.5,1.5}};
 #endif
 struct anchor{
     uint16_t ID;

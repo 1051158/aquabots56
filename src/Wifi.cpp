@@ -113,8 +113,8 @@ static void WiFiSettingsExtern(void)
 {
   uint8_t wifiCounter = 0;
   //Serial.println(ssid);
-  const char* ssid = WIFI;
-  const char* psswrd = W_PSSWRD;
+  const char* ssid = HOTSPOT;
+  const char* psswrd = H_PSSWRD;
   ////////////log in into the router for extern wifi connection///////////////
   WiFi.begin(ssid, psswrd);
   while (WiFi.status() != WL_CONNECTED) 

@@ -65,7 +65,7 @@ static void SendDistancesAD()
     #ifdef I2C
     _i2c.print("not connected", true);
     #endif
-    i2cMenu[1].status = false;
+    i2cMenu[0].status = false;
   }
   #ifdef DEBUG_INTERRUPT
     Serial.print('S');
@@ -85,16 +85,18 @@ static void SendDistancesAD()
       {  //Serial.println('n');
         anchors[i].total_data = "";
         anchors[i].done = false;
+        Serial.print("not registered");
       }
       else
       {
+        generateWiFiString(i);
         anchors[i].done = true;
         anchors_to_calculate_counter++;
-        //Serial.print(anchors_to_calculate_counter);
+        Serial.print("registered");
       }
       //When 3 anchors are found stop measuring(to increase speed)
       if(anchors_to_calculate_counter >= 3)
-    break;
+        break;
     //when all the data of the antenna_delay for one anchor is done a counter is used for synchronisation
   }
   }
