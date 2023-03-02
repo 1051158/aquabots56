@@ -57,6 +57,29 @@
 #define LONGEST_RANGE 12
 
 
+//Choose the amount of anchors supported
+#ifdef RANGETEST
+    #define MAX_RANGE_DIS 10
+    #define MAX_ANCHORS 1
+    static float range_points [MAX_RANGE_DIS] = {1,2,3,4,5,6,7,8,9,10};
+#endif
+
+
+#ifdef X_Y_TEST
+    #define MAX_ANCHORS 4
+    //GIVE THE NUMBER OF DISTANCES THAT ARE BEING USED FOR CALIBRATION
+    #ifndef Z_TEST
+    #define MAX_CAL_DIS 6 
+    static float x_y_points [MAX_CAL_DIS][2] = {{0.25,0.25},{0.5,0.5},{0.75,0.75},{1,1},{1.25,1.25},{1.5,1.5}};
+    #endif
+#endif
+
+
+#ifdef Z_TEST
+    #define MAX_CAL_DIS 6 
+    static float x_y_points [MAX_CAL_DIS][3] = {{8.5,1,0.83}, {7,1,0.83}, {5.5,1,0.83}, {4,1,0.83}, {2.5,1,0.83}, {1,1,0.83}};
+#endif
+
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
 #ifdef TYPE_ANCHOR
     //#define ANCHOR_1
@@ -154,10 +177,8 @@
 //#define WIFI_TEST
 
 //////fill in the right names of the desired router or hotspot
-#define HOTSPOT "Galaxy S20 FEA37E"
-#define H_PSSWRD "cooa7104"
+//#define HOTSPOT
+#define WIFI
 
-#define WIFI "Machelina"
-#define W_PSSWRD "Donjer01"
 
 

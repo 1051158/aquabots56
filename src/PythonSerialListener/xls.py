@@ -7,8 +7,15 @@ import numpy as np
 import request
 distances_per_interval = 2
 
+give_name = True
+
+Bool_anchorFilter = False
+
 def make_new_wbk(testName):
-    fileName = '/' + input('give a filename:') + '.xlsx' # name of the testfile
+    if give_name == True:
+        fileName = '/l.xlsx' # name of the testfile
+    else:
+        fileName = '/integration.xlsx'
     directory = '/home/donny/Documents/pythonProject'  # name of this directory so the xsl lib works
     modeName = '/LOWPOWER_MODE'
     anchorName = '/anchor1'  # name of the anchor to test the range with choose 1,2 or 3
@@ -21,12 +28,13 @@ def make_new_wbk(testName):
 
 
 
-def put_in_xls(jsonString, y_row, x_row, wks, x_array, y_array, nos, max_anchors):
+def put_in_xls(jsonString, y_row, x_row, wks, x_array, y_array, z_array, nos, max_anchors):
+    print(z_array)
     nos = int(nos)
-    anchor = jsonStrings
-    print(anchor)
+    anchor = jsonString
+    #print(anchor)
     max_anchors = int(max_anchors)
-    max_anchors -= 1
+    Anchorfilter = 0
     python_test_bool = False
     for i in range(max_anchors):
         #print(anchor[i])
@@ -49,15 +57,23 @@ def put_in_xls(jsonString, y_row, x_row, wks, x_array, y_array, nos, max_anchors
         if ID == '4369':
             wks.write(xl_rowcol_to_cell(y_row, x_row + 2), D)  # write distances on the cells
             wks.write(xl_rowcol_to_cell(y_row + 1, x_row + 2), ms)
+            if Bool_anchorFilter == True:
+                Anchorfilter -=1
         if ID == '8738':
-            wks.write(xl_rowcol_to_cell(y_row, x_row + nos), D)  # write distances on the cells
-            wks.write(xl_rowcol_to_cell(y_row + 1, x_row + nos), ms)
+            wks.write(xl_rowcol_to_cell(y_row, x_row + nos + 6), D)  # write distances on the cells
+            wks.write(xl_rowcol_to_cell(y_row + 1, x_row + nos + 6), ms)
+            if Bool_anchorFilter == True:
+                Anchorfilter -= 2
         if ID == '13107':
-            wks.write(xl_rowcol_to_cell(y_row, x_row + nos * 2), D)  # write distances on the cells
-            wks.write(xl_rowcol_to_cell(y_row + 1, x_row + nos * 2), ms)
+            wks.write(xl_rowcol_to_cell(y_row, x_row + nos + 12), D)  # write distances on the cells
+            wks.write(xl_rowcol_to_cell(y_row + 1, x_row + nos + 12), ms)
+            if Bool_anchorFilter == True:
+                Anchorfilter -= 3
         if ID == '17476':
-            wks.write(xl_rowcol_to_cell(y_row, x_row + nos * 3), D)  # write distances on the cells
-            wks.write(xl_rowcol_to_cell(y_row + 1, x_row + nos* 3), ms)
+            wks.write(xl_rowcol_to_cell(y_row, x_row + nos + 18), D)  # write distances on the cells
+            wks.write(xl_rowcol_to_cell(y_row + 1, x_row + nos + 18), ms)
+            if Bool_anchorFilter == True:
+                Anchorfilter -= 4
         if i == 0:
             D_1 = float(D)
         if i == 1:
@@ -67,8 +83,12 @@ def put_in_xls(jsonString, y_row, x_row, wks, x_array, y_array, nos, max_anchors
             print(D)
             print(D_1)
             print(D_2)
-            Xvalue, Yvalue = trilateration.getCoordinates1(x_array, y_array, D, D_1, D_2)
-            print(Xvalue, Yvalue)
+            if Bool_anchorFilter == True:
+                Anchorfilter += 9
+                del x_array[Anchorfilter]
+                del y_array[Anchorfilter]
+
+            print(trilateration.triliterationnew3D(x_array, y_array, z_array, D_2, D_1, D))
             wks.write(xl_rowcol_to_cell(y_row, x_row + len(anchor)*(nos + 5)), Xvalue)
             wks.write(xl_rowcol_to_cell(y_row, x_row + len(anchor)*(nos + 5)+nos), Yvalue)
             # write the calculated values with in the right row and colum of the AD_value
@@ -95,9 +115,9 @@ def first_rows_excel_multiple(row, wks, AD_interval, AD_start, AD_end, end_count
         for i in range(int(number_of_intervals) + 1):  # make sure the max anchors is correct with reality
             wks.write(xl_rowcol_to_cell(i + j, row), float(AD_start) + (float(AD_interval) * i))  # write on the cells defined by y row and the i of the for loop
             for l in range(int(number_of_dcm) + 1):
-                wks.write(xl_rowcol_to_cell(i + j, row + 1), 'avg_' + str(l + int(dcm)))
+                wks.write(xl_rowcol_to_cell(i + j + 1, row + 1), 'avg_' + str(l + int(dcm)))
                 j += 1
-                wks.write(xl_rowcol_to_cell(i + j, row + 1), 'time(ms)')
+                wks.write(xl_rowcol_to_cell(i + j + 1, row + 1), 'time(ms)')
                 j += 1
         row += nos + 3
         j = 0

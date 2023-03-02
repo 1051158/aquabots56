@@ -80,7 +80,8 @@ static String send_total_data_server()
         }
     } 
   }
-    return "not";
+    functionName = "dC" + dataCounter;
+    return functionName;
     ////////send "end" to pythonCode to go to next worksheet an calibrate the next point in the pool//////
   }
 
@@ -89,8 +90,14 @@ static void WiFiSettingsExtern(void)
 {
   uint8_t wifiCounter = 0;
   //Serial.println(ssid);
-  const char* ssid = HOTSPOT;
-  const char* psswrd = H_PSSWRD;
+  #ifdef WIFI
+  const char* ssid = "Machelina";
+  const char* psswrd = "Donjer01";
+  #endif
+  #ifdef HOTSPOT
+  const char* ssid = "Galaxy S20 FEA37E";
+  const char* psswrd = "cooa7104";
+  #endif
   ////////////log in into the router for extern wifi connection///////////////
   WiFi.begin(ssid, psswrd);
   while (WiFi.status() != WL_CONNECTED) 
@@ -153,7 +160,7 @@ static void WiFiSettingsExtern(void)
           return;
         }
       #endif
-    request->send(200, "text/plain", "not");
+    request->send(200, "text/plain", functionName.c_str());
 });
 
 

@@ -11,6 +11,7 @@ static uint8_t active_counter = 0;
 
 static void changeAD()
 {
+  functionName = "cAD";
   antenna_delay += ANTENNA_INTERVAL;
   //When it changes the tester will notice on the i2c screen
   String AD = "";
@@ -23,6 +24,7 @@ static void changeAD()
   //when all the antenna delays on the secified coördinates have been tested:
   if(antenna_delay > ANTENNA_DELAY_END)
   {
+    functionName = "strt";
     /////Reset the anchor delay to minimal to redo the test at a different coördinate//////////////
     antenna_delay = ANTENNA_DELAY_START;
     //When it changes the tester will notice on the i2c screen
@@ -78,20 +80,19 @@ static void SendDistancesAD()
     if(!anchors[i].done && anchors[i].ID == DW1000Ranging.getDistantDevice()->getShortAddress())
     {
       //convert all the variables into a String to send over wifi
-      if(!setDistanceIfRegisterdAnchor)
-      {  Serial.println('n');
+      if(setDistanceIfRegisterdAnchor && generateWiFiString(i))
+      { 
+        anchors[i].done = true;
+        anchors_to_calculate_counter++; 
+      }
+      else
+      {
+        Serial.println('n');
         anchors[i].total_data = "";
         anchors[i].done = false;
         Serial.print("not registered");
       }
-      else
-      {
-        if(generateWiFiString(i));
-          {
-          anchors[i].done = true;
-          anchors_to_calculate_counter++;
-          }
-      }
+      
       //When 3 anchors are found stop measuring(to increase speed)
       //if(anchors_to_calculate_counter >= 3)
         //break;
@@ -103,6 +104,7 @@ static void SendDistancesAD()
   }
   if(anchors_to_calculate_counter >=3)
   {
+    functionName = "atcc";
     anchors_to_calculate_counter = 0;
     uint8_t anchornumbers[3];
     uint8_t j = 0;
@@ -137,9 +139,9 @@ static void SendDistancesAD()
     rdy2send = true;
     anchors_to_calculate_counter = 0;
     //check menu when program is waiting for sending the data
+    functionName = "rdy";
     while(rdy2send)
     {
-    delayMicroseconds(1);
     #ifdef I2C
     checkMenuInterrupts();
     #endif

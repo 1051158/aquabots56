@@ -3,35 +3,14 @@
 #include <DW1000Ranging.h>
 #include "DW1000.h"
 #include "Defines.cpp"
+#include <stdint.h>
+#include <string.h>
 
 //#define HEIGHT_DIFFERENCE
 
 static uint16_t antenna_delay = ANTENNA_DELAY_START;
 
-
-//Choose the amount of anchors supported
-#ifdef RANGETEST
-    #define MAX_RANGE_DIS 10
-    #define MAX_ANCHORS 1
-    static float range_points [MAX_RANGE_DIS] = {1,2,3,4,5,6,7,8,9,10};
-#endif
-
-
-#ifdef X_Y_TEST
-    #define MAX_ANCHORS 4
-    //GIVE THE NUMBER OF DISTANCES THAT ARE BEING USED FOR CALIBRATION
-    #ifndef Z_TEST
-    #define MAX_CAL_DIS 6 
-    static float x_y_points [MAX_CAL_DIS][2] = {{0.25,0.25},{0.5,0.5},{0.75,0.75},{1,1},{1.25,1.25},{1.5,1.5}};
-    #endif
-#endif
-
-
-#ifdef Z_TEST
-    #define MAX_CAL_DIS 6 
-    static float x_y_points [MAX_CAL_DIS][3] = {{8.5,1,0.83}, {7,1,0.83}, {5.5,1,0.83}, {4,1,0.83}, {2.5,1,0.83}, {1,1,0.83}};
-#endif
-
+static String functionName;
 
 struct anchor{
     uint16_t ID;
@@ -172,6 +151,7 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
                 //Serial.print(rxPower);
                 Serial.print("\n");
             #endif
+            functionName = "sD";
             return true;
 }
 
@@ -220,6 +200,7 @@ static bool generateWiFiString(uint8_t anchornumber)
                 {
                     anchors[anchornumber].total_data = anchors[anchornumber].total_data + "a\t";
                     Serial.println('a');
+                    functionName = "gWSa";
                     return true;
                 }
                 if (distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE)
@@ -227,11 +208,13 @@ static bool generateWiFiString(uint8_t anchornumber)
                     //make the string
                     anchors[anchornumber].total_data = anchors[anchornumber].total_data + "e\t";
                     Serial.println('e');
+                    functionName = "gWSe";
                     return true;
                 }                 
             }
             anchors[anchornumber].total_data = anchors[anchornumber].total_data + anchornumber + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].sendTime + "ms" + "\t";
             //Serial.println(hulp_total_data);
+            functionName = "gWS";
             return true;
         #endif
         }
@@ -244,6 +227,7 @@ return false;
 
 static void synchronizeAnchors(void)
 {
+    functionName = "syn";
     num_of_send_counter++;
     for(uint8_t i = 0; i < MAX_ANCHORS; i++)
     {
@@ -273,6 +257,7 @@ static void synchronizeAnchors(void)
 
 static void resetAnchors(void)
 {
+    functionName = "rst";
     num_of_send_counter = 0;
     hulp_change_delay = false;
     distance_counter_max = DISTANCE_COUNTER_MIN;
