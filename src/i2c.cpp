@@ -2,12 +2,8 @@
 #include <string.h>
 #include <Arduino.h>
 #include <stdio.h>
+#include "calculations.cpp"
 
-#define MAX_STRLEN 120 
-#define I2C
-
-#define MAX_X_POS 128
-#define MAX_Y_POS 32
 
 //#define DEBUG_I2C_PRINT
 

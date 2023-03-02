@@ -2,79 +2,16 @@
 #include "antennaDelayExcel.cpp"
 #include <cmath>
 
-////////////////////////interrupt buttons////////////////////////////
-
-bool sendAntennaInfo = true;
-
-bool excel_mode = false;
-
-
 unsigned long lastTimestamp = millis();
 
-//#define ANTENNA_DELAY
-
-//#define USE_TIMER////Choose if Serial output is required and interval in microseconds of output
-int outputInterval = 1000;////(comment out if not needed)
-
-//#define DEBUG_MAIN ////Choose whether debug output should be printed
-
-
-///uncomment if u want to do unit test i2c///////////////////////////////////////////////////////////////////
-
-//#define TESTING_I2C
-
-///////////////////////to program the right anchor///////////////////////////////////////////////////////////
-#ifdef TYPE_ANCHOR
-  uint8_t range_counter = 0;
-    //#define ANCHOR_1
-//valeus for the right anchor for the void setup() function
-    #ifdef ANCHOR_1
-        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
-        #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
-    #endif
-    //#define ANCHOR_2
-//valeus for the right anchor for the void setup() function
-    #ifdef ANCHOR_2
-        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #2
-        #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
-    #endif
-    #define ANCHOR_3
-//valeus for the right anchor for the void setup() function
-    #ifdef ANCHOR_3
-        #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
-        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #3
-    #endif
-    //#define ANCHOR_4
-//valeus for the right anchor for the void setup() function
-    #ifdef ANCHOR_4
-        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
-        #define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
-    #endif
-    //#define ANCHOR_5
-    #ifdef ANCHOR_5
-      #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
-      #define UNIQUE_ADRESS "55:55:5B:D5:A9:9A:E2:9C"
-    #endif
-    #ifdef ANCHOR_6
-      #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
-      #define UNIQUE_ADRESS "66:66:5B:D5:A9:9A:E2:9C"
-    #endif
-#endif
-
-////Choose measure mode
-#define LOWPOWER
-//#define ACCURACY
-
-//#define USE_RANGE_FILTERING ////Enable the filter to smooth the distance (default off)
-
-
+//////////////Initialize all the anchors that will be used///////////////
 #ifdef TYPE_TAG
   #define WIFI_ON
     #define UNIQUE_ADRESS "7D:00:22:EA:82:60:3B:9C" // (default tag) 
     static void initializeAnchors()
   {
       //Note addAnchor takes the decimal representation of the first four hex characters of the UNIQUE_ADRESS
-      #ifdef X_Y_TEST
+      #ifndef Z_TEST
       addAnchor(ANCHOR_ID_1, ANCHOR_X_1, ANCHOR_Y_1);
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3);
@@ -83,30 +20,22 @@ int outputInterval = 1000;////(comment out if not needed)
       //addAnchor(ANCHOR_ID_6, ANCHOR_X_6, ANCHOR_Y_6);
       CalibrationDistances();
       #endif
-      #ifdef X_Y_Z_TEST
+      #ifdef Z_TEST
       addAnchor(ANCHOR_ID_1, ANCHOR_X_1, ANCHOR_Y_1, ANCHOR_Z_1);
       addAnchor(ANCHOR_ID_2, ANCHOR_X_2, ANCHOR_Y_2, ANCHOR_Z_2);
       addAnchor(ANCHOR_ID_3, ANCHOR_X_3, ANCHOR_Y_3, ANCHOR_Z_3);
+      addAnchor(ANCHOR_ID_4, ANCHOR_X_4, ANCHOR_Y_4, ANCHOR_Z_4);
       CalibrationDistances();
       #endif
     // keep adding anchors this way to your likinG
   }
 #endif
-
-/////////////////////////////End of configuration////////////////////////////////////////////
-
-//define pins
-#define SPI_SCK 18
-#define SPI_MISO 19
-#define SPI_MOSI 23
-#define DW_CS 4
  
 // connection pins
 const uint8_t PIN_RST = 27; // reset pin
 const uint8_t PIN_IRQ = 34; // irq pin
 const uint8_t PIN_SS = 4;   // spi select pin
 //timing variable
-
 
 void newRange()
 {
@@ -121,58 +50,18 @@ void newRange()
       calibration();//calibrate the anchor when antenna delay is unknown
     #endif
     #ifndef ANCHOR_CALIBRATION
-  //DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
-  //Serial.print(DW1000Ranging.getDistantDevice()->getRange());
-  //Serial.print("from: ");
-  //Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
-  //Serial.print("Range: ");
-  //Serial.println(DW1000Ranging.getDistantDevice()->getRange());
-  //Serial.print(" m");
-  //Serial.print("\t RX power: ");
-  //Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
-  //Serial.println(" dBm");
   #endif
   #endif
   // if new range is found by Tag it should store the distance in the anchorManager
   #ifdef TYPE_TAG
-  if(i2cMenu[END_CODE].status)
-    {
-      endProgram();
-    }
-  for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-  {
-    if(anchors[i].active)
-      {active_counter++;}
-  }
-    //Serial.print(active_counter);
+  /////////////////First check which menus are on//////////////////
 
-  if(i2cMenu[EXCEL_MODE].status)
-    {
-      if(i2cMenu[START_SEND].status && active_counter >= 3)
-      { 
-        //Serial.print('3');   
-        SendDistancesAD();
-      }
-      if(i2cMenu[BACKSPACE].status && active_counter >= 3)
-      {
-        backspaceDistances();
-      }
-      //average_counter++;
-        //#ifdef USE_SERIAL
-          //outputDataUart();
-          //average_counter = 0;
+    checkMenus();
 
-      }
-    if(i2cMenu[START_SEND].status && active_counter >= 3)//press the interrupt button to start measurement
-    { 
-      //Serial.print('3');
-    }
-    active_counter = 0;
   #endif
-  
 }
 
-/////////////////////////////////////////////////////////////////////////
+////////////////////Adding new device////////////////////////////////
 
 void newDevice(DW1000Device *device)
 {
@@ -188,7 +77,7 @@ void newDevice(DW1000Device *device)
     #endif
 }
 
-/////////////////////////////////////////////////////////////////////////
+////////////////////Delete inactive devices///////////////////////////
 
 void inactiveDevice(DW1000Device *device)
 {
@@ -211,7 +100,7 @@ void newBlink(DW1000Device *device)
     Serial.println(device->getShortAddress(), HEX);
 }
 
-//////////////////////////////////////////////////////////////////////////
+//////////Setup function(go to device.cpp to turn features ON/OFF////////
 void setup() 
 {
   Serial.begin(115200);//baud rate

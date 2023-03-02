@@ -1,0 +1,163 @@
+/////Type of test////////////
+
+////////////////////Choose between X_Y_(Z) Test or Rangetest(with one anchor)//////////////////////////
+#define X_Y_TEST
+//#define RANGETEST
+
+////////////////////comment Z test if the map is 2D////////////////////////////////////////////////////
+#ifdef X_Y_TEST
+#define Z_TEST
+#endif
+
+/////Anchor or tag////////////
+
+#define TYPE_TAG
+//#define TYPE_ANCHOR
+
+///////////////////////anchor info for the tag(change coordinates for the right real-time situation)/////////////////////
+#ifdef TYPE_TAG
+//give the coordinates and ID's of the anchors
+#define ANCHOR_ID_1 4369
+#define ANCHOR_X_1 10
+#define ANCHOR_Y_1 0
+#define ANCHOR_Z_1 1
+
+#define ANCHOR_ID_2 8738
+#define ANCHOR_X_2 0
+#define ANCHOR_Y_2 4
+#define ANCHOR_Z_2 1
+
+
+#define ANCHOR_ID_3 13107
+#define ANCHOR_X_3 10
+#define ANCHOR_Y_3 8
+#define ANCHOR_Z_3 1
+
+
+#define ANCHOR_ID_4 17476
+#define ANCHOR_X_4 10
+#define ANCHOR_Y_4 16
+#define ANCHOR_Z_4 1
+
+
+#define ANCHOR_ID_5 21845
+#define ANCHOR_X_5 10
+#define ANCHOR_Y_5 15
+#endif
+
+
+#define ANCHOR_ID_6 26214
+#define ANCHOR_X_6 15
+#define ANCHOR_Y_6 10
+
+#define X 0
+#define Y 1
+#define Z 2
+
+#define LONGEST_RANGE 12
+
+
+///////////////////////to program the right anchor///////////////////////////////////////////////////////////
+#ifdef TYPE_ANCHOR
+    //#define ANCHOR_1
+//valeus for the right anchor for the void setup() function
+    #ifdef ANCHOR_1
+        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
+        #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
+    #endif
+    //#define ANCHOR_2
+//valeus for the right anchor for the void setup() function
+    #ifdef ANCHOR_2
+        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #2
+        #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
+    #endif
+    //#define ANCHOR_3
+//valeus for the right anchor for the void setup() function
+    #ifdef ANCHOR_3
+        #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
+        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #3
+    #endif
+    #define ANCHOR_4
+//valeus for the right anchor for the void setup() function
+    #ifdef ANCHOR_4
+        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
+        #define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
+    #endif
+    //#define ANCHOR_5
+    #ifdef ANCHOR_5
+      #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
+      #define UNIQUE_ADRESS "55:55:5B:D5:A9:9A:E2:9C"
+    #endif
+    #ifdef ANCHOR_6
+      #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
+      #define UNIQUE_ADRESS "66:66:5B:D5:A9:9A:E2:9C"
+    #endif
+#endif
+
+////Choose measure mode (has to be the same with the other chips!!)////
+#define LOWPOWER
+//#define ACCURACY
+
+//define pins
+#define SPI_SCK 18
+#define SPI_MISO 19
+#define SPI_MOSI 23
+#define DW_CS 4
+
+////////////////////Excel options (will integrade immediatly with python)///////////////////////////////////////////
+#define NUM_OF_SEND 5//number of times the value is send for excel file
+
+#define RESET_DISTANCE_COUNTER_MAX_VALUE 2 //value to reset distance counter max to DISTANCE_COUNTER_MIN
+#define DISTANCE_COUNTER_MIN 1 // will reset variable distance counter max when RESET_DISTANCE_COUNTER_MAX_VALUE is reached 
+#define DISTANCE_COUNTER_INTERVAL 1 //will be added to variable distance counter max in the anchor struct
+
+#define ANTENNA_INTERVAL 20 //interval between 2 antenna delays
+
+#define ANTENNA_DELAY_START 16500 //start value antenna delay
+#define ANTENNA_DELAY_END 16600 //end value antenna delay
+
+
+///////////////////////////////////////I2C settings////////////////////////////////////
+
+
+#define I2C
+#define MAX_STRLEN 120 
+
+#define MAX_X_POS 128
+#define MAX_Y_POS 32
+
+
+//////////////////////////////////////Menu settings/////////////////////////////////////
+
+
+//set the size of different menu options//////
+#define MENUSIZE 4
+#define MAX_MENU_STRLEN 20
+////////Give every Menu number a define to make the code clearer
+#define START_SEND 0
+#define BACKSPACE 1
+#define EXCEL_MODE 2
+#define END_CODE 3
+
+
+
+///////////////////////////////////////Wifi settings//////////////////////////////////////
+
+
+//if there is no wifi use 2 esp32's to send and receive data and uncomment underneath define
+//#define WIFI_AP_ON
+
+//if there is wifi uncomment
+#define WIFI_EXTERN_ON
+
+//uncomment to start the wifi test
+//#define WIFI_TEST
+
+//////fill in the right names of the desired router or hotspot
+#define HOTSPOT "Galaxy S20 FEA37E"
+#define H_PSSWRD "cooa7104"
+
+#define WIFI "Machelina"
+#define W_PSSWRD "Donjer01"
+
+

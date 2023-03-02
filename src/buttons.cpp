@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "menu.cpp"
-#include "i2c.cpp"
+
+
 
 struct button
 {
@@ -14,8 +15,6 @@ struct button
 
 ////////////////Choose type of device///////////////////////////////////////////////////////////////
 
-#define TYPE_TAG
-//#define TYPE_ANCHOR
 #ifdef I2C
 
 static button button_up = {15,false};//interrupt button to send data to pyhonscript
@@ -80,6 +79,10 @@ static void checkMenuInterrupts(void)
   {
     if(!i2cMenu[i2c_menuNumber].status)
       i2cMenu[i2c_menuNumber].status = true;
+    if(i2c_menuNumber == START_SEND)
+    {
+      resetAnchors();
+    }
   }
   //go down
   if(button_down.pressed && !button_up.pressed && !button_enter.pressed)

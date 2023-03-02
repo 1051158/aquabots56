@@ -1,12 +1,5 @@
 #include <Arduino.h>
-
-#define MENUSIZE 4
-#define MAX_MENU_STRLEN 20
-
-#define START_SEND 0
-#define BACKSPACE 1
-#define EXCEL_MODE 2
-#define END_CODE 3
+#include "i2c.cpp"
 
 struct menu
 {
@@ -20,3 +13,4 @@ static menu i2cMenu[MENUSIZE] = {
                                 {true, "excel_mode"},
                                 {false, "end_code"}
                                 };
+
