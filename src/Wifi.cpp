@@ -3,9 +3,10 @@
 #include <ESPAsyncWebServer.h>
 #include "buttons.cpp"
 
+//bools to send different string through WiFi
 static bool end_done = false;
 static bool send_done = false;
-
+//bools to verify the string in the functions send_total_data_server() and
 static bool rdy2send = false;
 static bool done_send = false;
 
@@ -15,8 +16,8 @@ static bool start_program = false;
 static uint8_t syncNumber = 0;
 
 static AsyncWebServer Server(80);
-static AsyncWebServer Server1(81);
 
+//belang to "IP:80/caldis" link
 static String sendCalibrationDistances()
 {
     String total_data_cal;
@@ -58,6 +59,7 @@ static String sendCalibrationDistances()
     return total_data_cal;
 }
 
+//belong to "/anchors" server
 static String send_total_data_server()
 {
   //////////////check how many anchors are done with measuring//////////////////////////////////////////////
@@ -68,14 +70,18 @@ static String send_total_data_server()
   {
     if(anchors[i].done)
     {
-      total_data_1 = total_data_1 + anchors[i].total_data;
+      //store the data of every anchor in one total string to send 
       syncNumber = i;
       dataCounter++;
       if(dataCounter>=3)
         {
+          for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+            total_data_1 = total_data_1 + anchors[i].total_data;
+
           total_data_1 = total_data_1 + '\n';
           rdy2send = false;
           dataCounter = 0;
+
           return total_data_1;
         }
     } 
@@ -120,13 +126,6 @@ static void WiFiSettingsExtern(void)
         delay(3000);
         esp_deep_sleep_start();
       }
-      if(!start_program)
-        {
-          resetAnchors();
-          start_program = true;
-          request->send(200, "text/plain", "start");
-          return;
-        }
       if(end_done)
       {
         resetAnchors();
@@ -163,8 +162,41 @@ static void WiFiSettingsExtern(void)
     request->send(200, "text/plain", functionName.c_str());
 });
 
+Server.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  request->send(200, "text/plain", "OK");
+  _addAD = true;
+});
 
-  Server1.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
+Server.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  request->send(200, "text/plain", "OK");
+  _resetAD = true;
+}
+);
+//server to reset and start measurements from tag
+Server.on("/start", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  request->send(200, "text/plain", "OK");
+  resetAnchors();
+  start_program = true;
+});
+//server interrupt function to reset DCM
+Server.on("/resetDCM", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  request->send(200, "text/plain", "OK");
+  _resetDCM = true;
+} 
+);
+
+Server.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  request->send(200, "text/plain", "OK");
+  _addDCM = true;
+}
+);
+
+  Server.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     //Serial.println("send");
     String send;
@@ -177,7 +209,6 @@ static void WiFiSettingsExtern(void)
     IPAddress IP = WiFi.localIP();
     Serial.print(IP);
     Server.begin();
-    Server1.begin();
   #endif
 }
 

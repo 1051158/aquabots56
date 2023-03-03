@@ -139,7 +139,6 @@
 #define ANTENNA_DELAY_START 16500 //start value antenna delay
 #define ANTENNA_DELAY_END 16600 //end value antenna delay
 
-
 ///////////////////////////////////////I2C settings////////////////////////////////////
 
 

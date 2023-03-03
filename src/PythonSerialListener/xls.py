@@ -16,7 +16,7 @@ def make_new_wbk(testName):
         fileName = '/l.xlsx' # name of the testfile
     else:
         fileName = '/integration.xlsx'
-    directory = '/home/donny/Documents/pythonProject'  # name of this directory so the xsl lib works
+    directory = '/home/donny/Documents/UWB-Location_total_code/localization-uwb-esp32/src/PythonSerialListener'  # name of this directory so the xsl lib works
     modeName = '/LOWPOWER_MODE'
     anchorName = '/anchor1'  # name of the anchor to test the range with choose 1,2 or 3
     if '/x-y_test' in testName:
@@ -54,22 +54,22 @@ def put_in_xls(jsonString, y_row, x_row, wks, x_array, y_array, z_array, nos, ma
         # if (print_check == True and ID[i] != 0):
         #print(ms)
 
-        if ID == '4369':
+        if ID == '0':
             wks.write(xl_rowcol_to_cell(y_row, x_row + 2), D)  # write distances on the cells
             wks.write(xl_rowcol_to_cell(y_row + 1, x_row + 2), ms)
             if Bool_anchorFilter == True:
                 Anchorfilter -=1
-        if ID == '8738':
+        if ID == '1':
             wks.write(xl_rowcol_to_cell(y_row, x_row + nos + 6), D)  # write distances on the cells
             wks.write(xl_rowcol_to_cell(y_row + 1, x_row + nos + 6), ms)
             if Bool_anchorFilter == True:
                 Anchorfilter -= 2
-        if ID == '13107':
+        if ID == '2':
             wks.write(xl_rowcol_to_cell(y_row, x_row + nos + 12), D)  # write distances on the cells
             wks.write(xl_rowcol_to_cell(y_row + 1, x_row + nos + 12), ms)
             if Bool_anchorFilter == True:
                 Anchorfilter -= 3
-        if ID == '17476':
+        if ID == '3':
             wks.write(xl_rowcol_to_cell(y_row, x_row + nos + 18), D)  # write distances on the cells
             wks.write(xl_rowcol_to_cell(y_row + 1, x_row + nos + 18), ms)
             if Bool_anchorFilter == True:
@@ -87,10 +87,9 @@ def put_in_xls(jsonString, y_row, x_row, wks, x_array, y_array, z_array, nos, ma
                 Anchorfilter += 9
                 del x_array[Anchorfilter]
                 del y_array[Anchorfilter]
-
             print(trilateration.triliterationnew3D(x_array, y_array, z_array, D_2, D_1, D))
-            wks.write(xl_rowcol_to_cell(y_row, x_row + len(anchor)*(nos + 5)), Xvalue)
-            wks.write(xl_rowcol_to_cell(y_row, x_row + len(anchor)*(nos + 5)+nos), Yvalue)
+            #wks.write(xl_rowcol_to_cell(y_row, x_row + len(anchor)*(nos + 5)), Xvalue)
+            #wks.write(xl_rowcol_to_cell(y_row, x_row + len(anchor)*(nos + 5)+nos), Yvalue)
             # write the calculated values with in the right row and colum of the AD_value
         #print(D_array)
 

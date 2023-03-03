@@ -8,8 +8,8 @@
 
 //#define HEIGHT_DIFFERENCE
 
-static uint16_t antenna_delay = ANTENNA_DELAY_START;
 
+// used to debug through wifi(see where this code is when python uses the getRequest function)
 static String functionName;
 
 struct anchor{
@@ -31,9 +31,15 @@ struct anchor{
     #endif
 };
 
-static bool hulp_change_delay;
-static uint8_t num_of_send_counter = 0;
+//bools controlled bij de server functions(can be called with python code)
+static bool _addAD = false;
+static bool _resetAD = false;
+static bool _resetDCM = false;
+static bool _addDCM = false;
+
 static uint8_t distance_counter_max = DISTANCE_COUNTER_MIN;
+static uint16_t antenna_delay = ANTENNA_DELAY_START;
+
 
 #ifdef X_Y_TEST
 #ifndef Z_TEST
@@ -193,25 +199,7 @@ static bool generateWiFiString(uint8_t anchornumber)
             anchors[anchornumber].sendTime = millis();
             anchors[anchornumber].sendTime = anchors[anchornumber].sendTime - anchors[anchornumber].lastSendTime;
             anchors[anchornumber].lastSendTime = millis();
-            if(num_of_send_counter >= NUM_OF_SEND)
             //after the amount of outputs requested by de #define NUM_OF_SEND the outputs get resetted for the next antenna delay
-            {
-                if(distance_counter_max >= RESET_DISTANCE_COUNTER_MAX_VALUE)
-                {
-                    anchors[anchornumber].total_data = anchors[anchornumber].total_data + "a\t";
-                    Serial.println('a');
-                    functionName = "gWSa";
-                    return true;
-                }
-                if (distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE)
-                {
-                    //make the string
-                    anchors[anchornumber].total_data = anchors[anchornumber].total_data + "e\t";
-                    Serial.println('e');
-                    functionName = "gWSe";
-                    return true;
-                }                 
-            }
             anchors[anchornumber].total_data = anchors[anchornumber].total_data + anchornumber + "ID" + anchors[anchornumber].distance + 'd' + anchors[anchornumber].sendTime + "ms" + "\t";
             //Serial.println(hulp_total_data);
             functionName = "gWS";
@@ -228,38 +216,18 @@ return false;
 static void synchronizeAnchors(void)
 {
     functionName = "syn";
-    num_of_send_counter++;
     for(uint8_t i = 0; i < MAX_ANCHORS; i++)
     {
         anchors[i].distance = 0;
         anchors[i].distance_counter = 0;
         anchors[i].total_data = "";
         anchors[i].done = false;
-    }
-    if(distance_counter_max >= RESET_DISTANCE_COUNTER_MAX_VALUE && num_of_send_counter > NUM_OF_SEND) 
-    {
-        distance_counter_max = DISTANCE_COUNTER_MIN;
-        num_of_send_counter = 0;
-        hulp_change_delay = true;
-        return;
-    }
-    if(distance_counter_max < RESET_DISTANCE_COUNTER_MAX_VALUE && num_of_send_counter > NUM_OF_SEND)
-    {
-        hulp_change_delay = false;
-        //Serial.println(hulp_total_data);        
-        num_of_send_counter = 0;
-        //add one to the distance counter max and measure again with more samples
-        distance_counter_max += DISTANCE_COUNTER_INTERVAL;
-        return;
-    }    
-    
+    }   
 }
 
 static void resetAnchors(void)
 {
     functionName = "rst";
-    num_of_send_counter = 0;
-    hulp_change_delay = false;
     distance_counter_max = DISTANCE_COUNTER_MIN;
     for(uint8_t i = 0; i < MAX_ANCHORS; i++)
     {

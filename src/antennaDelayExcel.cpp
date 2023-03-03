@@ -9,31 +9,22 @@ static uint8_t active_counter = 0;
 
 /////////////////////////////////Function to send distances for the x-y calculation in python///////////////////////////////
 
-static void changeAD()
+static void resetAD()
 {
-  functionName = "cAD";
-  antenna_delay += ANTENNA_INTERVAL;
-  //When it changes the tester will notice on the i2c screen
-  String AD = "";
-  AD = AD + antenna_delay;
-  #ifdef I2C
-  _i2c.print(AD.c_str(), true);
-  #endif
-  //change the antenna delay on tag
-  DW1000.setAntennaDelay(antenna_delay);
-  //when all the antenna delays on the secified coördinates have been tested:
-  if(antenna_delay > ANTENNA_DELAY_END)
-  {
     functionName = "strt";
+
     /////Reset the anchor delay to minimal to redo the test at a different coördinate//////////////
     antenna_delay = ANTENNA_DELAY_START;
+
     //When it changes the tester will notice on the i2c screen
     #ifdef X_Y_TEST
-    AD = "";
+    String AD = "";
+    //The x_y_points are being converted to a string
     AD = AD + '(' + x_y_points[cal_points_counter][0] + ',' + x_y_points[cal_points_counter][1] + ')';
     _i2c.print(AD.c_str(), true);      
-    //a counter is used to synchronise the integration with python
+    //a counter is used to synchronise the right x_y_points array for the AD-string 
     cal_points_counter++;
+    //For reseting the cal_points_counter
     if(cal_points_counter >= MAX_CAL_DIS)
     { 
       cal_points_counter = 0;
@@ -41,21 +32,28 @@ static void changeAD()
     #endif
     //the String in every struct from the array will send "end" for the integration with python
     i2cMenu[0].status = false;
-    end_done = true;
-    while(end_done)
-    {
-      #ifdef I2C
-      checkMenuInterrupts();
-      #endif
-    }
+    _resetAD = false;
     resetAnchors();
     //delay(200);
-  }
-  hulp_change_delay = false;
-
 }
 
-static void SendDistancesAD()
+static void addAD()
+{
+  functionName = "cAD";
+  antenna_delay += ANTENNA_INTERVAL;
+  //When it changes the tester will notice on the i2c screen
+  #ifdef I2C
+  String AD = "";
+  AD = AD + antenna_delay;
+  _i2c.print(AD.c_str(), true);
+  #endif
+  //change the antenna delay on tag
+  DW1000.setAntennaDelay(antenna_delay);
+  //when all the antenna delays on the secified coördinates have been tested:
+  _addAD = false;
+}
+
+static void SendDistances()
 {
   //counter to make sure all anchors who send distances are synchronised  
   //check if python code has started yet if not skip measuring distance with making the interrupt bool false
@@ -87,15 +85,15 @@ static void SendDistancesAD()
       }
       else
       {
-        Serial.println('n');
+        //Serial.println('n');
         anchors[i].total_data = "";
         anchors[i].done = false;
-        Serial.print("not registered");
+        //Serial.print("not registered");
       }
       
       //When 3 anchors are found stop measuring(to increase speed)
-      //if(anchors_to_calculate_counter >= 3)
-        //break;
+      if(anchors_to_calculate_counter >= 3)
+        break;
     //when all the data of the antenna_delay for one anchor is done a counter is used for synchronisation
     }
     Serial.println(anchors_to_calculate_counter);
@@ -140,14 +138,25 @@ static void SendDistancesAD()
     anchors_to_calculate_counter = 0;
     //check menu when program is waiting for sending the data
     functionName = "rdy";
+    //wait untill python asks for a getRequest
     while(rdy2send)
+      checkMenuInterrupts();
+    //after the getRequest is send(Server.on("/anchor") interrupt is triggered) check if any options need to be changed(python always sends a change before it asks 4 message)
+    if(_addAD)
+      addAD();
+    if(_resetAD)
+      resetAD();
+    if(_addDCM)
+      {
+        distance_counter_max += DISTANCE_COUNTER_INTERVAL;
+        Serial.println("addDCM");
+        _addDCM = false;
+      }
+    if(_resetDCM)
     {
-    #ifdef I2C
-    checkMenuInterrupts();
-    #endif
-    }    
-    if(hulp_change_delay)
-      changeAD();
+       distance_counter_max = DISTANCE_COUNTER_MIN;
+       _resetDCM = false;
+    }
     synchronizeAnchors();
   }
   
@@ -160,7 +169,9 @@ static void SendDistancesAD()
 //if the AD doesn't need to be changed there will be checked if the anchors are done with measuring
   #endif
   }
-    
+
+
+//to skip last excel 
 static void backspaceDistances()
 {
   for(uint8_t i = 0; i < MAX_ANCHORS; i++)
@@ -204,10 +215,11 @@ static void checkMenus()
 
   if(i2cMenu[EXCEL_MODE].status)
     {
+      //when the start_send in menu is selected start sending
       if(i2cMenu[START_SEND].status && active_counter >= 3)
       { 
         //Serial.print('3');   
-        SendDistancesAD();
+        SendDistances();
       }
       if(i2cMenu[BACKSPACE].status && active_counter >= 3)
       {

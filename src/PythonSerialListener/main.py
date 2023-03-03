@@ -65,6 +65,7 @@ def WifiReadLoop(onIncoming):
         xls.first_rows_excel_multiple(position_x, wks, AD_interval, AD_start, AD_end, end_count, nos, dcm, reset_dcm, dci, distance_array, max_anchors)
     position_x = 0
     position_y = 1
+    WiFiString1 = 'a'
     while True:
         time.sleep(0.050)
         WiFiString = request.getRequest(':80/anchors')
@@ -143,6 +144,12 @@ def WifiReadLoop(onIncoming):
                         except:
                             pass
                 #print("not")
+            else:
+                if(WiFiString1 == WiFiString):
+                    print(WiFiString)
+                WiFiString1 = WiFiString
+
+                #print(WiFiString)
 
 
 # z = 80.5
