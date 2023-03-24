@@ -9,6 +9,10 @@
 #define Z_TEST
 #endif
 
+///////////////////For debugging/////////////////////////////
+#define FUNCTIONNAME_DEBUG
+#define SERIAL_DEBUG
+
 /////Anchor or tag////////////
 
 #define TYPE_TAG
@@ -74,6 +78,8 @@
     #endif
 #endif
 
+//uncomment if the tag should be controlled by servers
+#define SERVER_CONTROLLER
 
 #ifdef Z_TEST
     #define MAX_CAL_DIS 6 
@@ -158,6 +164,7 @@
 ////////Give every Menu number a define to make the code clearer
 #define START_SEND 0
 #define BACKSPACE 1
+//ToDo change excel_mode to drawMode
 #define EXCEL_MODE 2
 #define END_CODE 3
 

@@ -3,8 +3,9 @@
 #include <stdint.h>
 #include "menu.cpp"
 
+#define DEBOUNCE_BUTTON_TIME 250
 
-
+//struct that is used for all the interrupt functions
 struct button
 {
   const uint8_t interrupt_pin;
@@ -27,32 +28,41 @@ static unsigned long button_time = 0;
 static unsigned long last_button_time = 0; 
 
 #ifdef TYPE_TAG
-static void IRAM_ATTR upCode(void)//interruptfunction to go 1 row up in excel
+//interruptfunction to go to change the menuNumber to menuNumber+1
+static void IRAM_ATTR upCode(void)
 {
   button_time = millis();
-  if (button_time - last_button_time > 250)//to prevent debouncing of the button
-  { 
+  //if-statement to prevent debouncing of the button and pressing a second button while the first is still processing
+  if (button_time - last_button_time > DEBOUNCE_BUTTON_TIME && !button_down.pressed && !button_enter.pressed)
+  {
+    //set the button bool to true 
     button_up.pressed = true;   
-    last_button_time = button_time;
   }
+  last_button_time = button_time;
+
 }
 
-static void IRAM_ATTR downCode(void)//interrupt code to refresh the http page
+//interrupt code to go change the menuNumber to menuNumber-1
+static void IRAM_ATTR downCode(void)
 {
     button_time = millis();
-if (button_time - last_button_time > 250)
+if (button_time - last_button_time > DEBOUNCE_BUTTON_TIME && !button_up.pressed && !button_enter.pressed)
 {
+  //set the button bool to true
     button_down.pressed = true;
-    last_button_time = button_time;
 }
+//set the millis interval to a variable to measure the next interval(>250)
+  last_button_time = button_time;
 }
 
-static void IRAM_ATTR enterCode(void)//interrupt function to stop the code of the tag
+//interrupt function to press the number of menuNumber where it is currently at
+static void IRAM_ATTR enterCode(void)
 {
   button_time = millis();
-  if (button_time - last_button_time > 250)//to prevent debouncing of the button
+  if (button_time - last_button_time > DEBOUNCE_BUTTON_TIME && !button_up.pressed && !button_down.pressed)//to prevent debouncing of the button
   {
-    button_enter.pressed = true; // ToDo change pin number hardware
+    //set the button bool to true
+    button_enter.pressed = true; 
   }
 }
 #endif
@@ -60,7 +70,8 @@ static void IRAM_ATTR enterCode(void)//interrupt function to stop the code of th
 static void interruptfunctions(void)
 {
   #ifdef TYPE_TAG
-  pinMode(button_enter.interrupt_pin, INPUT_PULLUP);//enable interrupt to send data when green button is pressed
+  //enable interrupt to switch the status of menuNumber
+  pinMode(button_enter.interrupt_pin, INPUT_PULLUP);
   attachInterrupt(button_enter.interrupt_pin, enterCode, FALLING);
   pinMode(button_down.interrupt_pin, INPUT_PULLUP);//enable interrupt to use 'backspace' in python
   attachInterrupt(button_down.interrupt_pin, downCode, FALLING);
@@ -71,27 +82,38 @@ static void interruptfunctions(void)
 
 static int i2c_menuNumber = 0;
 
-//check which button has been pressed to scroll into i2c menu
+/*check which button has been pressed to scroll into i2c menu and switch the status of the 
+menuNumber if enter is pressed the reason it's done here instead of the interrupt itself is 
+that the measurements of the position needs to be done before changing settings*/
 static void checkMenuInterrupts(void)
 {
-  //go up
+  //press enter
   if(button_enter.pressed && !button_down.pressed && !button_up.pressed)
   {
+    functionNumber = 0x04;
+    //when enter is pressed on the interruptButtons change status to true if status was false
     if(!i2cMenu[i2c_menuNumber].status)
       i2cMenu[i2c_menuNumber].status = true;
+
+    //if the status is true set is back to false
+    //if(i2cMenu[i2c_menuNumber].status)
+      //i2cMenu[i2c_menuNumber].status = false;
+
+    //if the startSend menu has been entered reset the anchors for synchronisation
     if(i2c_menuNumber == START_SEND)
     {
-      resetAnchors();
+      //send a string in reset for debugging to show in python that the code is on this piece of the code
+      _resetAnchors = true;
     }
   }
-  //go down
+  //go down in the i2c number menu
   if(button_down.pressed && !button_up.pressed && !button_enter.pressed)
   {
     i2c_menuNumber--;
     if(i2c_menuNumber < 0)
       i2c_menuNumber = 3;
   }
-  //press enter
+  //go up in the i2c number menu
   if(button_up.pressed && !button_enter.pressed && !button_down.pressed)
   {
     i2c_menuNumber++;

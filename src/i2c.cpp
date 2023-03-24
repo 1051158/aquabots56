@@ -25,13 +25,14 @@ class i2c
             u8g2.setFontPosTop();
             x_pos = 0;
             y_pos = 0;
-            Serial.print("i2c");
+            #ifdef SERIAL_DEBUG
+                Serial.print("i2c");
+            #endif
             //init the configuration
             //_i2c.print("start");
         }
         static void print(const char* total_data, bool clear_screen)
         {
-            //Serial.print("i2cprint");
             if(clear_screen)
                 clear();
             uint16_t hulp_i = 0;

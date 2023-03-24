@@ -2,9 +2,31 @@ public class Main {
     public static void main(String[] args) {
         //uncomment de functies voor de weekopdrachten voor de bijbehorende week
         //Week_1(args);
-        Week_3(args);
+        berekeningen(args);
 
     }
+    public static void berekeningen(String[] args)
+    {
+        int T;
+        float Rpar[] = {46768,44669,42176,39452,36391,33242,29965,26704,23548,20572,17830,15361,13162};
+        T = -30;
+        float Kpar;
+        float Vo;
+        float Vref = 5;
+        float R;
+        for(int i = 0; i <= 12; i++)
+        {
+            Kpar = (Rpar[i]-Rpar[6])/(Rpar[6] * T);
+            R = (Rpar[6] + (Rpar[6] * Kpar * T));
+            System.out.print("Kpar: ");
+            System.out.println(Kpar);
+            System.out.println("R = " + R);
+            Vo = Vref*Kpar*T/2;
+            System.out.println("Vo + " + Vo);
+            T+= 5;
+        }
+    }
+}
     /*public static void Week_1(String[] args)
     {
         //in deze functie staan alle opdrachten van week 1
@@ -66,7 +88,7 @@ public class Main {
         System.out.println("het verschil tussen" + naam + "en" + naam_2 + "is: " + verschil);
 
     }
-    */
+    
     public static void Week_3(String[] args)
     {
         //Opdracht 1
@@ -131,3 +153,4 @@ public class Main {
         return total_tekst;
     }
 }
+*/
