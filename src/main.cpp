@@ -39,7 +39,6 @@ const uint8_t PIN_SS = 4;   // spi select pin
 
 void newRange()
 {
-  functionNumber = 0x03;
   #ifdef TYPE_ANCHOR
   #ifdef I2C
   /*String range = "";
@@ -57,12 +56,11 @@ void newRange()
   #ifdef TYPE_TAG
   /////////////////First check which menus are on//////////////////
     checkMenus();
-  #endif
-  if(_resetAnchors)
+    if(_resetAnchors)
   {
     resetAnchors();
   }
-  
+  #endif
 }
 
 ////////////////////Adding new device////////////////////////////////
@@ -107,7 +105,6 @@ void newBlink(DW1000Device *device)
 //////////Setup function(go to device.cpp to turn features ON/OFF////////
 void setup() 
 {
-  functionNumber = 1;
   Serial.begin(115200);//baud rate
   
   #ifdef I2C  //setup the ug2b lib //ug2b class is defined in i2c.cpp//
@@ -185,9 +182,6 @@ void setup()
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif
-  totalSendTime = millis();
-  totalSendTime_1 = 0;
-  functionNumber = 2;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -207,9 +201,10 @@ void loop()
 {
   #ifndef TESTING_I2C
   //when the wifi integration is complete the menu can be used
-  
+  #ifdef TYPE_TAG
   #ifdef I2C
     checkMenuInterrupts();
+  #endif
   #endif
   DW1000Ranging.loop();
   #endif

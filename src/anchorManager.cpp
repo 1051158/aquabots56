@@ -130,25 +130,11 @@ static void setAnchorActive(uint16_t ID, bool isActive)
     #endif
 }
 
-static bool generateDistanceAndTimer(uint8_t anchornumber)
-{
-    functionNumber = 0x07;
-    //check if the distance counter max value has been reached (if so the anchor is done for send)
-        if(anchors[anchornumber].distance_counter >= distance_counter_max)
-        {
-            anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
-            anchors[anchornumber].sendTime = millis();
-            anchors[anchornumber].sendTime = anchors[anchornumber].sendTime - anchors[anchornumber].lastSendTime;
-            anchors[anchornumber].lastSendTime = millis();
-            return true;
-        }
-    //when the distance counter max hasn't been reached send back false to measure again untill the maximum has been reached
-return false;
-}
 
 static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t anchornumber)
 {
     functionNumber = 0x06;
+    Serial.print(functionNumber);
     //for debugging:
     //Serial.print("distance: ");
     //Serial.println(distance);
@@ -176,8 +162,28 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
         //Serial.print(rxPower);
         Serial.print("\n");
     #endif
-        return false;
+        return true;
 
+}
+
+static bool generateDistanceAndTimer(uint8_t anchornumber)
+{
+    functionNumber = 0x07;
+    Serial.println(functionNumber);
+    if(setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange(), anchornumber)) 
+    {
+    //check if the distance counter max value has been reached (if so the anchor is done for send)
+        if(anchors[anchornumber].distance_counter >= distance_counter_max)
+        {
+            anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
+            anchors[anchornumber].sendTime = millis();
+            anchors[anchornumber].sendTime = anchors[anchornumber].sendTime - anchors[anchornumber].lastSendTime;
+            anchors[anchornumber].lastSendTime = millis();
+            return true;
+        }
+    }
+    //when the distance counter max hasn't been reached send back false to measure again untill the maximum has been reached
+return false;
 }
 
 #ifdef USE_SERIAL//print the distances through serial

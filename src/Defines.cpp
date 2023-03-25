@@ -47,8 +47,6 @@
 #define ANCHOR_ID_5 21845
 #define ANCHOR_X_5 10
 #define ANCHOR_Y_5 15
-#endif
-
 
 #define ANCHOR_ID_6 26214
 #define ANCHOR_X_6 15
@@ -57,6 +55,8 @@
 #define X 0
 #define Y 1
 #define Z 2
+#endif
+
 
 #define LONGEST_RANGE 12
 
@@ -88,7 +88,7 @@
 
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
 #ifdef TYPE_ANCHOR
-    //#define ANCHOR_1
+    #define ANCHOR_1
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_1
         #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
@@ -133,8 +133,7 @@
 #define SPI_MOSI 23
 #define DW_CS 4
 
-////////////////////Excel options (will integrade immediatly with python)///////////////////////////////////////////
-#define NUM_OF_SEND 5//number of times the value is send for excel file
+////////////////////Antenna_delay options (will integrade immediatly with python)///////////////////////////////////////////
 
 #define RESET_DISTANCE_COUNTER_MAX_VALUE 2 //value to reset distance counter max to DISTANCE_COUNTER_MIN
 #define DISTANCE_COUNTER_MIN 1 // will reset variable distance counter max when RESET_DISTANCE_COUNTER_MAX_VALUE is reached 

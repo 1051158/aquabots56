@@ -3,6 +3,7 @@
 #include <ESPAsyncWebServer.h>
 #include "buttons.cpp"
 
+#ifdef TYPE_TAG
 //bools to send different string through WiFi
 static bool send_done = false;
 //bools to verify the string in the functions send_total_data_server() and
@@ -81,7 +82,6 @@ static String send_total_data_server()
     if(anchors[i].done)
     {
       //store the data of every anchor in one total string to send 
-      syncNumber = i;
       dataCounter++;
       if(dataCounter>=3)
         {
@@ -96,7 +96,7 @@ static String send_total_data_server()
   }
   //Send the value of the anchors that sended the data if debug is necessary
   #ifdef WIFI_DEBUG
-    functionName = "dC" + dataCounter;
+    total_data_1 = total_data_1 + "dC" + dataCounter;
     return functionName;
   #endif
   #ifndef WIFI_DEBUG
@@ -135,15 +135,14 @@ static void WiFiSettingsExtern(void)
 
   Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
   {
-    //variables to get the three closest anchors for x-y calculation
-    bool cal_counter_bool = false;
+
     //check if tag has been shutted off(through i2c menu) and send that to python so the excel sheet will be saved
-      if(i2cMenu[END_CODE].status)
+      /*if(i2cMenu[END_CODE].status)
       {
         request->send(200, "text/plain", "stop");
         delay(3000);
         esp_deep_sleep_start();
-      }
+      }*/
       if(_resetAnchors)
       {
         request->send(200, "text/plain", "2rst");
@@ -184,6 +183,10 @@ Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
 //resetAD when the excel file has reached its max of the AD_test
 Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
 {
+  uint16_t AD_2_send = antenna_delay += ANTENNA_INTERVAL;
+  String AD_send = "";
+  AD_send = AD_send + AD_2_send;
+  request->send(200, "text/plain", AD_send);
   request->send(200, "text/plain", "OK");
   _resetAD = true;
 }
@@ -282,4 +285,5 @@ static void WiFiSettingsAP(void)
   });    
 Server.begin();
 }
+#endif
 #endif
