@@ -28,19 +28,19 @@
 
 #define ANCHOR_ID_2 8738
 #define ANCHOR_X_2 0
-#define ANCHOR_Y_2 4
+#define ANCHOR_Y_2 6.88
 #define ANCHOR_Z_2 1
 
 
 #define ANCHOR_ID_3 13107
 #define ANCHOR_X_3 10
-#define ANCHOR_Y_3 8
+#define ANCHOR_Y_3 16
 #define ANCHOR_Z_3 1
 
 
 #define ANCHOR_ID_4 17476
 #define ANCHOR_X_4 10
-#define ANCHOR_Y_4 16
+#define ANCHOR_Y_4 6
 #define ANCHOR_Z_4 1
 
 
@@ -58,7 +58,7 @@
 #endif
 
 
-#define LONGEST_RANGE 12
+#define LONGEST_RANGE 15
 
 
 //Choose the amount of anchors supported
@@ -83,7 +83,7 @@
 
 #ifdef Z_TEST
     #define MAX_CAL_DIS 6 
-    static float x_y_points [MAX_CAL_DIS][3] = {{8.5,1,0.83}, {7,1,0.83}, {5.5,1,0.83}, {4,1,0.83}, {2.5,1,0.83}, {1,1,0.83}};
+    static float x_y_points [MAX_CAL_DIS][3] = {{8.5,2.55,0.64}, {7,2.55,0.64}, {5.5,2.55,0.64}, {4,2.55,0.64}, {2.5,2.55,0.64}, {1,2.55,0.64}};
 #endif
 
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
@@ -182,8 +182,8 @@
 //#define WIFI_TEST
 
 //////fill in the right names of the desired router or hotspot
-//#define HOTSPOT
-#define WIFI
+#define HOTSPOT
+//#define WIFI
 
 
 

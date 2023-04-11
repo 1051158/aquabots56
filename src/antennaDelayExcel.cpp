@@ -19,7 +19,11 @@ static void resetAD()
     #ifdef X_Y_TEST
     String AD = "";
     //The x_y_points are being converted to a string
-    AD = AD + '(' + x_y_points[cal_points_counter][0] + ',' + x_y_points[cal_points_counter][1] + ')';
+    AD = AD + '(' + x_y_points[cal_points_counter][0] + ',' + x_y_points[cal_points_counter][1];
+    #ifdef Z_TEST
+    AD = AD + ',' + x_y_points[cal_points_counter][2];
+    #endif
+    AD = AD + ')';
     _i2c.print(AD.c_str(), true);      
     //a counter is used to synchronise the right x_y_points array for the AD-string 
     cal_points_counter++;
@@ -153,7 +157,6 @@ static void checkForDistances()
   {
     Rdy2Send();
     synchronizeAnchors();
-    
   }
     
     

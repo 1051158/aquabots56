@@ -38,6 +38,7 @@ static void CalibrationDistances()
             Serial.print(j);
             Serial.print("cal_number:\t");
             Serial.print(i);
+            Serial.print(' ');
             Serial.println(anchors[j].calibrationDistances[i]); 
         }
         #endif

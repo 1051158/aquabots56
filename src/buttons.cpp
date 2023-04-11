@@ -39,7 +39,6 @@ static void IRAM_ATTR upCode(void)
     button_up.pressed = true;   
   }
   last_button_time = button_time;
-
 }
 
 //interrupt code to go change the menuNumber to menuNumber-1
@@ -121,19 +120,23 @@ static void checkMenuInterrupts(void)
     if(i2c_menuNumber > 3)
       i2c_menuNumber = 0;
   }
+  //when enter is pressed in i2cMenu
   if(button_down.pressed || button_up.pressed || button_enter.pressed)
   {
     String help = "";
+    //check if the status is on
     if(i2cMenu[i2c_menuNumber].status)
     {
       help = help + i2cMenu[i2c_menuNumber].menuName + " = on";
       _i2c.print(help.c_str(), true);
     }
+    //if not then off
     else
     {
       help = help + i2cMenu[i2c_menuNumber].menuName + " = off";
       _i2c.print(help.c_str(), true);
     }
+    //reset buttons
     button_down.pressed = false;
     button_up.pressed = false;
     button_enter.pressed = false;

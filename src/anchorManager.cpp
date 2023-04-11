@@ -32,12 +32,13 @@ struct anchor
     #endif
 };
 
-//bools controlled bij de server functions(can be called with python code)
+//bools controlled by the server functions(can be called with python code)
 static bool _addAD = false;
 static bool _subAD = false;
 static bool _resetAD = false;
 static bool _resetDCM = false;
 static bool _addDCM = false;
+
 
 static long totalSendTime;
 static long totalSendTime_1;
@@ -142,11 +143,11 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
 
     //filter to skip the wrong measurements
     //if the measured distance is smaller than -1 or bigger than sqrt(x² + y²)
-    if(distance <= -1 || distance>=15)
+    if(distance <= -3 || distance>=15)
     {
         return false;
     }
-    if(distance > LONGEST_RANGE)//if the measured value is bigger than the maximum range
+    if(distance > 15)//if the measured value is bigger than the maximum range
     {
         anchors[anchornumber].distance += LONGEST_RANGE;//set is to max range
         anchors[anchornumber].distance_counter++;

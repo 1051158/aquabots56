@@ -4,27 +4,20 @@
 #include "buttons.cpp"
 
 #ifdef TYPE_TAG
-//bools to send different string through WiFi
-static bool send_done = false;
+
 //bools to verify the string in the functions send_total_data_server() and
 static bool rdy2send = false;
 static bool done_send = false;
 
-static bool max_anchor_error = false;
-
 static bool start_test = false;
-static bool start_program = false;
-
-static uint8_t syncNumber = 0;
 
 static AsyncWebServer Server(80);
 static AsyncWebServer Server1(81);
 static AsyncWebServer Server2(82);
 static AsyncWebServer Server3(83);
 
-
-//belang to "IP:80/caldis" link
-static String sendCalibrationDistances()
+//belong to "IP:80/caldis" link
+static String makeCaldisPackage()
 {
     String total_data_cal;
     #ifdef RANGETEST
@@ -47,7 +40,7 @@ static String sendCalibrationDistances()
         return total_data_cal;
       }
     #endif
-    total_data_cal = total_data_cal + "\t\n"+ MAX_ANCHORS + "max" + ANTENNA_DELAY_START + 'S' + ANTENNA_DELAY_END + 'E' + ANTENNA_INTERVAL + "I";
+    total_data_cal = total_data_cal + "\t\n"+ MAX_ANCHORS + "max" + ANTENNA_DELAY_START + 'S' + ANTENNA_DELAY_END + 'E' + ANTENNA_INTERVAL + "I" + "\t\n";
     #ifdef PYTHON_CONTROL
     total_data_cal = total_data_cal + NUM_OF_SEND + "nos" + DISTANCE_COUNTER_MIN + '-' + RESET_DISTANCE_COUNTER_MAX_VALUE + "r+" + DISTANCE_COUNTER_INTERVAL + "in" + "\t\n";
     #endif
@@ -77,31 +70,23 @@ static String send_total_data_server()
   String total_data_1;
   uint8_t dataCounter = 0;
   //////////////send signal if 3 out of MAX_ANCHORS anchors are done sending/////////////////////////////////
-  for(uint8_t i = 0; i<MAX_ANCHORS;i++)
+  for(uint8_t i = 0; i < MAX_ANCHORS; i++)
   {
     if(anchors[i].done)
     {
+      total_data_1 = total_data_1 + anchors[i].total_data + i + "ID" + anchors[i].distance + 'd' + anchors[i].sendTime + "ms" + "\t";
       //store the data of every anchor in one total string to send 
       dataCounter++;
-      if(dataCounter>=3)
-        {
-          for(uint8_t i = 0; i < MAX_ANCHORS; i++)
-            total_data_1 = total_data_1 + anchors[i].total_data + i + "ID" + anchors[i].distance + 'd' + anchors[i].sendTime + "ms" + "\t";
-
-          total_data_1 = total_data_1 + '\n';
-          dataCounter = 0;
-          return total_data_1;
-        }
-    } 
+    }
+      if(dataCounter >= 3)
+      {          
+        total_data_1 = total_data_1 + '\n';
+        return total_data_1;
+      }
   }
   //Send the value of the anchors that sended the data if debug is necessary
-  #ifdef WIFI_DEBUG
-    total_data_1 = total_data_1 + "dC" + dataCounter;
-    return functionName;
-  #endif
-  #ifndef WIFI_DEBUG
-    return "not";
-  #endif
+  total_data_1 = total_data_1 + "dC" + dataCounter;
+  return total_data_1;
     ////////send "end" to pythonCode to go to next worksheet an calibrate the next point in the pool//////
   }
 
@@ -116,8 +101,8 @@ static void WiFiSettingsExtern(void)
   const char* psswrd = "Donjer01";
   #endif
   #ifdef HOTSPOT
-  const char* ssid = "Galaxy S20 FEA37E";
-  const char* psswrd = "cooa7104";
+  const char* ssid = "TP-LINK_D712";
+  const char* psswrd = "05428717";
   #endif
   ////////////log in into the router for extern wifi connection//////////////
   WiFi.begin(ssid, psswrd);
@@ -173,7 +158,7 @@ static void WiFiSettingsExtern(void)
 //addAD when the python script has reached its DCM
 Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
 {
-  uint16_t AD_2_send = antenna_delay += ANTENNA_INTERVAL;
+  uint16_t AD_2_send = antenna_delay;
   String AD_send = "";
   AD_send = AD_send + AD_2_send;
   request->send(200, "text/plain", AD_send);
@@ -183,11 +168,10 @@ Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
 //resetAD when the excel file has reached its max of the AD_test
 Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
 {
-  uint16_t AD_2_send = antenna_delay += ANTENNA_INTERVAL;
+  uint16_t AD_2_send = antenna_delay;
   String AD_send = "";
   AD_send = AD_send + AD_2_send;
   request->send(200, "text/plain", AD_send);
-  request->send(200, "text/plain", "OK");
   _resetAD = true;
 }
 );
@@ -222,7 +206,7 @@ Server2.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
   Server.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     String send;
-    send = sendCalibrationDistances().c_str();
+    send = makeCaldisPackage().c_str();
     request->send(200, "text/plain", send);
   });
   //to control the python code with the interruptbuttons
@@ -233,6 +217,7 @@ Server2.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
     {  
       request->send(200, "text/plain", "0");
       i2cMenu[START_SEND].status = false;
+      resetAnchors();
       _resetAnchors = true;
     }
     //when the interrupt in tag has been detected by python
@@ -240,6 +225,7 @@ Server2.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
     {  
       request->send(200, "text/plain", "1");
       i2cMenu[BACKSPACE].status = false;
+      resetAnchors();
       _resetAnchors = true;
     }
     if(i2cMenu[EXCEL_MODE].status)
@@ -255,7 +241,13 @@ Server2.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
     }
     request->send(200, "text/plain", "n");
   });
-  
+Server3.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
+  {
+    request->send(200, "text/plain", "Restart");
+    delay(1000);
+    esp_restart();
+  });
+
   //check and print IPadress to fill into the laptop
     IPAddress IP = WiFi.localIP();
     Serial.print(IP);
