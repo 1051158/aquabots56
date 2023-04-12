@@ -3,15 +3,17 @@
 static uint8_t cal_points_counter = 1;
 static uint8_t anchors_to_calculate_counter = 0;
 static uint8_t active_counter = 0;
-
+static unsigned long sendTime = 0;
+static unsigned long sendTime_1 = 0;
 //#define DEBUG_SYNCHRONIZE
 
 /////////////////////////////////Function to send distances for the x-y calculation in python///////////////////////////////
 #ifdef TYPE_TAG
 static void resetAD()
 {
-    functionNumber = 0x10;
-    Serial.println(functionNumber);
+    functionNumber = 0x0A;
+    if(_debugSerial)
+      Serial.println(functionNumber);
     /////Reset the anchor delay to minimal to redo the test at a different coördinate//////////////
     antenna_delay = ANTENNA_DELAY_START;
 
@@ -34,7 +36,6 @@ static void resetAD()
     }
     #endif
     //the i2c menu interrupt bool will be set 0
-    i2cMenu[0].status = false;
     //bool to reset AD will be set false
     _resetAD = false;
     //put the new AD in the tag
@@ -46,7 +47,7 @@ static void resetAD()
 
 static void addAD()
 {
-  functionNumber = 0x11;
+  functionNumber = 0x0B;
   antenna_delay += ANTENNA_INTERVAL;
   //When it changes the tester will notice on the i2c screen
   #ifdef I2C
@@ -62,7 +63,7 @@ static void addAD()
 
 static void subAD()
 {
-  functionNumber = 0x12;
+  functionNumber = 0x0C;
   antenna_delay -= ANTENNA_INTERVAL;
   #ifdef I2C
   String AD = "";
@@ -77,20 +78,30 @@ static void subAD()
 
 static void addDCM()
 {
-  functionNumber = 0x13;
+  functionNumber = 0x0D;
   _addDCM = false;
 }
 
 //when enough distances have been found for triliteration a bool will be set so the string will be send
 static void Rdy2Send()
 {
-  Serial.println(functionNumber);
-  functionNumber = 0x08;
-  Serial.println(functionNumber);
+  functionNumber = 0x03;
+  if(_debugSerial)
+    Serial.println(functionNumber);
   anchors_to_calculate_counter = 0;
   rdy2send = true;
-  while(rdy2send && !_resetAnchors)
+  if(i2cMenu[START_SEND].status)
+  {
+    while(rdy2send && !_resetAnchors && i2cMenu[START_SEND].status)
       checkMenuInterrupts();
+    
+    String Counter = "";
+    sendTime = millis();
+    sendTime = sendTime - sendTime_1;
+    Counter = sendTime;
+    _i2c.print(Counter.c_str(), true);
+    sendTime_1 = millis();
+  }
   //check menu when program is waiting for sending the data
   //wait untill python asks for a getRequest
   if(_addAD)
@@ -98,9 +109,7 @@ static void Rdy2Send()
   if(_resetAD)
     resetAD();
   if(_addDCM)
-  {
     addDCM();
-  }
   if(_resetDCM)
   {
      distance_counter_max = DISTANCE_COUNTER_MIN;
@@ -108,12 +117,11 @@ static void Rdy2Send()
   }
 }
 
-
-
 static void checkForDistances()
 {
   functionNumber = 0x05;
-  Serial.print(functionNumber);
+  if(_debugSerial)
+    Serial.print(functionNumber);
   //counter to make sure all anchors who send distances are synchronised  
   //check if python code has started yet if not skip measuring distance with making the interrupt bool false
 
@@ -131,7 +139,8 @@ static void checkForDistances()
   //also check if the found distance has been send already(for synchronising)
     if(!anchors[i].done && anchors[i].ID == DW1000Ranging.getDistantDevice()->getShortAddress() && !_resetAnchors)
     {
-      Serial.print(functionNumber);
+      if(_debugSerial)
+        Serial.print(functionNumber);
       //convert all the variables into a String to send over wifi
       if(generateDistanceAndTimer(i) && !_resetAnchors)
       { 
@@ -145,13 +154,17 @@ static void checkForDistances()
         anchors[i].done = false;
         //Serial.print("not registered");
       }
-      Serial.print("anchorcount" );
-      Serial.println(anchors_to_calculate_counter);
+      
       //When 3 anchors are found stop measuring(to increase speed)
       if(anchors_to_calculate_counter >= 3 && !_resetAnchors)
         break;
     //when all the data of the antenna_delay for one anchor is done a counter is used for synchronisation
     }
+  }
+  if(_debugSerial)
+  {
+    Serial.print("anchorcount" );
+    Serial.println(anchors_to_calculate_counter);
   }
   if(anchors_to_calculate_counter >=3 && !_resetAnchors)
   {

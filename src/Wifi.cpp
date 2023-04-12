@@ -15,6 +15,10 @@ static AsyncWebServer Server(80);
 static AsyncWebServer Server1(81);
 static AsyncWebServer Server2(82);
 static AsyncWebServer Server3(83);
+static AsyncWebServer Server4(84);
+static AsyncWebServer Server5(85);
+static AsyncWebServer Server6(86);
+static AsyncWebServer Server7(87);
 
 //belong to "IP:80/caldis" link
 static String makeCaldisPackage()
@@ -74,7 +78,7 @@ static String send_total_data_server()
   {
     if(anchors[i].done)
     {
-      total_data_1 = total_data_1 + anchors[i].total_data + i + "ID" + anchors[i].distance + 'd' + anchors[i].sendTime + "ms" + "\t";
+      total_data_1 = total_data_1 + anchors[i].total_data + i + "ID" + anchors[i].distance + 'd' + "\t";
       //store the data of every anchor in one total string to send 
       dataCounter++;
     }
@@ -101,8 +105,8 @@ static void WiFiSettingsExtern(void)
   const char* psswrd = "Donjer01";
   #endif
   #ifdef HOTSPOT
-  const char* ssid = "TP-LINK_D712";
-  const char* psswrd = "05428717";
+  const char* ssid = "Galaxy S20 FEA37E";
+  const char* psswrd = "cooa7104";
   #endif
   ////////////log in into the router for extern wifi connection//////////////
   WiFi.begin(ssid, psswrd);
@@ -169,45 +173,39 @@ Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
 Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
 {
   uint16_t AD_2_send = antenna_delay;
-  String AD_send = "";
-  AD_send = AD_send + AD_2_send;
-  request->send(200, "text/plain", AD_send);
+  i2cMenu[START_SEND].status = false;
+  request->send(200, "text/plain", "1");
   _resetAD = true;
 }
 );
-
-//subADD when the python script and VSC are not synchronized
-Server1.on("/subAD", HTTP_GET, [](AsyncWebServerRequest *request)
-{
-  uint16_t AD_2_send = antenna_delay -= ANTENNA_INTERVAL;
-  String AD_send = "";
-  AD_send = AD_send + AD_2_send;
-  request->send(200, "text/plain", AD_send);
-  _resetAD = true;
-}
-);
-//server to reset and start measurements from tag
 
 //server interrupt function to reset DCM
 Server2.on("/resetDCM", HTTP_GET, [](AsyncWebServerRequest *request)
 {
-  request->send(200, "text/plain", "OK");
+  request->send(200, "text/plain", "2");
   _resetDCM = true;
 } );
 //server interrupt function to add to average counter
 Server2.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
 {
-  request->send(200, "text/plain", "OK");
+  request->send(200, "text/plain", "2");
   _addDCM = true;
+});
+
+Server4.on("/start", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  request->send(200, "text/plain", "4");
+  i2cMenu[START_SEND].status = true;
 });
 
 #endif
 
-  Server.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
+  Server5.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     String send;
     send = makeCaldisPackage().c_str();
     request->send(200, "text/plain", send);
+    Server5.end();
   });
   //to control the python code with the interruptbuttons
   Server3.on("/sendMenu", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -216,7 +214,6 @@ Server2.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
     if(i2cMenu[START_SEND].status)
     {  
       request->send(200, "text/plain", "0");
-      i2cMenu[START_SEND].status = false;
       resetAnchors();
       _resetAnchors = true;
     }
@@ -241,7 +238,7 @@ Server2.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
     }
     request->send(200, "text/plain", "n");
   });
-Server3.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
+Server6.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     request->send(200, "text/plain", "Restart");
     delay(1000);
@@ -255,6 +252,10 @@ Server3.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
     Server1.begin();
     Server2.begin();
     Server3.begin();
+    Server4.begin();
+    Server5.begin();
+    Server6.begin();
+    Server7.begin();
   #endif
 }
 

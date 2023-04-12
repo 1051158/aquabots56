@@ -1,22 +1,12 @@
 import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
-import draw
 import trilateration
-import array
 import draw
 from dataclasses import dataclass
-import numpy as np
-import request
-distances_per_interval = 2
 
-give_name = True
-
-Bool_anchorFilter = False
-
-bool_check_xls = True
 
 @dataclass
-class strctSet:
+class strctSet:#public values can be filled in, in excelSettings()
     dbgXls: bool
     dbgFirstRow: bool
     dbgReq: bool
@@ -27,7 +17,7 @@ class strctSet:
     max_dcm: int
     reset_dcm: int
     dci: int
-    startSend: bool = False
+    startSend: bool = False #private values of the class
     back: bool = False
     wks_count: int = 0
     num_of_send_counter: int = 0
@@ -37,10 +27,10 @@ class strctSet:
 def excelSettings(Coordinates):
 
     #fill in the variables underneath the code will fill them in the struct some variables are private(can't be changed)
-    dbgXls = True
+    dbgXls = False
     dbgFirstRow = False
-    dbgReq = True
-    dbgInteg = True
+    dbgReq = False
+    dbgInteg = False
     nos = 5
     dcm = 1
     max_dcm = 1
@@ -75,7 +65,6 @@ def put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Setting
 
     #an anchorcounter to make sure three anchors with the right ID's are measured
     anchorCounter = 0
-    anchorbool = np.array([0, 0, 0, 0])
     D_1 = 0
     D_2 = 0
     #print for debugging
@@ -88,42 +77,42 @@ def put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Setting
         #split the array into subarray's.
         ID = anchor[i].split('ID')  # split ID from the string
         D = ID[1].split('d')  # split distance from the string
-        ms = D[1].split('ms')
+        #ms = D[1].split('ms')
 
         #take the first value of every subarray.
         ID = ID.pop(0)
         D = D.pop(0)
-        ms = ms.pop(0)
+        #ms = ms.pop(0)
 
         #print only when debugging.
         if Settings.dbgXls:
             print(ID)
-            print(ms)
+            #print(ms)
 
         #check the ID number to make sure the values come in the right spot in excel...
 
         #anchor 1
         if ID == '0':
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + 2), D)  # write distances on the cells
-            wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + 2), ms)
+            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + 1), D)  # write distances on the cells
+            #wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + 2), ms)
             anchorCounter += 1
 
         #anchor 2
         if ID == '1':
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + Settings.nos + 6), D)  # write distances on the cells
-            wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 6), ms)
+            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + Settings.nos + 5), D)  # write distances on the cells
+            #wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 7), ms)
             anchorCounter += 1
 
         #anchor 3
         if ID == '2':
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + Settings.nos + 12), D)  # write distances on the cells
-            wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 12), ms)
+            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + Settings.nos + 13), D)  # write distances on the cells
+            #wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 13), ms)
             anchorCounter += 1
 
         #anchor 4
         if ID == '3':
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + Settings.nos + 18), D)  # write distances on the cells
-            wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 18), ms)
+            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + Settings.nos + 21), D)  # write distances on the cells
+            #wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos+21), ms)
             anchorCounter += 1
 
         #check how far the anchorcounter is and put the distances in variables
@@ -141,7 +130,7 @@ def put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Setting
                 print(D_2)
 
             #calculate the coordinates
-            Coordinate1, Coordinate2 = trilateration.triliterationnew3D(x_array, y_array, z_array, D_2, D_1, D)
+            Coordinate1, Coordinate2 = trilateration.triliterationnew3D(x_array, y_array, z_array, D, D_1, D_2)
 
             #draw the measured point with a positive Z-coordinate
             if Coordinate1[2] > 0:
@@ -150,10 +139,14 @@ def put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Setting
                 draw.animate_func(Coordinate2, fig)
 
             # write the calculated values with in the right row and colum of the AD_value
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + len(anchor)*(Settings.nos + 5)), Coordinate1[0])
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + len(anchor)*(Settings.nos + 5) + Settings.nos), Coordinate1[1])
+            wks.write(xl_rowcol_to_cell(Settings.position_y -1, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+1)+2), Coordinate1[0])
+            wks.write(xl_rowcol_to_cell(Settings.position_y-1, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+2)+2), Coordinate1[1])
+            wks.write(xl_rowcol_to_cell(Settings.position_y-1, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+3)+2), Coordinate1[2])
+            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+1)+2), Coordinate2[0])
+            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+2)+2), Coordinate2[1])
+            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+3)+2), Coordinate2[2])
             print('works')
-            return
+            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+4)+2), Coordinate2[2])
 
 def first_rows_excel_multiple_AD(wks, tagInfo, Distance_array, Settings):
     j = 0
@@ -164,17 +157,17 @@ def first_rows_excel_multiple_AD(wks, tagInfo, Distance_array, Settings):
 
     nos = Settings.nos
     number_of_dcm = (Settings.reset_dcm - Settings.dcm)/int(Settings.dci)
-    wks.write(xl_rowcol_to_cell(1, tagInfo.max_anchors*(nos+3)), 'x')
-    wks.write(xl_rowcol_to_cell(1, (tagInfo.max_anchors*(nos+3)+5)), 'y')
+    wks.write(xl_rowcol_to_cell(1, (Settings.nos + 1) * (tagInfo.max_anchors + 2) + 2), 'x')
+    wks.write(xl_rowcol_to_cell(1, (Settings.nos + 1) * (tagInfo.max_anchors + 2) + 2), 'y')
+    wks.write(xl_rowcol_to_cell(1, (Settings.nos + 1) * (tagInfo.max_anchors + 3) + 2), 'z')
+    print(Distance_array)
     for k in range((tagInfo.max_anchors)):
         print('k', k)
-        wks.write(xl_rowcol_to_cell(1 + j + 1, row), Distance_array[k][Settings.wks_count])
+        wks.write(xl_rowcol_to_cell(3 + j, row), Distance_array[k][Settings.wks_count])
         for i in range(int(number_of_intervals) + 1):  # make sure the max anchors is correct with reality
             wks.write(xl_rowcol_to_cell(i + j, row), float(tagInfo.AD_start) + (float(tagInfo.AD_interval) * i))  # write on the cells defined by y row and the i of the for loop
             for l in range(int(number_of_dcm) + 1):
                 wks.write(xl_rowcol_to_cell(i + j + 1, row + 1), 'avg_' + str(l + int(Settings.dcm)))
-                j += 1
-                wks.write(xl_rowcol_to_cell(i + j + 1, row + 1), 'time(ms)')
                 j += 1
         j = 0
         row += Settings.nos + 3

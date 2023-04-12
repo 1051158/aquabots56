@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 # write the right IP in Visual Studio for the http link
 # make sure the laptop has same WiFi-connection as tag-code in VSC
-IPaddress = 'http://192.168.2.53'
+IPaddress = 'http://192.168.220.44'
 
 @dataclass
 class receivedData:
@@ -58,13 +58,13 @@ def getValues(WiFistring):
     z_array = array.array('f', [])
 
     #delete the first part of the tagString, because it has already been set into variables(see code above)
-    del tagString[0]
 
     #make a array which size depends on the
+    del tagString[0]
     Distance_array = [[0] * len(Coordinates)] * (len(tagString)-1)
-
     for i in range(len(tagString)-1):
         help = tagString[i].split('i')
+        print(help)
         help1 = help[1].split('x')
         help2 = help1[1].split('y')
         help3 = help2[1].split('z')
@@ -82,17 +82,60 @@ def getValues(WiFistring):
 
     antenna_delay = int(AD_start)
     tagInfo = receivedData(int(max_anchors), int(AD_start), int(AD_end), int(AD_interval), int(antenna_delay))
-    print(tagInfo, Coordinates, x_array, y_array, z_array)
+    print(tagInfo)
+    print(Coordinates)
+    print(x_array)
+    print(y_array)
+    print(z_array)
     return tagInfo, Coordinates, x_array, y_array, z_array, Distance_array
 
-def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings):
+def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t, t1):
     print('maxNOSreached')
     if Settings.dcm >= int(Settings.reset_dcm):
-        dcm = 1
+        Settings.dcm = 1
         print('resetDCM', getRequest(':82/resetDCM'))
-        if int(tagInfo.antenna_delay) >= tagInfo.AD_end:
-            Settings.wks_count += 1
+        if tagInfo.AD_start == tagInfo.AD_end:
+            if int(tagInfo.antenna_delay) >= tagInfo.AD_end:
+                Settings.wks_count += 1
 
+                if Settings.wks_count >= len(Coordinates):
+                    wbk.close()
+                    sys.exit(0)
+                # float_distance -= 0.5
+
+                if Settings.back == False:
+                    print(Coordinates[Settings.wks_count])
+                    wks = xls.make_new_wks(Coordinates[Settings.wks_count], wbk)
+
+                else:
+                    print(Coordinates[Settings.wks_count])
+                    wks = wbk.get_worksheet_by_name(Coordinates[Settings.wks_count])
+                    Settings.back = False
+
+                if tagInfo.max_anchors == '1':
+                    xls.first_rows_excel(wks, tagInfo, distance_array, Settings)
+
+                else:
+                    xls.first_rows_excel_multiple_AD(wks, tagInfo, distance_array, Settings)
+
+                # reset the tag with the right link in the getRequest
+                t.start()
+                print('resetAD', getRequest(':81/resetAD'))
+                t.stop()
+                Settings.startSend = False
+                tagInfo.antenna_delay = tagInfo.AD_start
+                Settings.position_y = 1
+                print('time 1 coordinate:')
+                t1.stop()
+                sleepTime = 0.3
+            else:
+                t.start()
+                print('addAD', getRequest(':81/addAD'))
+                t.stop()
+                tagInfo.antenna_delay += tagInfo.AD_interval
+                Settings.position_y += 2
+                sleepTime = 0.3
+        else:
             if Settings.wks_count >= len(Coordinates):
                 wbk.close()
                 sys.exit(0)
@@ -113,17 +156,6 @@ def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings):
             else:
                 xls.first_rows_excel_multiple_AD(wks, tagInfo, distance_array, Settings)
 
-            # reset the tag with the right link in the getRequest
-            print('resetAD', getRequest(':81/resetAD'))
-            Settings.startSend = False
-            tagInfo.antenna_delay = tagInfo.AD_start
-            Settings.position_y = 1
-
-        else:
-            print('addAD', getRequest(':81/addAD'))
-            tagInfo.antenna_delay += tagInfo.AD_interval
-            Settings.position_y += 3
-
     else:
         Settings.dcm += Settings.dci
 
@@ -132,15 +164,8 @@ def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings):
             print(Settings.dcm)
 
         getRequest(':82/addDCM')
-        Settings.position_y += 2
+        Settings.position_y += 1
+        sleepTime = 0.2
+    return tagInfo, wks, Settings, t1
 
-    return tagInfo, wks, Settings
-
-#function to set all the strings to the variable needed for the calculations
-def setStringsToVariables(max_anchors, AD_start, AD_end, AD_interval):
-    max_anchors = int(max_anchors)
-    AD_start = int(AD_start)
-    AD_end = int(AD_end)
-    AD_interval = int(AD_interval)
-    return max_anchors, AD_start, AD_end, AD_interval
 

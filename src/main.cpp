@@ -39,6 +39,7 @@ const uint8_t PIN_SS = 4;   // spi select pin
 
 void newRange()
 {
+  functionNumber = 0x02;
   #ifdef TYPE_ANCHOR
   #ifdef I2C
   /*String range = "";

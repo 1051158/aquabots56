@@ -12,6 +12,7 @@
 ///////////////////For debugging/////////////////////////////
 #define FUNCTIONNAME_DEBUG
 #define SERIAL_DEBUG
+static bool _debugSerial = false;
 
 /////Anchor or tag////////////
 
@@ -40,7 +41,7 @@
 
 #define ANCHOR_ID_4 17476
 #define ANCHOR_X_4 10
-#define ANCHOR_Y_4 6
+#define ANCHOR_Y_4 8
 #define ANCHOR_Z_4 1
 
 
@@ -81,9 +82,12 @@
 //uncomment if the tag should be controlled by servers
 #define SERVER_CONTROLLER
 
+#define Y_COOR 2.5
+#define Z_COOR 0.64
+
 #ifdef Z_TEST
     #define MAX_CAL_DIS 6 
-    static float x_y_points [MAX_CAL_DIS][3] = {{8.5,2.55,0.64}, {7,2.55,0.64}, {5.5,2.55,0.64}, {4,2.55,0.64}, {2.5,2.55,0.64}, {1,2.55,0.64}};
+    static float x_y_points [MAX_CAL_DIS][3] = {{8.5, Y_COOR, Z_COOR}, {7,Y_COOR, Z_COOR}, {5.5, Y_COOR,Z_COOR}, {4, Y_COOR, Z_COOR}, {2.5, Y_COOR, Z_COOR}, {1, Y_COOR, Z_COOR}};
 #endif
 
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
@@ -141,8 +145,8 @@
 
 #define ANTENNA_INTERVAL 20 //interval between 2 antenna delays
 
-#define ANTENNA_DELAY_START 16500 //start value antenna delay
-#define ANTENNA_DELAY_END 16600 //end value antenna delay
+#define ANTENNA_DELAY_START 16384 //start value antenna delay
+#define ANTENNA_DELAY_END 16384 //end value antenna delay
 
 ///////////////////////////////////////I2C settings////////////////////////////////////
 

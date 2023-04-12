@@ -21,8 +21,8 @@ struct anchor
     float z;
     #endif
     float distance;
-    unsigned long sendTime;
-    unsigned long lastSendTime;
+    //unsigned long sendTime;
+    //unsigned long lastSendTime;
     uint8_t distance_counter;
     bool active;
     bool done;
@@ -39,10 +39,6 @@ static bool _resetAD = false;
 static bool _resetDCM = false;
 static bool _addDCM = false;
 
-
-static long totalSendTime;
-static long totalSendTime_1;
-
 static uint8_t distance_counter_max = DISTANCE_COUNTER_MIN;
 static uint16_t antenna_delay = ANTENNA_DELAY_START;
 
@@ -52,7 +48,7 @@ static uint16_t antenna_delay = ANTENNA_DELAY_START;
 static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, false, false, "",{0,0,0,0,0,0} };
 #endif
 #ifdef Z_TEST
-    static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0, 0.0, 0, 0, 0, false, false, "",{0,0,0,0,0,0} };
+    static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0, 0.0, 0, false, false, "",{0,0,0,0,0,0} };
 #endif
 #endif
 
@@ -135,7 +131,8 @@ static void setAnchorActive(uint16_t ID, bool isActive)
 static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t anchornumber)
 {
     functionNumber = 0x06;
-    Serial.print(functionNumber);
+    if(_debugSerial)
+        Serial.print(functionNumber);
     //for debugging:
     //Serial.print("distance: ");
     //Serial.println(distance);
@@ -147,7 +144,7 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
     {
         return false;
     }
-    if(distance > 15)//if the measured value is bigger than the maximum range
+    if(distance > LONGEST_RANGE)//if the measured value is bigger than the maximum range
     {
         anchors[anchornumber].distance += LONGEST_RANGE;//set is to max range
         anchors[anchornumber].distance_counter++;
@@ -170,16 +167,14 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
 static bool generateDistanceAndTimer(uint8_t anchornumber)
 {
     functionNumber = 0x07;
-    Serial.println(functionNumber);
+    if(_debugSerial)
+        Serial.println(functionNumber);
     if(setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange(), anchornumber)) 
     {
     //check if the distance counter max value has been reached (if so the anchor is done for send)
         if(anchors[anchornumber].distance_counter >= distance_counter_max)
         {
             anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
-            anchors[anchornumber].sendTime = millis();
-            anchors[anchornumber].sendTime = anchors[anchornumber].sendTime - anchors[anchornumber].lastSendTime;
-            anchors[anchornumber].lastSendTime = millis();
             return true;
         }
     }
