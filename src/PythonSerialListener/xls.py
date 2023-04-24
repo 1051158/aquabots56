@@ -2,81 +2,45 @@ import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
 import trilateration
 import draw
-from dataclasses import dataclass
+import array
 
-
-@dataclass
-class strctSet:#public values can be filled in, in excelSettings()
-    dbgXls: bool
-    dbgFirstRow: bool
-    dbgReq: bool
-    dbgInteg: bool
-    xyz_test: bool
-    nos: int
-    dcm: int
-    max_dcm: int
-    reset_dcm: int
-    dci: int
-    startSend: bool = False #private values of the class
-    back: bool = False
-    wks_count: int = 0
-    num_of_send_counter: int = 0
-    position_y: int = 1
-
-#enter all the lay out settings of excel here.
-def excelSettings(Coordinates):
-
-    #fill in the variables underneath the code will fill them in the struct some variables are private(can't be changed)
-    dbgXls = False
-    dbgFirstRow = False
-    dbgReq = False
-    dbgInteg = False
-    nos = 5
-    dcm = 1
-    max_dcm = 1
-    reset_dcm = 1
-    dci = 1
-
-    #set this false if you don't want to give a name each time the program starts
-    give_name = True
-    wbk, mapName = make_new_wbk(give_name)
-    #xyz_test depends on the map the wbk comes in:
-    if '/x-y-z_test' in mapName:
-        xyz_test = True
-    else:
-        xyz_test = False
-    Settings = strctSet(dbgXls, dbgFirstRow, dbgReq, dbgInteg, xyz_test, nos, dcm, max_dcm, reset_dcm, dci)
-    print(Settings)
-    # make a worksheet for excel
-    wks = make_new_wks(Coordinates[Settings.wks_count], wbk)
-    
-    #open the figure that will show the coordinate
-    fig = draw.start_figure()
-    
-    #return the workbook , worksheet, struct and figure
-    return wbk, wks, Settings, fig
-
-def put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Settings):
+def put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Settings, timer, ax, plt):
     #split the string into array's
     WiFiString = WiFiString.split('\n')
     WiFiString = WiFiString.pop(0)
     WiFiString = WiFiString.split('\t')
     anchor = WiFiString
 
-    #an anchorcounter to make sure three anchors with the right ID's are measured
-    anchorCounter = 0
-    D_1 = 0
-    D_2 = 0
+    #if tagInfo.AD_start != tagInfo.AD_end:
+     #   wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + 1), '-')
+      #  wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + 5), '-')
+       # wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + 13), '-')
+        #wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + 21), '-')
+
+
+    #else:
+    #wks.write(xl_rowcol_to_cell(1, Settings.num_of_send_counter + 2), '-')
+    #wks.write(xl_rowcol_to_cell(3, Settings.num_of_send_counter + 2), '-')
+    #wks.write(xl_rowcol_to_cell(5, Settings.num_of_send_counter + 2), '-')
+    #wks.write(xl_rowcol_to_cell(7, Settings.num_of_send_counter + 2), '-')
+
+    ID_array = array.array('i', [])
+    D_array = array.array('f', [])
+
     #print for debugging
     if Settings.dbgXls:
         print(anchor)
 
-    Anchorfilter = 0
-
     for i in range((tagInfo.max_anchors)-1):
         #split the array into subarray's.
-        ID = anchor[i].split('ID')  # split ID from the string
-        D = ID[1].split('d')  # split distance from the string
+
+        # split ID from the string
+        ID = anchor[i].split('ID')  
+
+        # split distance from the string
+        D = ID[1].split('d')  
+
+        #split measureTime from string(if activated) #todo
         #ms = D[1].split('ms')
 
         #take the first value of every subarray.
@@ -84,93 +48,130 @@ def put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Setting
         D = D.pop(0)
         #ms = ms.pop(0)
 
+        ID_array.append(int(ID))
+        D_array.append(float(D))
+
         #print only when debugging.
         if Settings.dbgXls:
             print(ID)
             #print(ms)
 
+            if i == 2:
+                print(ID_array)
+                print(D_array)
+
         #check the ID number to make sure the values come in the right spot in excel...
 
-        #anchor 1
-        if ID == '0':
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + 1), D)  # write distances on the cells
-            #wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + 2), ms)
-            anchorCounter += 1
+        if tagInfo.AD_start != tagInfo.AD_end:
+            print('ID: ', ID)
+            xpos = Settings.num_of_send_counter + 2 + 2 * int(ID) + (Settings.nos + 1) * int(ID)
+            print('xpos: ', xpos)
+            wks.write(xl_rowcol_to_cell(Settings.position_y, xpos), D)
+        else:
 
-        #anchor 2
-        if ID == '1':
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + Settings.nos + 5), D)  # write distances on the cells
-            #wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 7), ms)
-            anchorCounter += 1
+            #anchor 1
+            if ID == '0':
+                wks.write(xl_rowcol_to_cell(1, Settings.num_of_send_counter + 2), + D)  # write distances on the cells
+                # wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + 2), ms)
 
-        #anchor 3
-        if ID == '2':
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + Settings.nos + 13), D)  # write distances on the cells
-            #wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 13), ms)
-            anchorCounter += 1
+            # anchor 2
+            if ID == '1':
+                wks.write(xl_rowcol_to_cell(3, Settings.num_of_send_counter + 2), + D)  # write distances on the cells
+                # wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 7), ms)
 
-        #anchor 4
-        if ID == '3':
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + Settings.nos + 21), D)  # write distances on the cells
-            #wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos+21), ms)
-            anchorCounter += 1
+            # anchor 3
+            if ID == '2':
+                wks.write(xl_rowcol_to_cell(5, Settings.num_of_send_counter + 2), D)  # write distances on the cells
+                # wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 13), ms)
 
-        #check how far the anchorcounter is and put the distances in variables
-        if i == 0:
-            D_1 = float(D)
-
-        if i == 1:
-            D_2 = float(D_1)
-            D_1 = float(D)
-
+            # anchor 4
+            if ID == '3':
+                wks.write(xl_rowcol_to_cell(7, Settings.num_of_send_counter + 2), D)  # write distances on the cells
+                # wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos+21), ms)
+                # calculate the coordinates
+                # put the right ID numbers in the function so the x-y-z array's use the right values
         if i == 2:
+            Coordinate1, Coordinate2 = trilateration.triliterationnew3D(x_array, y_array, z_array, D_array[0],
+                                                                        D_array[1], D_array[2], ID_array, Settings)
+
             if Settings.dbgXls:
-                print(D)
-                print(D_1)
-                print(D_2)
+                print('Coordinate1: ', Coordinate1)
+                print('Coordinate2: ', Coordinate2)
 
-            #calculate the coordinates
-            Coordinate1, Coordinate2 = trilateration.triliterationnew3D(x_array, y_array, z_array, D, D_1, D_2)
+            # put the x_y_z values in excel
+            if tagInfo.AD_start == tagInfo.AD_end:
+                for j in range(tagInfo.max_anchors - 1):
+                    wks.write(xl_rowcol_to_cell((tagInfo.max_anchors + 1) * 2, Settings.num_of_send_counter + 2),
+                              Coordinate1[j])
+                    wks.write(xl_rowcol_to_cell(((tagInfo.max_anchors + 1) * 2) + Settings.num_of_send_counter + 2),
+                              Coordinate2[j])
 
-            #draw the measured point with a positive Z-coordinate
+            #put the x_y_z values in excel
+            if tagInfo.AD_start != tagInfo.AD_end:
+                for j in range(tagInfo.max_anchors - 1):
+                    xpos_xyz1 = (Settings.nos + 3) * (tagInfo.max_anchors) + Settings.num_of_send_counter + (Settings.nos + 1) * j
+                    xpos_xyz2 = (Settings.nos + 3) * (tagInfo.max_anchors) + Settings.num_of_send_counter + (Settings.nos + 1) * j + (Settings.nos + 2) * 3
+                    print('xyz1: ', xpos_xyz1)
+                    print('xyz2: ', xpos_xyz2)
+                    wks.write(xl_rowcol_to_cell(Settings.position_y,
+                                        (Settings.nos + 3) * (tagInfo.max_anchors) + Settings.num_of_send_counter + (Settings.nos + 1) * j + j), Coordinate1[j])
+                    wks.write(xl_rowcol_to_cell(Settings.position_y, (Settings.nos + 2) * (tagInfo.max_anchors) + Settings.num_of_send_counter + Settings.nos * j + (Settings.nos + 1) * 3 + 3 + j) , Coordinate2[j])
+
+                # draw the measured point with a positive Z-coordinate
             if Coordinate1[2] > 0:
-                draw.animate_func(Coordinate1, fig)
+                fig, ax, plt = draw.animate_func(Coordinate1, fig, ax, plt)
             else:
-                draw.animate_func(Coordinate2, fig)
+                fig, ax, plt = draw.animate_func(Coordinate2, fig, ax, plt)
 
-            # write the calculated values with in the right row and colum of the AD_value
-            wks.write(xl_rowcol_to_cell(Settings.position_y -1, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+1)+2), Coordinate1[0])
-            wks.write(xl_rowcol_to_cell(Settings.position_y-1, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+2)+2), Coordinate1[1])
-            wks.write(xl_rowcol_to_cell(Settings.position_y-1, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+3)+2), Coordinate1[2])
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+1)+2), Coordinate2[0])
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+2)+2), Coordinate2[1])
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+3)+2), Coordinate2[2])
-            print('works')
-            wks.write(xl_rowcol_to_cell(Settings.position_y, Settings.num_of_send_counter + (Settings.nos+1)*(tagInfo.max_anchors+4)+2), Coordinate2[2])
-
+    timer.stop()
+    timer.start()
+    return timer
 def first_rows_excel_multiple_AD(wks, tagInfo, Distance_array, Settings):
     j = 0
     row = Settings.num_of_send_counter
 
-    #calculate the number of AD intervals
+    # calculate the number of AD intervals
     number_of_intervals = (tagInfo.AD_end - tagInfo.AD_start) / tagInfo.AD_interval
 
-    nos = Settings.nos
-    number_of_dcm = (Settings.reset_dcm - Settings.dcm)/int(Settings.dci)
-    wks.write(xl_rowcol_to_cell(1, (Settings.nos + 1) * (tagInfo.max_anchors + 2) + 2), 'x')
-    wks.write(xl_rowcol_to_cell(1, (Settings.nos + 1) * (tagInfo.max_anchors + 2) + 2), 'y')
-    wks.write(xl_rowcol_to_cell(1, (Settings.nos + 1) * (tagInfo.max_anchors + 3) + 2), 'z')
-    print(Distance_array)
+    number_of_dcm = (Settings.reset_dcm - Settings.dcm) / int(Settings.dci)
+    wks.write(xl_rowcol_to_cell(0, (Settings.nos + 2) * tagInfo.max_anchors + 1), 'x1')
+    wks.write(xl_rowcol_to_cell(0, (Settings.nos + 2) * (tagInfo.max_anchors + 1) + 1), 'y1')
+    wks.write(xl_rowcol_to_cell(0, (Settings.nos + 2) * (tagInfo.max_anchors + 2) + 2), 'z1')
+    wks.write(xl_rowcol_to_cell(0, (Settings.nos + 2) * (tagInfo.max_anchors + 3) + 3), 'x2')
+    wks.write(xl_rowcol_to_cell(0, (Settings.nos + 2) * (tagInfo.max_anchors + 4) + 4), 'y2')
+    wks.write(xl_rowcol_to_cell(0, (Settings.nos + 2) * (tagInfo.max_anchors + 5) + 5), 'z2')
+
     for k in range((tagInfo.max_anchors)):
         print('k', k)
         wks.write(xl_rowcol_to_cell(3 + j, row), Distance_array[k][Settings.wks_count])
         for i in range(int(number_of_intervals) + 1):  # make sure the max anchors is correct with reality
-            wks.write(xl_rowcol_to_cell(i + j, row), float(tagInfo.AD_start) + (float(tagInfo.AD_interval) * i))  # write on the cells defined by y row and the i of the for loop
+            wks.write(xl_rowcol_to_cell(i + j, row), float(tagInfo.AD_start) + (float(
+                tagInfo.AD_interval) * i))  # write on the cells defined by y row and the i of the for loop
             for l in range(int(number_of_dcm) + 1):
                 wks.write(xl_rowcol_to_cell(i + j + 1, row + 1), 'avg_' + str(l + int(Settings.dcm)))
                 j += 1
         j = 0
         row += Settings.nos + 3
+
+def first_rows_excel_multiple_anchor(wks, tagInfo, Distance_array, Settings):
+    j = 0
+    row = 0
+    for i in range(Settings.nos):
+        wks.write(xl_rowcol_to_cell(0, i + 2), i)
+
+    number_of_dcm = (Settings.reset_dcm - Settings.dcm) / int(Settings.dci)
+    wks.write(xl_rowcol_to_cell(10, 0), 'x1')
+    wks.write(xl_rowcol_to_cell(11, 0), 'y1')
+    wks.write(xl_rowcol_to_cell(12, 0), 'z1')
+    wks.write(xl_rowcol_to_cell(14, 0), 'x2')
+    wks.write(xl_rowcol_to_cell(15, 0), 'y2')
+    wks.write(xl_rowcol_to_cell(16, 0), 'z2')
+
+    for k in range((tagInfo.max_anchors)):
+        print('k', k)
+        wks.write(xl_rowcol_to_cell(2 * k , row), Distance_array[k][Settings.wks_count])
+        for l in range(int(number_of_dcm) + 1):
+            wks.write(xl_rowcol_to_cell(2*k + l + 1, row + 1), 'avg_' + str(l + int(Settings.dcm)))
 
 def first_rows_excel(wks, tagInfo, distance_array, Settings):
     j = 0
@@ -188,7 +189,7 @@ def first_rows_excel(wks, tagInfo, distance_array, Settings):
             wks.write(xl_rowcol_to_cell(i + j, row + 1), 'time(ms)')
             j += 1
     j = 0
-    row += Settings.nos + 3
+    row += Settings.nos + 2
 
 def make_new_wbk(give_name):
     if give_name == True:
@@ -196,7 +197,7 @@ def make_new_wbk(give_name):
         fileName = '/' + input() + '.xlsx' # name of the testfile
     else:
         fileName = '/integration.xlsx'
-    directory = '/home/donny/Documents/Aqualab/pythonProject/xlsxFiles'  # name of this directory so the xsl lib works
+    directory = '/home/donny/Documents/Werk/Aqualab/pythonProject/xlsxFiles'  # name of this directory so the xsl lib works
     modeName = '/LOWPOWER_MODE'
     anchorName = ''  # name of the anchor to test the range with choose 1,2 or 3
     testName = '/x-y-z_test'  # name of the kind of test(choose between '/rangetest' or '/x_y-test')
