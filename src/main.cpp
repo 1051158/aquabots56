@@ -56,7 +56,7 @@ void newRange()
   // if new range is found by Tag it should store the distance in the anchorManager
   #ifdef TYPE_TAG
   /////////////////First check which menus are on//////////////////
-    checkMenus();
+    checkActivity();
     if(_resetAnchors)
   {
     resetAnchors();
@@ -178,6 +178,25 @@ void setup()
     //print on display end of setup
     #ifdef I2C
     _i2c.print(UNIQUE_ADRESS, true);
+    String info = "";
+    #ifdef ANCHOR_1
+      info = info + ANCHOR_X_1 + ANCHOR_Y_1 + ANCHOR_Z_1;
+      #endif
+      #ifdef ANCHOR_2
+      info = info + ANCHOR_X_2 + ANCHOR_Y_2 + ANCHOR_Z_2;
+      #endif
+      #ifdef ANCHOR_3
+      info = info + ANCHOR_X_3 + 'x' + ANCHOR_Y_3 + 'y' + ANCHOR_Z_3 + 'z';
+      Serial.print(info);
+      #endif
+      #ifdef ANCHOR_4
+      info = info + ANCHOR_X_4 + ANCHOR_Y_4 + ANCHOR_Z_4;
+      #endif
+    _i2c.enter();
+    _i2c.print(info.c_str(), false);
+    info = ANTENNA_DELAY;
+    _i2c.enter();
+    _i2c.print(info.c_str(), false);
     #endif
   #endif
   #ifdef USE_RANGE_FILTERING

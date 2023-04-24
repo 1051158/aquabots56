@@ -2,13 +2,16 @@
 
 static uint8_t cal_points_counter = 1;
 static uint8_t anchors_to_calculate_counter = 0;
-static uint8_t active_counter = 0;
+static uint8_t active_counter_1 = 0;
 static unsigned long sendTime = 0;
 static unsigned long sendTime_1 = 0;
 //#define DEBUG_SYNCHRONIZE
 
+static bool print = true;
+
 /////////////////////////////////Function to send distances for the x-y calculation in python///////////////////////////////
 #ifdef TYPE_TAG
+#ifdef AD_TEST
 static void resetAD()
 {
     functionNumber = 0x0A;
@@ -75,6 +78,7 @@ static void subAD()
   //when all the antenna delays on the secified coördinates have been tested:
   _subAD = false;
 }
+#endif
 
 static void addDCM()
 {
@@ -104,10 +108,12 @@ static void Rdy2Send()
   }
   //check menu when program is waiting for sending the data
   //wait untill python asks for a getRequest
+  #ifdef AD_TEST
   if(_addAD)
     addAD();
   if(_resetAD)
     resetAD();
+  #endif
   if(_addDCM)
     addDCM();
   if(_resetDCM)
@@ -131,7 +137,6 @@ static void checkForDistances()
   #endif      
   if(!_resetAnchors)
   {
-    #ifndef DEBUG_INTERRPUT
   //get ranges from all the anchors in a for statement
   for(uint8_t i = 0; i < MAX_ANCHORS;i++)
   {
@@ -154,10 +159,7 @@ static void checkForDistances()
         anchors[i].done = false;
         //Serial.print("not registered");
       }
-      
-      //When 3 anchors are found stop measuring(to increase speed)
-      if(anchors_to_calculate_counter >= 3 && !_resetAnchors)
-        break;
+
     //when all the data of the antenna_delay for one anchor is done a counter is used for synchronisation
     }
   }
@@ -171,16 +173,6 @@ static void checkForDistances()
     Rdy2Send();
     synchronizeAnchors();
   }
-    
-    
-    /*after the getRequest is send(Server.on("/anchor") interrupt is triggered) check if any options need to be changed.
-    Python always sends a change before it asks 4 message so the interrupt bool to change the AD or DCM will be set true
-    */ 
-  #ifdef DEBUG_SYNCHRONIZE
-  Serial.print("delay");
-  Serial.println(change_delay_counter);
-  #endif
-  #endif
   }
 }
 
@@ -196,7 +188,7 @@ static void endProgram(void)
 }
 
 
-static void checkMenus()
+static void checkActivity()
 {
   functionNumber = 0x04;
     if(i2cMenu[END_CODE].status)
@@ -205,14 +197,21 @@ static void checkMenus()
     }
 
   //check first if there are at least 3 anchors
+  active_counter = 0;
   for(uint8_t i = 0; i < MAX_ANCHORS; i++)
   {
     if(anchors[i].active)
       {
         active_counter++;
       }
-  }          
-    if(active_counter>=3 && !_resetAnchors)
-        checkForDistances();
+  }
+      checkForDistances();
+      if(active_counter != active_counter_1)
+      {
+        String AC = "";
+        AC = AC + "active: " + active_counter;
+        _i2c.print(AC.c_str(), true);
+        active_counter_1 = active_counter;
+      }
 }
 #endif

@@ -95,9 +95,31 @@ def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t,
         Settings.dcm = 1
         print('resetDCM', getRequest(':82/resetDCM'))
         if tagInfo.AD_start == tagInfo.AD_end:
+            Settings.wks_count += 1
+            Settings.startSend = False
+            getRequest(":81/resetAD")
+            if Settings.wks_count >= len(Coordinates):
+                wbk.close()
+                sys.exit(0)
+            # float_distance -= 0.5
+
+            if Settings.back == False:
+                print(Coordinates[Settings.wks_count])
+                wks = xls.make_new_wks(Coordinates[Settings.wks_count], wbk) 
+                print(Coordinates[Settings.wks_count])
+                wks = wbk.get_worksheet_by_name(Coordinates[Settings.wks_count])
+                Settings.back = False
+
+            if tagInfo.max_anchors == '1':
+                xls.first_rows_excel(wks, tagInfo, distance_array, Settings)
+
+            else:
+                xls.first_rows_excel_multiple_anchor(wks, tagInfo, distance_array, Settings)
+            t1.stop()
+        else:
             if int(tagInfo.antenna_delay) >= tagInfo.AD_end:
                 Settings.wks_count += 1
-
+                print('went in')
                 if Settings.wks_count >= len(Coordinates):
                     wbk.close()
                     sys.exit(0)
@@ -119,9 +141,7 @@ def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t,
                     xls.first_rows_excel_multiple_AD(wks, tagInfo, distance_array, Settings)
 
                 # reset the tag with the right link in the getRequest
-                t.start()
                 print('resetAD', getRequest(':81/resetAD'))
-                t.stop()
                 Settings.startSend = False
                 tagInfo.antenna_delay = tagInfo.AD_start
                 Settings.position_y = 1
@@ -135,26 +155,6 @@ def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t,
                 tagInfo.antenna_delay += tagInfo.AD_interval
                 Settings.position_y += 2
                 sleepTime = 0.3
-        else:
-            if Settings.wks_count >= len(Coordinates):
-                wbk.close()
-                sys.exit(0)
-            # float_distance -= 0.5
-
-            if Settings.back == False:
-                print(Coordinates[Settings.wks_count])
-                wks = xls.make_new_wks(Coordinates[Settings.wks_count], wbk)
-
-            else:
-                print(Coordinates[Settings.wks_count])
-                wks = wbk.get_worksheet_by_name(Coordinates[Settings.wks_count])
-                Settings.back = False
-
-            if tagInfo.max_anchors == '1':
-                xls.first_rows_excel(wks, tagInfo, distance_array, Settings)
-
-            else:
-                xls.first_rows_excel_multiple_AD(wks, tagInfo, distance_array, Settings)
 
     else:
         Settings.dcm += Settings.dci
@@ -166,6 +166,6 @@ def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t,
         getRequest(':82/addDCM')
         Settings.position_y += 1
         sleepTime = 0.2
-    return tagInfo, wks, Settings, t1
+    return tagInfo, wks, Settings, t, t1
 
 

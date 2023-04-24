@@ -16,33 +16,34 @@ static bool _debugSerial = false;
 
 /////Anchor or tag////////////
 
-#define TYPE_TAG
-//#define TYPE_ANCHOR
+//#define TYPE_TAG
+#define TYPE_ANCHOR
+
+#define AD_TEST
 
 ///////////////////////anchor info for the tag(change coordinates for the right real-time situation)/////////////////////
-#ifdef TYPE_TAG
 //give the coordinates and ID's of the anchors
 #define ANCHOR_ID_1 4369
-#define ANCHOR_X_1 10
+#define ANCHOR_X_1 4.5
 #define ANCHOR_Y_1 0
-#define ANCHOR_Z_1 1
+#define ANCHOR_Z_1 0.9
 
 #define ANCHOR_ID_2 8738
-#define ANCHOR_X_2 0
-#define ANCHOR_Y_2 6.88
-#define ANCHOR_Z_2 1
+#define ANCHOR_X_2 3
+#define ANCHOR_Y_2 5.6
+#define ANCHOR_Z_2 0.9
 
 
 #define ANCHOR_ID_3 13107
-#define ANCHOR_X_3 10
-#define ANCHOR_Y_3 16
-#define ANCHOR_Z_3 1
+#define ANCHOR_X_3 0.4
+#define ANCHOR_Y_3 5
+#define ANCHOR_Z_3 1.1
 
 
 #define ANCHOR_ID_4 17476
-#define ANCHOR_X_4 10
-#define ANCHOR_Y_4 8
-#define ANCHOR_Z_4 1
+#define ANCHOR_X_4 0.35
+#define ANCHOR_Y_4 0.73
+#define ANCHOR_Z_4 1.5
 
 
 #define ANCHOR_ID_5 21845
@@ -56,7 +57,6 @@ static bool _debugSerial = false;
 #define X 0
 #define Y 1
 #define Z 2
-#endif
 
 
 #define LONGEST_RANGE 15
@@ -82,38 +82,38 @@ static bool _debugSerial = false;
 //uncomment if the tag should be controlled by servers
 #define SERVER_CONTROLLER
 
-#define Y_COOR 2.5
-#define Z_COOR 0.64
+#define Y_COOR 2
+#define Z_COOR 0.84
 
 #ifdef Z_TEST
     #define MAX_CAL_DIS 6 
-    static float x_y_points [MAX_CAL_DIS][3] = {{8.5, Y_COOR, Z_COOR}, {7,Y_COOR, Z_COOR}, {5.5, Y_COOR,Z_COOR}, {4, Y_COOR, Z_COOR}, {2.5, Y_COOR, Z_COOR}, {1, Y_COOR, Z_COOR}};
+    static float x_y_points [MAX_CAL_DIS][3] = {{2,2.4,0.5}, {4,Y_COOR, Z_COOR}, {7, Y_COOR,Z_COOR}, {5.5, Y_COOR, Z_COOR}, {7, Y_COOR, Z_COOR}, {8.5, Y_COOR, Z_COOR}};
 #endif
 
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
 #ifdef TYPE_ANCHOR
-    #define ANCHOR_1
+    //#define ANCHOR_1
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_1
-        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #1
+        #define ANTENNA_DELAY 16707 // BEST ANTENNA DELAY ANCHOR #1
         #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
     #endif
-    //#define ANCHOR_2
+    #define ANCHOR_2
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_2
-        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #2
+        #define ANTENNA_DELAY 16500 // BEST ANTENNA DELAY ANCHOR #2
         #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
     #endif
     //#define ANCHOR_3
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_3
         #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
-        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #3
+        #define ANTENNA_DELAY 16550 // BEST ANTENNA DELAY ANCHOR #3
     #endif
-    #define ANCHOR_4
+    //#define ANCHOR_4
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_4
-        #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
+        #define ANTENNA_DELAY 16675 // BEST ANTENNA DELAY ANCHOR #4
         #define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
     #endif
     //#define ANCHOR_5
@@ -143,7 +143,7 @@ static bool _debugSerial = false;
 #define DISTANCE_COUNTER_MIN 1 // will reset variable distance counter max when RESET_DISTANCE_COUNTER_MAX_VALUE is reached 
 #define DISTANCE_COUNTER_INTERVAL 1 //will be added to variable distance counter max in the anchor struct
 
-#define ANTENNA_INTERVAL 20 //interval between 2 antenna delays
+#define ANTENNA_INTERVAL 0 //interval between 2 antenna delays
 
 #define ANTENNA_DELAY_START 16384 //start value antenna delay
 #define ANTENNA_DELAY_END 16384 //end value antenna delay
@@ -168,7 +168,7 @@ static bool _debugSerial = false;
 #define START_SEND 0
 #define BACKSPACE 1
 //ToDo change excel_mode to drawMode
-#define EXCEL_MODE 2
+#define DRAW_MODE 2
 #define END_CODE 3
 
 

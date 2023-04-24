@@ -9,6 +9,8 @@
 static bool rdy2send = false;
 static bool done_send = false;
 
+static uint8_t active_counter = 0;
+
 static bool start_test = false;
 
 static AsyncWebServer Server(80);
@@ -76,7 +78,7 @@ static String send_total_data_server()
   //////////////send signal if 3 out of MAX_ANCHORS anchors are done sending/////////////////////////////////
   for(uint8_t i = 0; i < MAX_ANCHORS; i++)
   {
-    if(anchors[i].done)
+    if(anchors[i].done && anchors[i].distance > 0)
     {
       total_data_1 = total_data_1 + anchors[i].total_data + i + "ID" + anchors[i].distance + 'd' + "\t";
       //store the data of every anchor in one total string to send 
@@ -124,14 +126,11 @@ static void WiFiSettingsExtern(void)
 
   Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
   {
-
-    //check if tag has been shutted off(through i2c menu) and send that to python so the excel sheet will be saved
-      /*if(i2cMenu[END_CODE].status)
-      {
-        request->send(200, "text/plain", "stop");
-        delay(3000);
-        esp_deep_sleep_start();
-      }*/
+    if(active_counter < 3 && active_counter > 0)
+    {
+      request->send(200, "text/plain", "notActive");
+      return;
+    }
       if(_resetAnchors)
       {
         request->send(200, "text/plain", "2rst");
@@ -159,6 +158,7 @@ static void WiFiSettingsExtern(void)
 });
 
 #ifdef SERVER_CONTROLLER
+#ifdef AD_TEST
 //addAD when the python script has reached its DCM
 Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
 {
@@ -168,6 +168,7 @@ Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
   request->send(200, "text/plain", AD_send);
   _addAD = true;
 });
+#endif
 
 //resetAD when the excel file has reached its max of the AD_test
 Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -178,6 +179,7 @@ Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
   _resetAD = true;
 }
 );
+
 
 //server interrupt function to reset DCM
 Server2.on("/resetDCM", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -205,7 +207,6 @@ Server4.on("/start", HTTP_GET, [](AsyncWebServerRequest *request)
     String send;
     send = makeCaldisPackage().c_str();
     request->send(200, "text/plain", send);
-    Server5.end();
   });
   //to control the python code with the interruptbuttons
   Server3.on("/sendMenu", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -225,10 +226,10 @@ Server4.on("/start", HTTP_GET, [](AsyncWebServerRequest *request)
       resetAnchors();
       _resetAnchors = true;
     }
-    if(i2cMenu[EXCEL_MODE].status)
+    if(i2cMenu[DRAW_MODE].status)
     {  
       request->send(200, "text/plain", "2");
-      i2cMenu[EXCEL_MODE].status = false;
+      i2cMenu[DRAW_MODE].status = false;
     }
     //when this button is pressed and the pythoncode has all measurements send the arraynumber of END_CODE
     if(i2cMenu[END_CODE].status)

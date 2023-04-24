@@ -108,7 +108,7 @@ class i2c
         }
         static bool enter(void)
         {
-            y_pos+=9;
+            y_pos+=10;
             x_pos = 0;
             if(y_pos>=MAX_Y_POS)
             {

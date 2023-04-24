@@ -140,7 +140,7 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
 
     //filter to skip the wrong measurements
     //if the measured distance is smaller than -1 or bigger than sqrt(x² + y²)
-    if(distance <= -3 || distance>=15)
+    if(distance <= -1 || distance>=15)
     {
         return false;
     }
@@ -150,6 +150,9 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
         anchors[anchornumber].distance_counter++;
         return true;
     }
+    if(distance < 0)
+        distance = 0;
+
     anchors[anchornumber].distance += distance;//add distance 
     anchors[anchornumber].distance_counter++;//add 1 to distance_counter
     #ifdef DEBUG_ANCHOR_MANAGER
