@@ -16,10 +16,10 @@ static bool _debugSerial = false;
 
 /////Anchor or tag////////////
 
-//#define TYPE_TAG
-#define TYPE_ANCHOR
+#define TYPE_TAG
+//#define TYPE_ANCHOR
 
-#define AD_TEST
+//#define AD_TEST
 
 ///////////////////////anchor info for the tag(change coordinates for the right real-time situation)/////////////////////
 //give the coordinates and ID's of the anchors
