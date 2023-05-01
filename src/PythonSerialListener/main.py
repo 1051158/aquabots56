@@ -33,7 +33,7 @@ def WifiReadLoop():
                                   'synchornizeAnchors', 'resetAnchors', 'resetAD', 'addAD', 'subAD', 'addDCM'])
 
     #get the excel settings and make a workbook and worksheet
-    wbk, wks, Settings, fig, ax, plt = settings.excelSettings(Coordinates)
+    wbk, wks, Settings, fig, ax, plt, coordinates, anchor1, anchor2, anchor3, anchor4, d1, d2, d3, d4 = settings.allSettings(Coordinates)
 
     if Settings.xyzTest == False:
         for i in range (6):
@@ -88,7 +88,7 @@ def WifiReadLoop():
                     if Settings.dbgXls:
                         print('y', Settings.position_y)
                         print('x', Settings.num_of_send_counter)
-                    t2 = xls.put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Settings, t2, ax, plt)
+                    D = xls.put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Settings, t2, ax, plt)
                     Settings.num_of_send_counter += 1
 
                     if Settings.dbgXls:
@@ -154,5 +154,4 @@ def endCode(wbk):
     wbk.close()
     sys.exit(0)
 
-trilateration.trilaterationtest()
-# start eventLoop
+WifiReadLoop()# start eventLoop

@@ -68,28 +68,8 @@ def put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Setting
             print('xpos: ', xpos)
             wks.write(xl_rowcol_to_cell(Settings.position_y, xpos), D)
         else:
+            wks.write(xl_rowcol_to_cell(Settings.position_y + 2*int(ID), Settings.num_of_send_counter), D)
 
-            #anchor 1
-            if ID == '0':
-                wks.write(xl_rowcol_to_cell(1, Settings.num_of_send_counter + 2), + D)  # write distances on the cells
-                # wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + 2), ms)
-
-            # anchor 2
-            if ID == '1':
-                wks.write(xl_rowcol_to_cell(3, Settings.num_of_send_counter + 2), + D)  # write distances on the cells
-                # wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 7), ms)
-
-            # anchor 3
-            if ID == '2':
-                wks.write(xl_rowcol_to_cell(5, Settings.num_of_send_counter + 2), D)  # write distances on the cells
-                # wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos + 13), ms)
-
-            # anchor 4
-            if ID == '3':
-                wks.write(xl_rowcol_to_cell(7, Settings.num_of_send_counter + 2), D)  # write distances on the cells
-                # wks.write(xl_rowcol_to_cell(Settings.position_y + 1, Settings.num_of_send_counter + Settings.nos+21), ms)
-                # calculate the coordinates
-                # put the right ID numbers in the function so the x-y-z array's use the right values
         if i == 2:
             Coordinate1, Coordinate2 = trilateration.triliterationnew3D(x_array, y_array, z_array, D_array[0],
                                                                         D_array[1], D_array[2], ID_array, Settings)
@@ -103,7 +83,7 @@ def put_in_xls(WiFiString, wks, x_array, y_array, z_array, tagInfo, fig, Setting
                 for j in range(tagInfo.max_anchors - 1):
                     wks.write(xl_rowcol_to_cell((tagInfo.max_anchors + 1) * 2, Settings.num_of_send_counter + 2),
                               Coordinate1[j])
-                    wks.write(xl_rowcol_to_cell(((tagInfo.max_anchors + 1) * 2) + Settings.num_of_send_counter + 2),
+                    wks.write(xl_rowcol_to_cell((tagInfo.max_anchors + 1) * 2, + Settings.num_of_send_counter + 2),
                               Coordinate2[j])
 
             #put the x_y_z values in excel
