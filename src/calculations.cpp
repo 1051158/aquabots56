@@ -7,6 +7,8 @@
 //////////////////uncomment to check the calculations of calibration distances/////////////////////////////
 //#define DEBUG_CAL
 
+static float x, y;
+
 #ifdef TYPE_TAG
 //////////////////Calculate the distances at every X and Y point for the calibration of Antenna Delay///////
 static void CalibrationDistances()
@@ -44,7 +46,7 @@ static void CalibrationDistances()
         #endif
     }
 }
-/*
+
 static void x_y_cal(anchor anchor1, anchor anchor2, anchor anchor3)
 { 
     float A,B,C,D,E,F; 
@@ -57,5 +59,5 @@ static void x_y_cal(anchor anchor1, anchor anchor2, anchor anchor3)
     
     x = ((C*E) - (F*B))/((E*A) - (B*D));
     y = ((C*D) - (A*F))/((B*D) - (A*E));
-}*/
+}
 #endif
