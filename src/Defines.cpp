@@ -19,7 +19,7 @@ static bool _debugSerial = false;
 #define TYPE_TAG
 //#define TYPE_ANCHOR
 
-//#define AD_TEST
+#define AD_TEST
 
 ///////////////////////anchor info for the tag(change coordinates for the right real-time situation)/////////////////////
 //give the coordinates and ID's of the anchors
@@ -86,41 +86,46 @@ static bool _debugSerial = false;
 #define Z_COOR 0.84
 
 #ifdef Z_TEST
-    #define MAX_CAL_DIS 6 
-    static float x_y_points [MAX_CAL_DIS][3] = {{2,2.4,0.5}, {4,Y_COOR, Z_COOR}, {7, Y_COOR,Z_COOR}, {5.5, Y_COOR, Z_COOR}, {7, Y_COOR, Z_COOR}, {8.5, Y_COOR, Z_COOR}};
+    #define MAX_CAL_DIS 3 
+    static float x_y_points [MAX_CAL_DIS][3] = {{5, 10, Z_COOR}, {5, 15, Z_COOR}, {5, 5, Z_COOR}};
 #endif
 
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
 #ifdef TYPE_ANCHOR
-    //#define ANCHOR_1
+    #define ANCHOR_1
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_1
-        #define ANTENNA_DELAY 16707 // BEST ANTENNA DELAY ANCHOR #1
+        #define ANTENNA_DELAY 16500 // BEST ANTENNA DELAY ANCHOR #1
         #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
     #endif
-    #define ANCHOR_2
+
+    //#define ANCHOR_2
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_2
         #define ANTENNA_DELAY 16500 // BEST ANTENNA DELAY ANCHOR #2
         #define UNIQUE_ADRESS "22:22:5B:D5:A9:9A:E2:9C"
     #endif
+
     //#define ANCHOR_3
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_3
         #define UNIQUE_ADRESS "33:33:5B:D5:A9:9A:E2:9C"
-        #define ANTENNA_DELAY 16550 // BEST ANTENNA DELAY ANCHOR #3
+        #define ANTENNA_DELAY 16500 // BEST ANTENNA DELAY ANCHOR #3
     #endif
+
     //#define ANCHOR_4
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_4
-        #define ANTENNA_DELAY 16675 // BEST ANTENNA DELAY ANCHOR #4
+        #define ANTENNA_DELAY 16500 // BEST ANTENNA DELAY ANCHOR #4
         #define UNIQUE_ADRESS "44:44:5B:D5:A9:9A:E2:9C"
     #endif
+
     //#define ANCHOR_5
     #ifdef ANCHOR_5
       #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
       #define UNIQUE_ADRESS "55:55:5B:D5:A9:9A:E2:9C"
     #endif
+
     #ifdef ANCHOR_6
       #define ANTENNA_DELAY 16384 // BEST ANTENNA DELAY ANCHOR #4
       #define UNIQUE_ADRESS "66:66:5B:D5:A9:9A:E2:9C"
@@ -143,10 +148,10 @@ static bool _debugSerial = false;
 #define DISTANCE_COUNTER_MIN 1 // will reset variable distance counter max when RESET_DISTANCE_COUNTER_MAX_VALUE is reached 
 #define DISTANCE_COUNTER_INTERVAL 1 //will be added to variable distance counter max in the anchor struct
 
-#define ANTENNA_INTERVAL 0 //interval between 2 antenna delays
+#define ANTENNA_INTERVAL 15 //interval between 2 antenna delays
 
-#define ANTENNA_DELAY_START 16384 //start value antenna delay
-#define ANTENNA_DELAY_END 16384 //end value antenna delay
+#define ANTENNA_DELAY_START 16450 //start value antenna delay
+#define ANTENNA_DELAY_END 16600 //end value antenna delay
 
 ///////////////////////////////////////I2C settings////////////////////////////////////
 
@@ -186,8 +191,8 @@ static bool _debugSerial = false;
 //#define WIFI_TEST
 
 //////fill in the right names of the desired router or hotspot
-#define HOTSPOT
-//#define WIFI
+//#define HOTSPOT
+#define WIFI
 
 
 

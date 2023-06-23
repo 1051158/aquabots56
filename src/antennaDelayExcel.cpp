@@ -96,8 +96,8 @@ static void Rdy2Send()
   rdy2send = true;
   if(i2cMenu[START_SEND].status)
   {
-    while(rdy2send && !_resetAnchors && i2cMenu[START_SEND].status)
-      checkMenuInterrupts();
+    //while(rdy2send && !_resetAnchors && i2cMenu[START_SEND].status)
+      //checkMenuInterrupts();
     
     String Counter = "";
     sendTime = millis();

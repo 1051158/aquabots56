@@ -3,7 +3,6 @@
 #include <ESPAsyncWebServer.h>
 #include "buttons.cpp"
 
-#ifdef TYPE_TAG
 
 //bools to verify the string in the functions send_total_data_server() and
 static bool rdy2send = false;
@@ -13,8 +12,14 @@ static uint8_t active_counter = 0;
 
 static bool start_test = false;
 
-static AsyncWebServer Server(80);
+//IP's used by both 
 static AsyncWebServer Server1(81);
+
+//belong to "IP:80/caldis" link
+#ifdef TYPE_TAG
+
+//IP's only used by tag
+static AsyncWebServer Server(80);
 static AsyncWebServer Server2(82);
 static AsyncWebServer Server3(83);
 static AsyncWebServer Server4(84);
@@ -22,7 +27,6 @@ static AsyncWebServer Server5(85);
 static AsyncWebServer Server6(86);
 static AsyncWebServer Server7(87);
 
-//belong to "IP:80/caldis" link
 static String makeCaldisPackage()
 {
     String total_data_cal;
@@ -95,6 +99,7 @@ static String send_total_data_server()
   return total_data_1;
     ////////send "end" to pythonCode to go to next worksheet an calibrate the next point in the pool//////
   }
+  #endif
 
 #ifdef WIFI_EXTERN_ON///////////////////When the ESP32 is not an acces point(AP) use this function in void setup() of main.cpp////////////////////
 static void WiFiSettingsExtern(void)
@@ -102,14 +107,17 @@ static void WiFiSettingsExtern(void)
   uint8_t wifiCounter = 0;
   
   //Serial.println(ssid);
+
   #ifdef WIFI
-  const char* ssid = "Machelina";
-  const char* psswrd = "Donjer01";
+  const char* ssid = "DentGalaxy";
+  const char* psswrd = "PanGalactic";
   #endif
+
   #ifdef HOTSPOT
   const char* ssid = "Galaxy S20 FEA37E";
   const char* psswrd = "cooa7104";
   #endif
+
   ////////////log in into the router for extern wifi connection//////////////
   WiFi.begin(ssid, psswrd);
   while (WiFi.status() != WL_CONNECTED) 
@@ -117,6 +125,7 @@ static void WiFiSettingsExtern(void)
     if(wifiCounter == 5)
       esp_restart();
     delay(1000);
+
     #ifdef SERIAL_DEBUG
       Serial.println("Connecting to WiFi..");
     #endif
@@ -124,6 +133,7 @@ static void WiFiSettingsExtern(void)
     wifiCounter++;
   }
 
+  #ifdef TYPE_TAG
   Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     if(active_counter < 3 && active_counter > 0)
@@ -158,28 +168,7 @@ static void WiFiSettingsExtern(void)
 });
 
 #ifdef SERVER_CONTROLLER
-#ifdef AD_TEST
 //addAD when the python script has reached its DCM
-Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
-{
-  uint16_t AD_2_send = antenna_delay;
-  String AD_send = "";
-  AD_send = AD_send + AD_2_send;
-  request->send(200, "text/plain", AD_send);
-  _addAD = true;
-});
-#endif
-
-//resetAD when the excel file has reached its max of the AD_test
-Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
-{
-  uint16_t AD_2_send = antenna_delay;
-  i2cMenu[START_SEND].status = false;
-  request->send(200, "text/plain", "1");
-  _resetAD = true;
-}
-);
-
 
 //server interrupt function to reset DCM
 Server2.on("/resetDCM", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -245,18 +234,86 @@ Server6.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
     delay(1000);
     esp_restart();
   });
+#endif
+  #ifdef TYPE_TAG
+  Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  uint16_t AD_2_send = antenna_delay;
+  String AD_send = "";
+  AD_send = AD_send + AD_2_send;
+  request->send(200, "text/plain", AD_send);
+  _addAD = true;
+});
+
+//resetAD when the excel file has reached its max of the AD_test
+Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  uint16_t AD_2_send = antenna_delay;
+  i2cMenu[START_SEND].status = false;
+  request->send(200, "text/plain", "1");
+  _resetAD = true;
+}
+);
+
+  Server1.on("/subAD", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  uint16_t AD_2_send = antenna_delay - 5;
+  String AD_send = "";
+  AD_send = AD_send + AD_2_send;
+  request->send(200, "text/plain", AD_send);
+  _subAD = true;
+});
+
+#endif
+
+#ifdef TYPE_ANCHOR
+Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  antenna_delay += 5;
+  String AD_send = "";
+  AD_send = AD_send + antenna_delay;
+  request->send(200, "text/plain", AD_send);
+});
+
+//resetAD when the excel file has reached its max of the AD_test
+Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  antenna_delay = ANTENNA_DELAY;
+  String AD_send = "";
+  AD_send = AD_send + antenna_delay;
+  request->send(200, "text/plain", AD_send);
+}
+);
+
+  Server1.on("/subAD", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  antenna_delay -= 5;
+  String AD_send = "";
+  AD_send = AD_send + antenna_delay;
+  request->send(200, "text/plain", AD_send);
+});
+
+Server1.on("/setAD", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  request->send(200, "text/plain", "succes!");
+  DW1000.setAntennaDelay(antenna_delay);
+});
+#endif
 
   //check and print IPadress to fill into the laptop
     IPAddress IP = WiFi.localIP();
     Serial.print(IP);
-    Server.begin();
     Server1.begin();
+
+    #ifdef TYPE_TAG
+    Server.begin();
     Server2.begin();
     Server3.begin();
     Server4.begin();
     Server5.begin();
     Server6.begin();
     Server7.begin();
+    #endif
   #endif
 }
 
@@ -279,5 +336,4 @@ static void WiFiSettingsAP(void)
   });    
 Server.begin();
 }
-#endif
 #endif

@@ -59,5 +59,8 @@ static void x_y_cal(anchor anchor1, anchor anchor2, anchor anchor3)
     
     x = ((C*E) - (F*B))/((E*A) - (B*D));
     y = ((C*D) - (A*F))/((B*D) - (A*E));
+    String Coordinates;
+    Coordinates += '('+ x + ',' + y + ')';
+    Serial.write(Coordinates.c_str());
 }
 #endif

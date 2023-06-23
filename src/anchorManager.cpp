@@ -40,12 +40,19 @@ static bool _resetDCM = false;
 static bool _addDCM = false;
 
 static uint8_t distance_counter_max = DISTANCE_COUNTER_MIN;
+
+#ifdef TYPE_TAG
 static uint16_t antenna_delay = ANTENNA_DELAY_START;
+#endif
+
+#ifdef TYPE_ANCHOR
+static uint16_t antenna_delay = ANTENNA_DELAY;
+#endif
 
 
 #ifdef X_Y_TEST
 #ifndef Z_TEST
-static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, 0, 0, false, false, "",{0,0,0,0,0,0} };
+static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, false, false, "", {0,0,0,0,0,0} };
 #endif
 #ifdef Z_TEST
     static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0, 0.0, 0, false, false, "",{0,0,0,0,0,0} };

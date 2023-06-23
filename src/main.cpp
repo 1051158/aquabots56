@@ -103,6 +103,32 @@ void newBlink(DW1000Device *device)
     Serial.println(device->getShortAddress(), HEX);
 }
 
+#ifdef TYPE_ANCHOR
+void printI2C(void)
+{
+  _i2c.print(UNIQUE_ADRESS, true);
+    String info = "";
+    #ifdef ANCHOR_1
+      info = info + ANCHOR_X_1 + ' ' +  ANCHOR_Y_1 + ' ' +  ANCHOR_Z_1;
+      #endif
+      #ifdef ANCHOR_2
+      info = info + ANCHOR_X_2 + ' ' + ANCHOR_Y_2 + ' ' + ANCHOR_Z_2;
+      #endif
+      #ifdef ANCHOR_3
+      info = info + ANCHOR_X_3 + ' ' + ANCHOR_Y_3 + ' ' + ANCHOR_Z_3;
+      Serial.print(info);
+      #endif
+      #ifdef ANCHOR_4
+      info = info + ANCHOR_X_4 + ' ' + ANCHOR_Y_4 + ' ' + ANCHOR_Z_4;
+      #endif
+    _i2c.enter();
+    _i2c.print(info.c_str(), false);
+    info = ANTENNA_DELAY;
+    _i2c.enter();
+    _i2c.print(info.c_str(), false);
+}
+#endif
+
 //////////Setup function(go to device.cpp to turn features ON/OFF////////
 void setup() 
 {
@@ -115,9 +141,7 @@ void setup()
   //esp_sleep_enable_uart_wakeup(ESP_SLEEP_WAKEUP_UART);
   //when wifi is desired uncomment the WIFI_EXTERN_ON in
   #ifdef WIFI_EXTERN_ON
-    #ifdef TYPE_TAG
     WiFiSettingsExtern(); 
-    #endif
   #endif
   
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
@@ -136,10 +160,6 @@ void setup()
 
     Serial.println("\n\nTAG starting");
     DW1000.setAntennaDelay(ANTENNA_DELAY_START);//set the defined antenna delay
-
-    #ifndef RANGETEST
-    DW1000.setAntennaDelay(ANTENNA_DELAY_START);
-    #endif
 
     //initialize all anchors
     initializeAnchors();
@@ -177,32 +197,15 @@ void setup()
     #endif
     //print on display end of setup
     #ifdef I2C
-    _i2c.print(UNIQUE_ADRESS, true);
-    String info = "";
-    #ifdef ANCHOR_1
-      info = info + ANCHOR_X_1 + ANCHOR_Y_1 + ANCHOR_Z_1;
-      #endif
-      #ifdef ANCHOR_2
-      info = info + ANCHOR_X_2 + ANCHOR_Y_2 + ANCHOR_Z_2;
-      #endif
-      #ifdef ANCHOR_3
-      info = info + ANCHOR_X_3 + 'x' + ANCHOR_Y_3 + 'y' + ANCHOR_Z_3 + 'z';
-      Serial.print(info);
-      #endif
-      #ifdef ANCHOR_4
-      info = info + ANCHOR_X_4 + ANCHOR_Y_4 + ANCHOR_Z_4;
-      #endif
-    _i2c.enter();
-    _i2c.print(info.c_str(), false);
-    info = ANTENNA_DELAY;
-    _i2c.enter();
-    _i2c.print(info.c_str(), false);
+    printI2C();
     #endif
   #endif
   #ifdef USE_RANGE_FILTERING
     DW1000Ranging.useRangeFilter(true);
   #endif
 }
+
+//the text printed on the i2c screens of the anchors
 
 /////////////////////////////////////////////////////////////////////////
 #ifdef TESTING_I2C
@@ -227,6 +230,12 @@ void loop()
   #endif
   #endif
   DW1000Ranging.loop();
+  unsigned long timeStamp = millis();
+  if(timeStamp - lastTimestamp >= 1000)
+  {
+    Serial.print(antenna_delay);
+    lastTimestamp = millis();
+  }
   #endif
 
   #ifdef TESTING_I2C
