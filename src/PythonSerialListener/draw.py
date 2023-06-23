@@ -12,28 +12,35 @@ def start_figure():
     plt.pause(0.001)
     return fig, ax, plt
 
-def animate_func(num, fig, ax, plt):
+def animate_func(num, fig, ax, plt, xyzTest):
     #clear the last graph for new dot.
     plt.cla()
 
     #set limits for the graph
     ax.set_ylim3d(ymin=0, ymax=10)
     ax.set_xlim3d(xmin=0, xmax=10)
-    ax.set_zlim3d(zmin= 0, zmax=4)
+    ax.set_zlim3d(zmin= 0, zmax=1)
 
     #make normal floats out of the incoming array
     x = num[0]
     y = num[1]
-    z = num[2]
+    if xyzTest:
+        z = num[2]
+        ax.set_zlabel('z: ' + str(z))
 
     #give names to the axis and graph
     ax.set_title('tag_position')
     ax.set_xlabel('x: ' + str(x))
     ax.set_ylabel('y: ' + str(y))
-    ax.set_zlabel('z: ' + str(z))
+
 
     #plot the graph
-    ax.scatter(x, y, z, 'o', color='red')
+    if xyzTest:
+        ax.scatter(x, y, z, 'o', color='red')
+    else:
+        ax.scatter(x, y, 0.87, 'o', color='red')
+
+
     plt.pause(0.00001)
     return fig, ax, plt
 

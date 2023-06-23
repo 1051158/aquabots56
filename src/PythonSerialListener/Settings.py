@@ -33,6 +33,14 @@ class strctSet:
     wks_count: int = 0
     num_of_send_counter: int = 0
     position_y: int = 1
+    ADelay_1: int = 16500
+    ADelay_2: int = 16500
+    ADelay_3: int = 16500
+    ADelay_4: int = 16500
+    IP_A1: str = 'http://192.168.1.8'
+    IP_A2: str = 'http://192.168.1.127'
+    IP_A3: str = 'http://192.168.1.123'
+    IP_A4: str = 'http://192.168.1.6'
 
 
 # enter all the lay out settings of excel here.
@@ -42,12 +50,12 @@ def allSettings(Coordinates):
     dbgFirstRow = False
     dbgInteg = False
     dbgReq = False
-    dbgTril = True
-    dbgXls = True
+    dbgTril = False
+    dbgXls = False
     speedTest = True
     draw = True
     excel = True
-    nos = 100
+    nos = 5
     dcm = 1
     max_dcm = 1
     reset_dcm = 1
@@ -76,6 +84,7 @@ def allSettings(Coordinates):
     # open the figure that will show the coordinate
     if Settings.draw:
         fig, ax, plt = xls.draw.start_figure()
+
     coordinates = np.array([[2, y_coor, z_coor], [3.5, y_coor, z_coor], [5, y_coor, z_coor], [6.5, y_coor, z_coor], [8, y_coor, z_coor]])
     print(len(coordinates))
     anchor1 = anchors(4.5, 0, 0.9)
@@ -92,10 +101,11 @@ def calculateDistances(anchor1, anchor2, anchor3, anchor4, coordinates):
     d3 = array.array('f', [])
     d4 = array.array('f', [])
     for i in range(5):
-        d1.append(m.sqrt(m.pow(anchor1.x - coordinates[i, 0], 2) + m.pow(anchor1.y - coordinates[i, 1]) + anchor1.z - coordinates[i, 2]))
-        d2.append(m.sqrt(m.pow(anchor2.x - coordinates[i, 0], 2) + m.pow(anchor2.y - coordinates[i, 1]) + anchor2.z - coordinates[i, 2]))
-        d3.append(m.sqrt(m.pow(anchor3.x - coordinates[i, 0], 2) + m.pow(anchor3.y - coordinates[i, 1]) + anchor3.z - coordinates[i, 2]))
-        d4.append(m.sqrt(m.pow(anchor4.x - coordinates[i, 0], 2) + m.pow(anchor4.y - coordinates[i, 1]) + anchor4.z - coordinates[i, 2]))
+        d1.append(m.sqrt(m.pow(anchor1.x - coordinates[i, 0], 2) + m.pow(anchor1.y - coordinates[i, 1], 2) + m.pow(anchor1.z - coordinates[i, 2], 2)))
+        d3.append(m.sqrt(m.pow(anchor3.x - coordinates[i, 0], 2) + m.pow(anchor3.y - coordinates[i, 1], 2) + m.pow(anchor3.z - coordinates[i, 2], 2)))
+        d4.append(m.sqrt(m.pow(anchor4.x - coordinates[i, 0], 2) + m.pow(anchor4.y - coordinates[i, 1], 2) + m.pow(anchor4.z - coordinates[i, 2], 2)))
+        d2.append(m.sqrt(m.pow(anchor2.x - coordinates[i, 0], 2) + m.pow(anchor2.y - coordinates[i, 1], 2) + m.pow(anchor2.z - coordinates[i, 2], 2)))
+    print(d1, d2, d3, d4)
     return d1, d2, d3, d4
 
 

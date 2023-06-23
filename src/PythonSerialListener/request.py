@@ -2,11 +2,12 @@ import requests
 import array
 import sys
 import xls
+import settings
+import time
 from dataclasses import dataclass
 
 # write the right IP in Visual Studio for the http link
 # make sure the laptop has same WiFi-connection as tag-code in VSC
-IPaddress = 'http://192.168.220.44'
 
 @dataclass
 class receivedData:
@@ -17,11 +18,74 @@ class receivedData:
     antenna_delay: int
 
 
+def setADelays(Settings):
+    antenna_delay = 16400
+    whileBool = False
+    while(antenna_delay != Settings.ADelay_1 and not whileBool):
+        if antenna_delay < Settings.ADelay_1:
+            antenna_delay = int(getRequest(Settings.IP_A1 + ':81/addAD'))
+
+        if antenna_delay > Settings.ADelay_1:
+            antenna_delay = int(getRequest(Settings.IP_A1 + ':81/subAD'))
+
+        if antenna_delay == Settings.ADelay_1:
+            whileBool == True
+
+    print(antenna_delay)
+    antenna_delay = 16400
+    whileBool = False
+
+    while (antenna_delay != Settings.ADelay_2 and not whileBool):
+        if antenna_delay < Settings.ADelay_2:
+            antenna_delay = int(getRequest(Settings.IP_A2 + ':81/addAD'))
+
+        if antenna_delay > Settings.ADelay_2:
+            antenna_delay = int(getRequest(Settings.IP_A2 + ':81/subAD'))
+
+        if antenna_delay == Settings.ADelay_2:
+            whileBool == True
+    print(antenna_delay)
+    antenna_delay = 16400
+    whileBool = False
+
+    while (antenna_delay != Settings.ADelay_3 and not whileBool):
+        if antenna_delay < Settings.ADelay_3:
+            antenna_delay = int(getRequest(Settings.IP_A3 + ':81/addAD'))
+
+        if antenna_delay > Settings.ADelay_3:
+            antenna_delay = int(getRequest(Settings.IP_A3 + ':81/subAD'))
+
+        if antenna_delay == Settings.ADelay_3:
+            whileBool == True
+
+    print(antenna_delay)
+    antenna_delay = 16400
+    whileBool = False
+
+    while (antenna_delay != Settings.ADelay_4 and not whileBool):
+        if antenna_delay < Settings.ADelay_4:
+            antenna_delay = int(getRequest(Settings.IP_A4 + ':81/addAD'))
+
+        if antenna_delay > Settings.ADelay_4:
+            antenna_delay = int(getRequest(Settings.IP_A4 + ':81/subAD'))
+
+        if antenna_delay == Settings.ADelay_4:
+            whileBool == True
+    print(antenna_delay)
+
+
 # put the link of the Server to get the info from right server
 def getRequest(server_address):
 
     # combine the IPadress and Server address
-    response = requests.get(IPaddress + server_address)
+    while True:
+        try:
+            response = requests.get(server_address, timeout = 10)
+            break
+        except:
+            print('connection error of ip:', server_address)
+            time.sleep(0.01)
+    time.sleep(0.01)
     return response.text
 
 def getValues(WiFistring):
@@ -89,15 +153,15 @@ def getValues(WiFistring):
     print(z_array)
     return tagInfo, Coordinates, x_array, y_array, z_array, Distance_array
 
-def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t, t1):
+def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t, t1, IPadress):
     print('maxNOSreached')
     if Settings.dcm >= int(Settings.reset_dcm):
         Settings.dcm = 1
-        print('resetDCM', getRequest(':82/resetDCM'))
+        print('resetDCM', getRequest(IPadress + ':82/resetDCM'))
         if tagInfo.AD_start == tagInfo.AD_end:
             Settings.wks_count += 1
             Settings.startSend = False
-            getRequest(":81/resetAD")
+            getRequest(IPadress + ':81/resetAD')
             if Settings.wks_count >= len(Coordinates):
                 wbk.close()
                 sys.exit(0)
@@ -141,7 +205,7 @@ def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t,
                     xls.first_rows_excel_multiple_AD(wks, tagInfo, distance_array, Settings)
 
                 # reset the tag with the right link in the getRequest
-                print('resetAD', getRequest(':81/resetAD'))
+                print('resetAD', getRequest(IPadress + ':81/resetAD'))
                 Settings.startSend = False
                 tagInfo.antenna_delay = tagInfo.AD_start
                 Settings.position_y = 1
@@ -150,7 +214,7 @@ def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t,
                 sleepTime = 0.3
             else:
                 t.start()
-                print('addAD', getRequest(':81/addAD'))
+                print('addAD', getRequest(IPadress + ':81/addAD'))
                 t.stop()
                 tagInfo.antenna_delay += tagInfo.AD_interval
                 Settings.position_y += 2
@@ -163,7 +227,7 @@ def callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t,
             print('DCM= ')
             print(Settings.dcm)
 
-        getRequest(':82/addDCM')
+        getRequest(IPadress + ':82/addDCM')
         Settings.position_y += 1
         sleepTime = 0.2
     return tagInfo, wks, Settings, t, t1

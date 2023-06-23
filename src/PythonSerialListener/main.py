@@ -1,6 +1,7 @@
 import numpy as np
 import draw
 import trilateration
+import signal
 import sys
 import time
 import request
@@ -12,17 +13,23 @@ from timer import Timer
 # define comport to which the tag is connected
 comPort = "COM12"
 
+def handler(signum, frame):
+    res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
+    if res == 'y':
+        sys.exit(0)
 
+signal.signal(signal.SIGINT, handler)
 
 def WifiReadLoop():
     #restart the tag
-    request.getRequest(':86/restart')
-
+    IPadress = 'http://192.168.1.9'
+    request.getRequest(IPadress + ':86/restart')
     #wait till restart is complete
     time.sleep(3)
 
     #ask for the tag info
-    cal_distances = request.getRequest(':85/caldis')
+    cal_distances = request.getRequest(IPadress + ':85/caldis')
+
     WiFiString_1 = ''
     firstSend = True
     #put the tagInfo in the tagInfo struct
@@ -34,13 +41,8 @@ def WifiReadLoop():
 
     #get the excel settings and make a workbook and worksheet
     wbk, wks, Settings, fig, ax, plt, coordinates, anchor1, anchor2, anchor3, anchor4, d1, d2, d3, d4 = settings.allSettings(Coordinates)
+    request.setADelays(Settings)
 
-    if Settings.xyzTest == False:
-        for i in range (6):
-            r1 = tagInfo.distance_array[0][i]
-            r2 = tagInfo.distance_array[1][i]
-            r3 = tagInfo.distance_array[2][i]
-            print(trilateration.triliterationnew3D(x_array, y_array, z_array, r1, r2, r3))
     if Settings.excel:
         # use different lay out when using 1 anchor
         if tagInfo.max_anchors == '1':
@@ -62,20 +64,21 @@ def WifiReadLoop():
     t = Timer()
     t1 = Timer()
     t2 = Timer()
-    request.getRequest(':80/resetAD')
-    request.getRequest(':80/anchors')
+    request.getRequest(IPadress + ':80/resetAD')
+    request.getRequest(IPadress + ':80/anchors')
     t2.start()
+    #main loop starting.
     while True:
         time.sleep(0.01)
         #check if the code had enough data to change position and antenna delay
         if Settings.num_of_send_counter > Settings.nos:
             Settings.num_of_send_counter = 0
-            antenna_delay, wks, Settings, t, t1 = request.callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t, t1)
+            antenna_delay, wks, Settings, t, t1 = request.callRightServer(Coordinates, wbk, wks, distance_array, tagInfo, Settings, t, t1, IPadress)
         #if that's not the case...
 
             # check is the program wnats new data. the bool can be set by pressing 's' key or by pressing 'start_send' on the tag
         if Settings.startSend:
-            WiFiString = request.getRequest(':80/anchors')
+            WiFiString = request.getRequest(IPadress + ':80/anchors')
             # print the incoming string if debug is desired
             if WiFiString == 'notActive':
                 print('not enough active!')
@@ -119,16 +122,17 @@ def WifiReadLoop():
             # if the code is not ready to send check if keyboard keys are pressed and any buttons on tag are pressed
         if not Settings.startSend:
             # ask to tag if a menubutton has been pressed yet
-            WiFiString = request.getRequest(':83/sendMenu')
+            WiFiString = request.getRequest(IPadress + ':83/sendMenu')
+
             # if awnser is '0' send button has been pressed
             if WiFiString == '0':
                 Settings.startSend = True
                 firstSend = True
-                request.getRequest(':80/anchors')
+                request.getRequest(IPadress + ':80/anchors')
                 t1.start()
             if keyboard.is_pressed('s'):
-                request.getRequest(':84/start')
-                request.getRequest(':80/anchors')
+                request.getRequest(IPadress + ':84/start')
+                request.getRequest(IPadress + ':80/anchors')
                 Settings.startSend = True
                 t1.start()
             # if answer of tag is '1' back button has been pressed
@@ -147,7 +151,7 @@ def WifiReadLoop():
 
             # if awnser of tag is '3' end button has been pressed
             if WiFiString == '3' or keyboard.is_pressed('e'):
-                print('end', request.getRequest(':86/restart'))
+                print('end', request.getRequest(IPadress + ':86/restart'))
                 endCode(wbk)
 
 def endCode(wbk):
