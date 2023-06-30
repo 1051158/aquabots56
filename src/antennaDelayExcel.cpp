@@ -89,12 +89,25 @@ static void addDCM()
 //when enough distances have been found for triliteration a bool will be set so the string will be send
 static void Rdy2Send()
 {
+  uint8_t anchorCounter = 0;
+  anchor helpAnchors[MAX_ANCHORS];
   functionNumber = 0x03;
   if(_debugSerial)
     Serial.println(functionNumber);
   anchors_to_calculate_counter = 0;
   rdy2send = true;
-  if(i2cMenu[START_SEND].status)
+  for(uint8_t i = 0; i < MAX_ANCHORS && anchorCounter <= 3; i++)
+  {
+    if(anchors[i].done && anchors[i].distance != 0)
+    {
+      helpAnchors[anchorCounter] = anchors[i];
+      anchorCounter++;
+    }
+    Serial.println(helpAnchors[anchorCounter].distance);
+  }
+  if(anchorCounter >= 3)
+    x_y_cal(helpAnchors[0], helpAnchors[1], helpAnchors[2]);
+  if(i2cMenu[START_SEND].status && x > 0 && y > 0 && x < ANCHOR_X_4 + 3 && y < ANCHOR_Y_4 + 3 )
   {
     //while(rdy2send && !_resetAnchors && i2cMenu[START_SEND].status)
       //checkMenuInterrupts();
@@ -103,8 +116,14 @@ static void Rdy2Send()
     sendTime = millis();
     sendTime = sendTime - sendTime_1;
     Counter = sendTime;
+    Counter += "ms";
     _i2c.print(Counter.c_str(), true);
+    _i2c.enter();
+    Counter = '(' + String(x) + ',' + String(y) + ')';
     sendTime_1 = millis();
+    _i2c.print(Counter.c_str(), false);
+    Counter = String(anchors[0].distance) + ',' + String(anchors[1].distance) + ',' + String(anchors[2].distance) + ',' + String(anchors[3].distance) + '(' + String(x) + ',' + String(y) + ")\n";
+    
   }
   //check menu when program is waiting for sending the data
   //wait untill python asks for a getRequest

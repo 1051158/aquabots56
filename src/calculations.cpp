@@ -50,6 +50,7 @@ static void CalibrationDistances()
 static void x_y_cal(anchor anchor1, anchor anchor2, anchor anchor3)
 { 
     float A,B,C,D,E,F; 
+    
     A = (-2*anchor1.x) + (2*anchor2.x);
     B = (-2*anchor1.y) + (2*anchor2.y);
     C = pow(anchor1.distance, 2) - pow(anchor2.distance, 2) - pow(anchor1.x, 2) + pow(anchor2.x, 2) - pow(anchor1.y, 2) + pow(anchor2.y, 2);
@@ -59,8 +60,18 @@ static void x_y_cal(anchor anchor1, anchor anchor2, anchor anchor3)
     
     x = ((C*E) - (F*B))/((E*A) - (B*D));
     y = ((C*D) - (A*F))/((B*D) - (A*E));
+    int verstuur_x = x * 100;
+    int verstuur_y = y * 100;
+    Serial.println(x);
+    Serial.println(y);
     String Coordinates;
-    Coordinates += '('+ x + ',' + y + ')';
+    Coordinates += '('+ String(verstuur_x) + ',' + String(verstuur_y) + ')' + '\n';
     Serial.write(Coordinates.c_str());
+    Serial.println(anchor1.distance);
+    Serial.println(anchor2.distance);
+    Serial.println(anchor3.distance);
+
+    Serial.printf("x = %f  ", x);
+    Serial.printf("y = %f\n", y);
 }
 #endif

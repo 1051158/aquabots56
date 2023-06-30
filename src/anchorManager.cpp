@@ -55,7 +55,7 @@ static uint16_t antenna_delay = ANTENNA_DELAY;
 static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0.0, 0, false, false, "", {0,0,0,0,0,0} };
 #endif
 #ifdef Z_TEST
-    static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0, 0.0, 0, false, false, "",{0,0,0,0,0,0} };
+    static anchor anchors[MAX_ANCHORS] = {0, 0, 0, 0, 0.0, 0, false, false, "",{0,0,0}};
 #endif
 #endif
 
@@ -147,7 +147,7 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
 
     //filter to skip the wrong measurements
     //if the measured distance is smaller than -1 or bigger than sqrt(x² + y²)
-    if(distance <= -1 || distance>=15)
+    if(distance <= -1 || distance>=30)
     {
         return false;
     }

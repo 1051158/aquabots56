@@ -84,7 +84,7 @@ def getRequest(server_address):
             break
         except:
             print('connection error of ip:', server_address)
-            time.sleep(0.01)
+            time.sleep(0.1)
     time.sleep(0.01)
     return response.text
 

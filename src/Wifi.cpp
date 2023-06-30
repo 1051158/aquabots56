@@ -8,13 +8,16 @@
 static bool rdy2send = false;
 static bool done_send = false;
 
+static bool _accuracy = false;
+static bool _lowpower = false;
+
 static uint8_t active_counter = 0;
 
 static bool start_test = false;
 
 //IP's used by both 
 static AsyncWebServer Server1(81);
-
+static AsyncWebServer Server8(88);
 //belong to "IP:80/caldis" link
 #ifdef TYPE_TAG
 
@@ -105,12 +108,17 @@ static String send_total_data_server()
 static void WiFiSettingsExtern(void)
 {
   uint8_t wifiCounter = 0;
-  
+  bool wifiTimer = false;
   //Serial.println(ssid);
 
   #ifdef WIFI
   const char* ssid = "DentGalaxy";
   const char* psswrd = "PanGalactic";
+  #endif
+
+  #ifdef WIFI_AQUA
+  const char* ssid = "Innovation Dock WiFi";
+  const char* psswrd = "RDMCampus123";
   #endif
 
   #ifdef HOTSPOT
@@ -120,10 +128,12 @@ static void WiFiSettingsExtern(void)
 
   ////////////log in into the router for extern wifi connection//////////////
   WiFi.begin(ssid, psswrd);
-  while (WiFi.status() != WL_CONNECTED) 
+  while (WiFi.status() != WL_CONNECTED && !wifiTimer) 
   {
-    if(wifiCounter == 5)
-      esp_restart();
+    if(wifiCounter >= 10){
+      wifiTimer = true;
+      Serial.println("connection failed!");
+      }
     delay(1000);
 
     #ifdef SERIAL_DEBUG
@@ -132,7 +142,9 @@ static void WiFiSettingsExtern(void)
 
     wifiCounter++;
   }
-
+  if(!wifiTimer)
+  {
+  
   #ifdef TYPE_TAG
   Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
   {
@@ -265,6 +277,15 @@ Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
 });
 
 #endif
+Server8.on("/accuracy", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  _accuracy = true;
+});
+
+Server8.on("/lowpower", HTTP_GET, [](AsyncWebServerRequest *request)
+{
+  _lowpower = true;
+});
 
 #ifdef TYPE_ANCHOR
 Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -303,8 +324,12 @@ Server1.on("/setAD", HTTP_GET, [](AsyncWebServerRequest *request)
   //check and print IPadress to fill into the laptop
     IPAddress IP = WiFi.localIP();
     Serial.print(IP);
-    Server1.begin();
-
+    String ip = "";
+  for(uint8_t i = 0; i < 4; i++)
+  {
+    ip += String(IP[i]) + '.';
+  }
+  _i2c.print(ip.c_str(), true);
     #ifdef TYPE_TAG
     Server.begin();
     Server2.begin();
@@ -314,7 +339,12 @@ Server1.on("/setAD", HTTP_GET, [](AsyncWebServerRequest *request)
     Server6.begin();
     Server7.begin();
     #endif
+    Server8.begin();
+    Server1.begin();
+
+
   #endif
+}
 }
 
 #ifdef WIFI_AP_ON

@@ -33,14 +33,14 @@ class strctSet:
     wks_count: int = 0
     num_of_send_counter: int = 0
     position_y: int = 1
-    ADelay_1: int = 16500
-    ADelay_2: int = 16500
-    ADelay_3: int = 16500
-    ADelay_4: int = 16500
-    IP_A1: str = 'http://192.168.1.8'
-    IP_A2: str = 'http://192.168.1.127'
-    IP_A3: str = 'http://192.168.1.123'
-    IP_A4: str = 'http://192.168.1.6'
+    ADelay_1: int = 16550
+    ADelay_2: int = 16550
+    ADelay_3: int = 16550
+    ADelay_4: int = 16550
+    IP_A1: str = 'http://192.168.0.103'
+    IP_A2: str = 'http://192.168.0.104'
+    IP_A3: str = 'http://192.168.0.100'
+    IP_A4: str = 'http://192.168.0.102'
 
 
 # enter all the lay out settings of excel here.

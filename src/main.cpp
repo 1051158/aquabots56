@@ -106,20 +106,19 @@ void newBlink(DW1000Device *device)
 #ifdef TYPE_ANCHOR
 void printI2C(void)
 {
-  _i2c.print(UNIQUE_ADRESS, true);
     String info = "";
     #ifdef ANCHOR_1
-      info = info + ANCHOR_X_1 + ' ' +  ANCHOR_Y_1 + ' ' +  ANCHOR_Z_1;
+      info = info + ANCHOR_X_1 + "x, " +  ANCHOR_Y_1 + "y, " +  ANCHOR_Z_1 + "z, ";
       #endif
       #ifdef ANCHOR_2
-      info = info + ANCHOR_X_2 + ' ' + ANCHOR_Y_2 + ' ' + ANCHOR_Z_2;
+      info = info + ANCHOR_X_2 + "x, " + ANCHOR_Y_2 + "y, "+ ANCHOR_Z_2  + "z, ";
       #endif
       #ifdef ANCHOR_3
-      info = info + ANCHOR_X_3 + ' ' + ANCHOR_Y_3 + ' ' + ANCHOR_Z_3;
+      info = info + ANCHOR_X_3 + "x, "  + ANCHOR_Y_3 + "y, " + ANCHOR_Z_3  + "z, ";
       Serial.print(info);
       #endif
       #ifdef ANCHOR_4
-      info = info + ANCHOR_X_4 + ' ' + ANCHOR_Y_4 + ' ' + ANCHOR_Z_4;
+      info = info + ANCHOR_X_4 + "x, " + ANCHOR_Y_4 + "y, " + ANCHOR_Z_4 + "z, ";
       #endif
     _i2c.enter();
     _i2c.print(info.c_str(), false);
@@ -133,6 +132,7 @@ void printI2C(void)
 void setup() 
 {
   Serial.begin(115200);//baud rate
+  Serial2.begin(115200);//pins are TX(GPIO17) RX(GPIO16)
   
   #ifdef I2C  //setup the ug2b lib //ug2b class is defined in i2c.cpp//
     _i2c.settings();
@@ -177,10 +177,6 @@ void setup()
       DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
     #endif
 
-    #ifdef I2C
-  //print on display end of setup
-    _i2c.print("end of tag setup!", true);
-    #endif
   #endif
   #ifdef TYPE_ANCHOR
     DW1000.setAntennaDelay(ANTENNA_DELAY);
@@ -233,10 +229,18 @@ void loop()
   unsigned long timeStamp = millis();
   if(timeStamp - lastTimestamp >= 1000)
   {
-    Serial.print(antenna_delay);
+    //Serial.print(antenna_delay);
     lastTimestamp = millis();
   }
   #endif
+  if(_accuracy)
+  {
+    DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
+  }
+  if(_lowpower)
+  {
+    DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
+  }
 
   #ifdef TESTING_I2C
   testi2c();
