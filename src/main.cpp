@@ -245,6 +245,14 @@ void loop()
     lastTimestamp = millis();
   }
 #endif
+#ifdef TYPE_ANCHOR
+  if (_addAD)
+    addAD();
+  if (_resetAD)
+    resetAD();
+  if(_subAD)
+    subAD();
+  #endif
   if (_accuracy)
   {
     DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);

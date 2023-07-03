@@ -11,13 +11,12 @@
 
 ///////////////////For debugging/////////////////////////////
 #define FUNCTIONNAME_DEBUG
-#define SERIAL_DEBUG
 static bool _debugSerial = false;
 
 /////Anchor or tag////////////
 
-#define TYPE_TAG
-//#define TYPE_ANCHOR
+//#define TYPE_TAG
+#define TYPE_ANCHOR
 
 #define AD_TEST
 
@@ -29,20 +28,20 @@ static bool _debugSerial = false;
 #define ANCHOR_Z_1 0
 
 #define ANCHOR_ID_2 8738
-#define ANCHOR_X_2 5
-#define ANCHOR_Y_2 0
+#define ANCHOR_X_2 0
+#define ANCHOR_Y_2 7
 #define ANCHOR_Z_2 0
 
 
 #define ANCHOR_ID_3 13107
-#define ANCHOR_X_3 8
-#define ANCHOR_Y_3 0
+#define ANCHOR_X_3 10
+#define ANCHOR_Y_3 7
 #define ANCHOR_Z_3 0
 
 
 #define ANCHOR_ID_4 17476
-#define ANCHOR_X_4 4.5
-#define ANCHOR_Y_4 8
+#define ANCHOR_X_4 10
+#define ANCHOR_Y_4 16
 #define ANCHOR_Z_4 0
 
 
@@ -99,7 +98,7 @@ static bool _debugSerial = false;
         #define UNIQUE_ADRESS "11:11:5B:D5:A9:9A:E2:9C"
     #endif
 
-    //#define ANCHOR_2
+   //#define ANCHOR_2
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_2
         #define ANTENNA_DELAY 16550 // BEST ANTENNA DELAY ANCHOR #2
@@ -148,7 +147,7 @@ static bool _debugSerial = false;
 #define DISTANCE_COUNTER_MIN 1 // will reset variable distance counter max when RESET_DISTANCE_COUNTER_MAX_VALUE is reached 
 #define DISTANCE_COUNTER_INTERVAL 1 //will be added to variable distance counter max in the anchor struct
 
-#define ANTENNA_INTERVAL 15 //interval between 2 antenna delays
+#define ANTENNA_INTERVAL 5 //interval between 2 antenna delays
 
 #define ANTENNA_DELAY_START 16384 //start value antenna delay
 #define ANTENNA_DELAY_END 16600 //end value antenna delay
@@ -192,8 +191,8 @@ static bool _debugSerial = false;
 
 //////fill in the right names of the desired router or hotspot
 //#define WIFI_AQUA
-//#define HOTSPOT
-#define WIFI
+#define HOTSPOT
+//#define WIFI
 
 
 

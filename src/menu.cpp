@@ -7,7 +7,7 @@ struct menu
     String menuName;
 };
 
-static menu i2cMenu[MENUSIZE] = {
+static menu i2cMenu[] = {
                                 {false, "start_send"},
                                 {false, "Show_ADelay"},
                                 {false, "showIP"},

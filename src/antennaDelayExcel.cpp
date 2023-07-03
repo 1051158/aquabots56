@@ -11,7 +11,6 @@ static unsigned long sendTime_1 = 0;
 static bool print = true;
 
 /////////////////////////////////Function to send distances for the x-y calculation in python///////////////////////////////
-#ifdef TYPE_TAG
 #ifdef AD_TEST
 static void resetAD()
 {
@@ -80,6 +79,7 @@ static void subAD()
   _subAD = false;
 }
 #endif
+#ifdef TYPE_TAG
 
 static void addDCM()
 {
@@ -103,7 +103,8 @@ static void Rdy2Send()
     {
       helpAnchors[anchorCounter] = anchors[i];
       anchorCounter++;
-      Serial.printf("helpAnchors[%u].distance = %f", anchorCounter, helpAnchors[anchorCounter].distance);
+      if(_debugSerial)
+        Serial.printf("helpAnchors[%u].distance = %f", anchorCounter, helpAnchors[anchorCounter].distance);
     }
   }
   Serial.print('\n');
@@ -141,12 +142,12 @@ static void Rdy2Send()
   }
 // check menu when program is waiting for sending the data
 // wait untill python asks for a getRequest
-#ifdef AD_TEST
   if (_addAD)
     addAD();
   if (_resetAD)
     resetAD();
-#endif
+  if(_subAD)
+    subAD;
   if (_addDCM)
     addDCM();
   if (_resetDCM)

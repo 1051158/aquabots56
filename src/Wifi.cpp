@@ -269,19 +269,22 @@ static void WiFiSettingsExtern(void)
 #endif
     Server8.on("/accuracy", HTTP_GET, [](AsyncWebServerRequest *request)
                { _accuracy = true; 
-               request->send(200, "text/plain", "accuracy");});
+               request->send(200, "text/plain", "accuracy"); });
 
     Server8.on("/lowpower", HTTP_GET, [](AsyncWebServerRequest *request)
                { _lowpower = true; 
-               request->send(200, "text/plain", "lowpower");});
+               request->send(200, "text/plain", "lowpower"); });
 
 #ifdef TYPE_ANCHOR
     Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
                {
   antenna_delay += 5;
   String AD_send = "";
+  _addAD = true;
   AD_send = AD_send + antenna_delay;
-  request->send(200, "text/plain", AD_send); });
+  request->send(200, "text/plain", AD_send); 
+  });
+  
 
     // resetAD when the excel file has reached its max of the AD_test
     Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -296,7 +299,10 @@ static void WiFiSettingsExtern(void)
   antenna_delay -= 5;
   String AD_send = "";
   AD_send = AD_send + antenna_delay;
-  request->send(200, "text/plain", AD_send); });
+  request->send(200, "text/plain", AD_send);
+  });
+  
+
 
     Server1.on("/setAD", HTTP_GET, [](AsyncWebServerRequest *request)
                {
