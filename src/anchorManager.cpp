@@ -184,7 +184,6 @@ static bool generateDistanceAndTimer(uint8_t anchornumber)
     //check if the distance counter max value has been reached (if so the anchor is done for send)
         if(anchors[anchornumber].distance_counter >= distance_counter_max)
         {
-            anchors[anchornumber].distance /= anchors[anchornumber].distance_counter;
             return true;
         }
     }

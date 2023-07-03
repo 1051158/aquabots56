@@ -41,7 +41,7 @@ static bool _debugSerial = false;
 
 
 #define ANCHOR_ID_4 17476
-#define ANCHOR_X_4 5
+#define ANCHOR_X_4 4.5
 #define ANCHOR_Y_4 8
 #define ANCHOR_Z_4 0
 

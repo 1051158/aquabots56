@@ -98,17 +98,17 @@ static void Rdy2Send()
     Serial.println(functionNumber);
   anchors_to_calculate_counter = 0;
   rdy2send = true;
-  for(uint8_t i = 0; i < MAX_ANCHORS && anchorCounter <= 3; i++)
+  for(uint8_t i = 0; i < MAX_ANCHORS; i++)
   {
     if(anchors[i].done && anchors[i].distance != 0)
     {
       helpAnchors[anchorCounter] = anchors[i];
       anchorCounter++;
+      Serial.println(helpAnchors[anchorCounter].distance);
     }
-    Serial.println(helpAnchors[anchorCounter].distance);
   }
   if(anchorCounter >= 3)
-    x_y_cal(helpAnchors[0], helpAnchors[1], helpAnchors[2]);
+    {x_y_cal(helpAnchors[0], helpAnchors[1], helpAnchors[2]);
   if(i2cMenu[START_SEND].status && x > 0 && y > 0 && x < ANCHOR_X_4 + 3 && y < ANCHOR_Y_4 + 3 )
   {
     //while(rdy2send && !_resetAnchors && i2cMenu[START_SEND].status)
@@ -131,10 +131,13 @@ static void Rdy2Send()
     {
       distances[i] = anchors[i].distance * 100;
     }
+  
     String Counter1 = "";
-    Counter1 =  String(distances[0]) + ',' + String(distances[1]) + ',' + String(distances[2]) + ',' + String(distances[3]) + ',' + '(' + String(verstuur_x) + ',' + String(verstuur_y) + ')' + '\n';
+    Counter1 = '(' + String(verstuur_x) + ',' + String(verstuur_y) + ")\n";
     Serial.write(Counter1.c_str());
+    //Serial.print(Counter1);
   }
+    }
   //check menu when program is waiting for sending the data
   //wait untill python asks for a getRequest
   #ifdef AD_TEST
