@@ -53,8 +53,8 @@ def allSettings(Coordinates):
     dbgTril = False
     dbgXls = False
     speedTest = True
-    draw = True
-    excel = True
+    draw = False
+    excel = False
     nos = 5
     dcm = 1
     max_dcm = 1
@@ -72,8 +72,10 @@ def allSettings(Coordinates):
         xyzTest = True
     else:
         xyzTest = False
-    Settings = strctSet(dbgFirstRow, dbgInteg, dbgReq, dbgTril, dbgXls, xyzTest, speedTest, draw, excel, nos, dcm, max_dcm,
+    if not excel:
+        Settings = strctSet(dbgFirstRow, dbgInteg, dbgReq, dbgTril, dbgXls, xyzTest, speedTest, draw, excel, nos, dcm, max_dcm,
                         reset_dcm, dci)
+        return Settings
     # make a worksheet for excel
     if Settings.excel:
         wks = xls.make_new_wks(Coordinates[Settings.wks_count], wbk)

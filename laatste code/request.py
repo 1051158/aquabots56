@@ -18,60 +18,65 @@ class receivedData:
     antenna_delay: int
 
 
-def setADelays(Settings):
+def setADelays(Settings, anchornumber):
     antenna_delay = 16400
     whileBool = False
-    while(antenna_delay != Settings.ADelay_1 and not whileBool):
-        if antenna_delay < Settings.ADelay_1:
-            antenna_delay = int(getRequest(Settings.IP_A1 + ':81/addAD'))
+    if anchornumber == 1:
+        while(antenna_delay != Settings.ADelay_1 and not whileBool):
+            if antenna_delay < Settings.ADelay_1:
+                antenna_delay = int(getRequest(Settings.IP_A1 + ':81/addAD'))
 
-        if antenna_delay > Settings.ADelay_1:
-            antenna_delay = int(getRequest(Settings.IP_A1 + ':81/subAD'))
+            if antenna_delay > Settings.ADelay_1:
+                antenna_delay = int(getRequest(Settings.IP_A1 + ':81/subAD'))
 
-        if antenna_delay == Settings.ADelay_1:
-            whileBool == True
+            if antenna_delay == Settings.ADelay_1:
+                whileBool == True
 
     print(antenna_delay)
     antenna_delay = 16400
     whileBool = False
 
-    while (antenna_delay != Settings.ADelay_2 and not whileBool):
-        if antenna_delay < Settings.ADelay_2:
-            antenna_delay = int(getRequest(Settings.IP_A2 + ':81/addAD'))
+    if anchornumber == 3:
+        while (antenna_delay != Settings.ADelay_2 and not whileBool):
+            if antenna_delay < Settings.ADelay_2:
+                antenna_delay = int(getRequest(Settings.IP_A2 + ':81/addAD'))
 
-        if antenna_delay > Settings.ADelay_2:
-            antenna_delay = int(getRequest(Settings.IP_A2 + ':81/subAD'))
+            if antenna_delay > Settings.ADelay_2:
+                antenna_delay = int(getRequest(Settings.IP_A2 + ':81/subAD'))
 
-        if antenna_delay == Settings.ADelay_2:
-            whileBool == True
+            if antenna_delay == Settings.ADelay_2:
+                whileBool == True
     print(antenna_delay)
     antenna_delay = 16400
     whileBool = False
 
-    while (antenna_delay != Settings.ADelay_3 and not whileBool):
-        if antenna_delay < Settings.ADelay_3:
-            antenna_delay = int(getRequest(Settings.IP_A3 + ':81/addAD'))
+    if anchornumber == 3:
+        while (antenna_delay != Settings.ADelay_3 and not whileBool):
+            if antenna_delay < Settings.ADelay_3:
+                antenna_delay = int(getRequest(Settings.IP_A3 + ':81/addAD'))
 
-        if antenna_delay > Settings.ADelay_3:
-            antenna_delay = int(getRequest(Settings.IP_A3 + ':81/subAD'))
+            if antenna_delay > Settings.ADelay_3:
+                antenna_delay = int(getRequest(Settings.IP_A3 + ':81/subAD'))
 
-        if antenna_delay == Settings.ADelay_3:
-            whileBool == True
-
+            if antenna_delay == Settings.ADelay_3:
+                whileBool == True
     print(antenna_delay)
     antenna_delay = 16400
     whileBool = False
 
-    while (antenna_delay != Settings.ADelay_4 and not whileBool):
-        if antenna_delay < Settings.ADelay_4:
-            antenna_delay = int(getRequest(Settings.IP_A4 + ':81/addAD'))
+    if anchornumber == 4:
+        while (antenna_delay != Settings.ADelay_4 and not whileBool):
+            if antenna_delay < Settings.ADelay_4:
+                antenna_delay = int(getRequest(Settings.IP_A4 + ':81/addAD'))
 
-        if antenna_delay > Settings.ADelay_4:
-            antenna_delay = int(getRequest(Settings.IP_A4 + ':81/subAD'))
+            if antenna_delay > Settings.ADelay_4:
+                antenna_delay = int(getRequest(Settings.IP_A4 + ':81/subAD'))
 
-        if antenna_delay == Settings.ADelay_4:
-            whileBool == True
+            if antenna_delay == Settings.ADelay_4:
+                whileBool == True
     print(antenna_delay)
+    antenna_delay = 16400
+    whileBool = False
 
 
 # put the link of the Server to get the info from right server

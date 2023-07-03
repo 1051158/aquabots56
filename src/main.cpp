@@ -1,6 +1,7 @@
 #include <driver/uart.h>
 #include "antennaDelayExcel.cpp"
 #include <cmath>
+#include <HardwareSerial.h>
 
 unsigned long lastTimestamp = millis();
 
@@ -127,13 +128,14 @@ void printI2C(void)
     _i2c.print(info.c_str(), false);
 }
 #endif
+static HardwareSerial SerialPort(2);
+
 
 //////////Setup function(go to device.cpp to turn features ON/OFF////////
 void setup() 
 {
   Serial.begin(115200);//baud rate
-  Serial2.begin(115200);//pins are TX(GPIO17) RX(GPIO16)
-  
+  SerialPort.begin(115200, SERIAL_8N1, 16, 17);
   #ifdef I2C  //setup the ug2b lib //ug2b class is defined in i2c.cpp//
     _i2c.settings();
   #endif
@@ -143,7 +145,7 @@ void setup()
   #ifdef WIFI_EXTERN_ON
     WiFiSettingsExtern(); 
   #endif
-  
+  SerialPort.write(1);
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
   DW1000Ranging.attachNewRange(newRange);
@@ -227,6 +229,11 @@ void loop()
   #endif
   DW1000Ranging.loop();
   unsigned long timeStamp = millis();
+  int a,b,c,d,e,f = 100;
+  String totaal = "";
+  totaal = String(a) + ',' +String(b)+ ',' +String(c)+ ',' +String(d)+ ',' +String(e)+ ',' +String(f) + '\n';
+  Serial.write(totaal.c_str());
+  delay(1000);
   if(timeStamp - lastTimestamp >= 1000)
   {
     //Serial.print(antenna_delay);
@@ -241,6 +248,7 @@ void loop()
   {
     DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
   }
+
 
   #ifdef TESTING_I2C
   testi2c();

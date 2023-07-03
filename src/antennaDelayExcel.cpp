@@ -9,6 +9,8 @@ static unsigned long sendTime_1 = 0;
 
 static bool print = true;
 
+
+
 /////////////////////////////////Function to send distances for the x-y calculation in python///////////////////////////////
 #ifdef TYPE_TAG
 #ifdef AD_TEST
@@ -122,8 +124,16 @@ static void Rdy2Send()
     Counter = '(' + String(x) + ',' + String(y) + ')';
     sendTime_1 = millis();
     _i2c.print(Counter.c_str(), false);
-    Counter = String(anchors[0].distance) + ',' + String(anchors[1].distance) + ',' + String(anchors[2].distance) + ',' + String(anchors[3].distance) + '(' + String(x) + ',' + String(y) + ")\n";
-    
+    int verstuur_x = x * 100;
+    int verstuur_y = y * 100;
+    int distances[MAX_ANCHORS] = {0};
+    for(uint8_t i = 0; i < MAX_ANCHORS; i++)
+    {
+      distances[i] = anchors[i].distance * 100;
+    }
+    String Counter1 = "";
+    Counter1 =  String(distances[0]) + ',' + String(distances[1]) + ',' + String(distances[2]) + ',' + String(distances[3]) + ',' + '(' + String(verstuur_x) + ',' + String(verstuur_y) + ')' + '\n';
+    Serial.write(Counter1.c_str());
   }
   //check menu when program is waiting for sending the data
   //wait untill python asks for a getRequest

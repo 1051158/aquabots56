@@ -20,6 +20,19 @@ def handler(signum, frame):
 
 signal.signal(signal.SIGINT, handler)
 
+def setDelays(anchornumber):
+    Settings = settings.allSettings(Coordinate, anchornumber)
+    request.setADelays(coordinates)
+
+def setAccuracy(anchornumber):
+    Settings = settings.allSettings(Coordinates)
+    if anchornumber == 1:
+        request.getRequest(Settings.IP_A1 + ':88/accuracy')
+
+def setLowPower(anchornumber):
+    Settings = settings.allSettings(Coordinates)
+
+
 def WifiReadLoop():
     #restart the tag
     IPadress = 'http://172.31.83.43'
@@ -157,4 +170,7 @@ def endCode(wbk):
     wbk.close()
     sys.exit(0)
 
-WifiReadLoop()# start eventLoop
+#WifiReadLoop()# start eventLoop
+setDelays()
+setAccuracy()
+setLowPower()
