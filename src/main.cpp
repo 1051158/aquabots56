@@ -70,9 +70,9 @@ _i2c.print(range.c_str(), true);*/
 void newDevice(DW1000Device *device)
 {
 #ifdef DEBUG_MAIN
-  //Serial.print("ranging init; 1 device added ! -> ");
-  //Serial.print(" short:");
-  //Serial.println(device->getShortAddress(), HEX);
+  // Serial.print("ranging init; 1 device added ! -> ");
+  // Serial.print(" short:");
+  // Serial.println(device->getShortAddress(), HEX);
 #endif
 
 // TODO log activeness in manager
@@ -86,8 +86,8 @@ void newDevice(DW1000Device *device)
 void inactiveDevice(DW1000Device *device)
 {
 #ifdef TYPE_ANCHOR
-  //Serial.print("delete inactive device: ");
-  //Serial.println(device->getShortAddress(), HEX);
+  // Serial.print("delete inactive device: ");
+  // Serial.println(device->getShortAddress(), HEX);
 #endif
 
 #ifdef TYPE_TAG
@@ -99,9 +99,9 @@ void inactiveDevice(DW1000Device *device)
 
 void newBlink(DW1000Device *device)
 {
-  //Serial.print("blink; 1 device added ! -> ");
-  //Serial.print(" short:");
-  //Serial.println(device->getShortAddress(), HEX);
+  // Serial.print("blink; 1 device added ! -> ");
+  // Serial.print(" short:");
+  // Serial.println(device->getShortAddress(), HEX);
 }
 
 #ifdef TYPE_ANCHOR
@@ -116,7 +116,7 @@ void printI2C(void)
 #endif
 #ifdef ANCHOR_3
   info = info + ANCHOR_X_3 + "x, " + ANCHOR_Y_3 + "y, " + ANCHOR_Z_3 + "z, ";
-  //Serial.print(info);
+  // Serial.print(info);
 #endif
 #ifdef ANCHOR_4
   info = info + ANCHOR_X_4 + "x, " + ANCHOR_Y_4 + "y, " + ANCHOR_Z_4 + "z, ";
@@ -142,6 +142,7 @@ void setup()
 // when wifi is desired uncomment the WIFI_EXTERN_ON in
 #ifdef WIFI_EXTERN_ON
   WiFiSettingsExtern();
+  delay(1000);
 #endif
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); // Reset, CS, IRQ pin
@@ -157,7 +158,7 @@ void setup()
   WiFiSettingsAP();
 #endif
 
-  //Serial.println("\n\nTAG starting");
+  // Serial.println("\n\nTAG starting");
   DW1000.setAntennaDelay(ANTENNA_DELAY_START); // set the defined antenna delay
 
   // initialize all anchors
@@ -179,13 +180,13 @@ void setup()
 #endif
 #ifdef TYPE_ANCHOR
   DW1000.setAntennaDelay(ANTENNA_DELAY);
-  //Serial.println("\n\n\n\n\nANCHOR starting");
+  // Serial.println("\n\n\n\n\nANCHOR starting");
   DW1000Ranging.attachBlinkDevice(newBlink);
 #ifdef LOWPOWER
   DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
 #endif
 #ifdef ANCHOR_CALIBRATION
-  //Serial.println("calibration mode started:");
+  // Serial.println("calibration mode started:");
 #endif
 #ifdef ACCURACY
   DW1000Ranging.startAsAnchor(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
@@ -236,7 +237,7 @@ void loop()
   delay(500);
   b += 100;
   a += 100;
-  //Serial.print(totaal.c_str());
+  // Serial.print(totaal.c_str());
 #endif
   if (timeStamp - lastTimestamp >= 1000)
   {
@@ -247,10 +248,24 @@ void loop()
   if (_accuracy)
   {
     DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, false);
+    _accuracy = false;
   }
   if (_lowpower)
   {
     DW1000Ranging.startAsTag(UNIQUE_ADRESS, DW1000.MODE_LONGDATA_RANGE_LOWPOWER, false);
+    _lowpower = false;
+  }
+  if (i2cMenu[SHOW_IP].status)
+  {
+    IPAddress IP = WiFi.localIP();
+
+    String ip = "";
+    for (uint8_t i = 0; i < 4; i++)
+    {
+      ip += String(IP[i]) + '.';
+    }
+    _i2c.print(ip.c_str(), true);
+    i2cMenu[SHOW_IP].status = false;
   }
 
 #ifdef TESTING_I2C

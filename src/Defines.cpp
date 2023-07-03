@@ -171,9 +171,9 @@ static bool _debugSerial = false;
 #define MAX_MENU_STRLEN 20
 ////////Give every Menu number a define to make the code clearer
 #define START_SEND 0
-#define BACKSPACE 1
+#define SHOW_ADELAY 1
 //ToDo change excel_mode to drawMode
-#define DRAW_MODE 2
+#define SHOW_IP 2
 #define END_CODE 3
 
 

@@ -140,37 +140,20 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
     functionNumber = 0x06;
     if(_debugSerial)
         Serial.print(functionNumber);
-    //for debugging:
-    //Serial.print("distance: ");
-    //Serial.println(distance);
-    //Serial.println(anchors[anchornumber].distance_counter);
+    Serial.printf("distance = %f", distance);
 
     //filter to skip the wrong measurements
-    //if the measured distance is smaller than -1 or bigger than sqrt(x² + y²)
     if(distance <= -1 || distance>=30)
-    {
         return false;
-    }
-    if(distance > LONGEST_RANGE)//if the measured value is bigger than the maximum range
-    {
-        anchors[anchornumber].distance += LONGEST_RANGE;//set is to max range
-        anchors[anchornumber].distance_counter++;
-        return true;
-    }
-    if(distance < 0)
-        distance = 0;
 
+    if(distance > LONGEST_RANGE)//if the measured value is bigger than the maximum range
+        distance = LONGEST_RANGE;
+
+    if(distance < 0)
+        distance = 0.01;
     anchors[anchornumber].distance += distance;//add distance 
-    anchors[anchornumber].distance_counter++;//add 1 to distance_counter
-    #ifdef DEBUG_ANCHOR_MANAGER
-        Serial.print(ID);
-        Serial.print(" to ");
-        Serial.print(distance);
-        //Serial.print(" at rxPower ");
-        //Serial.print(rxPower);
-        Serial.print("\n");
-    #endif
-        return true;
+    //anchors[anchornumber].distance_counter++;//add 1 to distance_counter
+    return true;
 
 }
 
@@ -181,13 +164,8 @@ static bool generateDistanceAndTimer(uint8_t anchornumber)
         Serial.println(functionNumber);
     if(setDistanceIfRegisterdAnchor(DW1000Ranging.getDistantDevice()->getShortAddress(),DW1000Ranging.getDistantDevice()->getRange(), anchornumber)) 
     {
-    //check if the distance counter max value has been reached (if so the anchor is done for send)
-        if(anchors[anchornumber].distance_counter >= distance_counter_max)
-        {
-            return true;
-        }
+        return true;
     }
-    //when the distance counter max hasn't been reached send back false to measure again untill the maximum has been reached
 return false;
 }
 
@@ -235,6 +213,7 @@ static void resetAnchors()
 {
     functionNumber = 0x09;
     distance_counter_max = DISTANCE_COUNTER_MIN;
+    Serial.print("reset");
     for(uint8_t i = 0; i < MAX_ANCHORS; i++)
     {
         anchors[i].done = false;

@@ -9,8 +9,8 @@ struct menu
 
 static menu i2cMenu[MENUSIZE] = {
                                 {false, "start_send"},
-                                {false, "back_send"},
-                                {true, "excel_mode"},
+                                {false, "Show_ADelay"},
+                                {false, "showIP"},
                                 {false, "end_code"}
                                 };
 
