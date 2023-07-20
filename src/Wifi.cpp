@@ -311,7 +311,6 @@ static void WiFiSettingsExtern(void)
 #endif
     IPAddress IP = WiFi.localIP();
     // check and print IPadress to fill into the laptop
-    Serial.print(IP);
     String ip = "";
     for (uint8_t i = 0; i < 4; i++)
     {

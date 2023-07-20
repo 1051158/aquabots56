@@ -88,8 +88,11 @@ static void checkMenuInterrupts(void)
   // press enter
   if (button_enter.pressed && !button_down.pressed && !button_up.pressed)
   {
-    functionNumber = 0x09;
-    Serial.println(functionNumber);
+    if(_debugSerial)
+    {
+      functionNumber = 0x09;
+      Serial.println(functionNumber);
+    }
     // when enter is pressed on the interruptButtons change status to true if status was false
     if (!i2cMenu[i2c_menuNumber].status)
     {

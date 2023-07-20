@@ -107,7 +107,6 @@ static void Rdy2Send()
         Serial.printf("helpAnchors[%u].distance = %f", anchorCounter, helpAnchors[anchorCounter].distance);
     }
   }
-  Serial.print('\n');
   if (anchorCounter >= 3)
   {
     x_y_cal(helpAnchors[0], helpAnchors[1], helpAnchors[2]);
@@ -135,8 +134,7 @@ static void Rdy2Send()
       }
 
       String Counter1 = "";
-      Counter1 = '(' + String(verstuur_x) + ',' + String(verstuur_y) + ")\n";
-      Serial.write(Counter1.c_str());
+      Counter1 = String(verstuur_x) + ',' + String(verstuur_y) + '\n';
       Serial.print(Counter1);
     }
   }

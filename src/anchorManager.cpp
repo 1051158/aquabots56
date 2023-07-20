@@ -139,9 +139,10 @@ static bool setDistanceIfRegisterdAnchor(uint16_t ID, double distance, uint8_t a
 {
     functionNumber = 0x06;
     if(_debugSerial)
-        Serial.print(functionNumber);
-    Serial.printf("distance = %f", distance);
-
+        {
+            Serial.print(functionNumber);
+            Serial.printf("distance = %f", distance);
+        }
     //filter to skip the wrong measurements
     if(distance <= -1 || distance>=30)
         return false;

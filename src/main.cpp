@@ -133,6 +133,7 @@ void printI2C(void)
 void setup()
 {
   Serial.begin(115200); // baud rate
+  Serial1.begin(115200);
 // SerialPort.begin(115200, SERIAL_8N1, 16, 17);
 #ifdef I2C // setup the ug2b lib //ug2b class is defined in i2c.cpp//
   _i2c.settings();

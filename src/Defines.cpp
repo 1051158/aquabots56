@@ -15,8 +15,8 @@ static bool _debugSerial = false;
 
 /////Anchor or tag////////////
 
-//#define TYPE_TAG
-#define TYPE_ANCHOR
+#define TYPE_TAG
+//#define TYPE_ANCHOR
 
 #define AD_TEST
 
@@ -28,20 +28,20 @@ static bool _debugSerial = false;
 #define ANCHOR_Z_1 0
 
 #define ANCHOR_ID_2 8738
-#define ANCHOR_X_2 0
-#define ANCHOR_Y_2 7
+#define ANCHOR_X_2 10
+#define ANCHOR_Y_2 0
 #define ANCHOR_Z_2 0
 
 
 #define ANCHOR_ID_3 13107
-#define ANCHOR_X_3 10
-#define ANCHOR_Y_3 7
+#define ANCHOR_X_3 0
+#define ANCHOR_Y_3 12.7
 #define ANCHOR_Z_3 0
 
 
 #define ANCHOR_ID_4 17476
 #define ANCHOR_X_4 10
-#define ANCHOR_Y_4 16
+#define ANCHOR_Y_4 14
 #define ANCHOR_Z_4 0
 
 
@@ -91,7 +91,7 @@ static bool _debugSerial = false;
 
 ///////////////////////to program the right anchor///////////////////////////////////////////////////////////
 #ifdef TYPE_ANCHOR
-    //#define ANCHOR_1
+    #define ANCHOR_1
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_1
         #define ANTENNA_DELAY 16550 // BEST ANTENNA DELAY ANCHOR #1
@@ -112,7 +112,7 @@ static bool _debugSerial = false;
         #define ANTENNA_DELAY 16550 // BEST ANTENNA DELAY ANCHOR #3
     #endif
 
-    #define ANCHOR_4
+    //#define ANCHOR_4
 //valeus for the right anchor for the void setup() function
     #ifdef ANCHOR_4
         #define ANTENNA_DELAY 16550 // BEST ANTENNA DELAY ANCHOR #4
