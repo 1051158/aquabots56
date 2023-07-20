@@ -12,12 +12,6 @@ struct button
   bool pressed;
 };
 
-// #define DEBUG_INTERRUPT
-
-////////////////Choose type of device///////////////////////////////////////////////////////////////
-
-#ifdef I2C
-
 static button button_up = {15, false};   // interrupt button to send data to pyhonscript
 static button button_enter{14, false};   // interrupt to skip latest uart value
 static button button_down = {13, false}; // interrupt to stop python script
@@ -85,6 +79,7 @@ menuNumber if enter is pressed the reason it's done here instead of the interrup
 that the measurements of the position needs to be done before changing settings*/
 static void checkMenuInterrupts(void)
 {
+ #ifdef TYPE_TAG
   // press enter
   if (button_enter.pressed && !button_down.pressed && !button_up.pressed)
   {
@@ -145,5 +140,5 @@ static void checkMenuInterrupts(void)
     button_up.pressed = false;
     button_enter.pressed = false;
   }
+  #endif
 }
-#endif

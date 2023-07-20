@@ -7,6 +7,7 @@
 static bool rdy2send = false;
 static bool done_send = false;
 
+// bools to switch the ways of measuerement through wifi
 static bool _accuracy = false;
 static bool _lowpower = false;
 
@@ -14,7 +15,7 @@ static uint8_t active_counter = 0;
 
 static bool start_test = false;
 
-// IP's used by both
+// IP's used by all devices
 
 static AsyncWebServer Server1(81);
 static AsyncWebServer Server8(88);
@@ -30,6 +31,7 @@ static AsyncWebServer Server5(85);
 static AsyncWebServer Server6(86);
 static AsyncWebServer Server7(87);
 
+// a huge string with all the info will be sent to the python script
 static String makeCaldisPackage()
 {
   String total_data_cal;
@@ -76,7 +78,7 @@ static String makeCaldisPackage()
   return total_data_cal;
 }
 
-// belong to "/anchors" server
+// belong to "/anchors" server(sends the distances through wifi)
 static String send_total_data_server()
 {
   //////////////check how many anchors are done with measuring//////////////////////////////////////////////
@@ -85,18 +87,22 @@ static String send_total_data_server()
   //////////////send signal if 3 out of MAX_ANCHORS anchors are done sending/////////////////////////////////
   for (uint8_t i = 0; i < MAX_ANCHORS; i++)
   {
+    // check if the anchor have a found distance
     if (anchors[i].done && anchors[i].distance > 0)
     {
       total_data_1 = total_data_1 + anchors[i].total_data + i + "ID" + anchors[i].distance + 'd' + "\t";
       // store the data of every anchor in one total string to send
       dataCounter++;
     }
+
+    // only send if more then 3 distances have been found
     if (dataCounter >= 3)
     {
       total_data_1 = total_data_1 + '\n';
       return total_data_1;
     }
   }
+
   // Send the value of the anchors that sended the data if debug is necessary
   total_data_1 = total_data_1 + "dC" + dataCounter;
   return total_data_1;
@@ -104,7 +110,10 @@ static String send_total_data_server()
 }
 #endif
 
-#ifdef WIFI_EXTERN_ON ///////////////////When the ESP32 is not an acces point(AP) use this function in void setup() of main.cpp////////////////////
+#ifdef WIFI_EXTERN_ON
+
+///////////////////When the ESP32 is not an acces point(AP) use this function in void setup() of main.cpp////////////////////
+
 static void WiFiSettingsExtern(void)
 {
   uint8_t wifiCounter = 0;
@@ -146,6 +155,7 @@ static void WiFiSettingsExtern(void)
   if (!wifiTimer)
   {
 
+///////////////////////////////////////////////////All the links for the tag//////////////////////////////////////
 #ifdef TYPE_TAG
     Server.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
               {
@@ -187,6 +197,7 @@ static void WiFiSettingsExtern(void)
                {
   request->send(200, "text/plain", "2");
   _resetDCM = true; });
+
     // server interrupt function to add to average counter
     Server2.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
                {
@@ -205,6 +216,7 @@ static void WiFiSettingsExtern(void)
     String send;
     send = makeCaldisPackage().c_str();
     request->send(200, "text/plain", send); });
+
     // to control the python code with the interruptbuttons
     Server3.on("/sendMenu", HTTP_GET, [](AsyncWebServerRequest *request)
                {
@@ -215,33 +227,21 @@ static void WiFiSettingsExtern(void)
       resetAnchors();
       _resetAnchors = true;
     }
-    //when the interrupt in tag has been detected by python
-    if(i2cMenu[SHOW_ADELAY].status)
-    {  
-      request->send(200, "text/plain", "1");
-      i2cMenu[SHOW_ADELAY].status = false;
-      resetAnchors();
-      _resetAnchors = true;
-    }
-    if(i2cMenu[SHOW_IP].status)
-    {  
-      request->send(200, "text/plain", "2");
-      i2cMenu[SHOW_IP].status = false;
-    }
+
     //when this button is pressed and the pythoncode has all measurements send the arraynumber of END_CODE
     if(i2cMenu[END_CODE].status)
     {
       request->send(200, "text/plain", "3");
       esp_restart();
     }
+
     request->send(200, "text/plain", "n"); });
     Server6.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
                {
     request->send(200, "text/plain", "Restart");
     delay(1000);
     esp_restart(); });
-#endif
-#ifdef TYPE_TAG
+    
     Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
                {
   uint16_t AD_2_send = antenna_delay;
@@ -275,6 +275,8 @@ static void WiFiSettingsExtern(void)
                { _lowpower = true; 
                request->send(200, "text/plain", "lowpower"); });
 
+    ///////////////////////////////////////////////////All the links for the anchor//////////////////////////////////////
+
 #ifdef TYPE_ANCHOR
     Server1.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
                {
@@ -282,9 +284,7 @@ static void WiFiSettingsExtern(void)
   String AD_send = "";
   _addAD = true;
   AD_send = AD_send + antenna_delay;
-  request->send(200, "text/plain", AD_send); 
-  });
-  
+  request->send(200, "text/plain", AD_send); });
 
     // resetAD when the excel file has reached its max of the AD_test
     Server1.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -299,10 +299,7 @@ static void WiFiSettingsExtern(void)
   antenna_delay -= 5;
   String AD_send = "";
   AD_send = AD_send + antenna_delay;
-  request->send(200, "text/plain", AD_send);
-  });
-  
-
+  request->send(200, "text/plain", AD_send); });
 
     Server1.on("/setAD", HTTP_GET, [](AsyncWebServerRequest *request)
                {
@@ -310,7 +307,7 @@ static void WiFiSettingsExtern(void)
   DW1000.setAntennaDelay(antenna_delay); });
 #endif
     IPAddress IP = WiFi.localIP();
-    // check and print IPadress to fill into the laptop
+    // check and print IPadress on the little screen to fill into the laptop
     String ip = "";
     for (uint8_t i = 0; i < 4; i++)
     {
