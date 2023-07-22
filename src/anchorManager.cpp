@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <DW1000Ranging.h>
 #include "DW1000.h"
-#include "Defines.cpp"
+#include "Settings.cpp"
 #include <stdint.h>
 #include <string.h>
 

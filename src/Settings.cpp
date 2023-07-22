@@ -22,42 +22,44 @@ static bool _debugSerial = false;
 
 ///////////////////////anchor info for the tag(change coordinates for the right real-time situation)/////////////////////
 //give the coordinates and ID's of the anchors
+
+//ID of Anchor #1 (Do not change!!)
 #define ANCHOR_ID_1 4369
+
+//coordinates of anchor #1
 #define ANCHOR_X_1 0
 #define ANCHOR_Y_1 0
 #define ANCHOR_Z_1 0
 
+//ID of Anchor #2 (Do not change!!)
 #define ANCHOR_ID_2 8738
+
+//coordinates of anchor #2
 #define ANCHOR_X_2 10
 #define ANCHOR_Y_2 0
 #define ANCHOR_Z_2 0
 
-
+//ID of Anchor #3 (Do not change!!)
 #define ANCHOR_ID_3 13107
+
+//coordinates of anchor #3
 #define ANCHOR_X_3 0
 #define ANCHOR_Y_3 12.7
 #define ANCHOR_Z_3 0
 
-
+//ID of Anchor #4 (Do not change!!)
 #define ANCHOR_ID_4 17476
+
+//coordinates of anchor #4
 #define ANCHOR_X_4 10
 #define ANCHOR_Y_4 14
 #define ANCHOR_Z_4 0
-
-
-#define ANCHOR_ID_5 21845
-#define ANCHOR_X_5 10
-#define ANCHOR_Y_5 15
-
-#define ANCHOR_ID_6 26214
-#define ANCHOR_X_6 15
-#define ANCHOR_Y_6 10
 
 #define X 0
 #define Y 1
 #define Z 2
 
-
+//longest range measureable in the area(to filter wrong measurements).
 #define LONGEST_RANGE 22.3
 
 
@@ -149,7 +151,7 @@ static bool _debugSerial = false;
 
 #define ANTENNA_INTERVAL 5 //interval between 2 antenna delays
 
-#define ANTENNA_DELAY_START 16384 //start value antenna delay
+#define ANTENNA_DELAY_START 16385 //start value antenna delay
 #define ANTENNA_DELAY_END 16600 //end value antenna delay
 
 ///////////////////////////////////////I2C settings////////////////////////////////////
@@ -189,10 +191,6 @@ static bool _debugSerial = false;
 //uncomment to start the wifi test
 //#define WIFI_TEST
 
-//////fill in the right names of the desired router or hotspot
-//#define WIFI_AQUA
-#define HOTSPOT
-//#define WIFI
 
 
 

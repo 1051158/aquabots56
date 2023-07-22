@@ -120,20 +120,8 @@ static void WiFiSettingsExtern(void)
   bool wifiTimer = false;
   // Serial.println(ssid);
 
-#ifdef WIFI
-  const char *ssid = "DentGalaxy";
-  const char *psswrd = "PanGalactic";
-#endif
-
-#ifdef WIFI_AQUA
-  const char *ssid = "Innovation Dock WiFi";
-  const char *psswrd = "RDMCampus123";
-#endif
-
-#ifdef HOTSPOT
-  const char *ssid = "Galaxy S20 FEA37E";
-  const char *psswrd = "cooa7104";
-#endif
+  const char *ssid = "Choose your Router SSID";
+  const char *psswrd = "Password for this ssid";
 
   ////////////log in into the router for extern wifi connection//////////////
   WiFi.begin(ssid, psswrd);
