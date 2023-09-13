@@ -3,6 +3,7 @@
 #include <cmath>
 #include <HardwareSerial.h>
 
+//timer om snelheid te bepalen.
 unsigned long lastTimestamp = millis();
 
 //////////////Initialize all the anchors that will be used///////////////
@@ -38,9 +39,13 @@ const uint8_t PIN_IRQ = 34; // irq pin
 const uint8_t PIN_SS = 4;   // spi select pin
 // timing variable
 
+
+//wanneer er genoeg anchors zijn gekoppeld zal een nieuwe x- en y-coördinaat worden berekend
 void newRange()
 {
+//voor het debiuggen via wifi!
   functionNumber = 0x02;
+
 #ifdef TYPE_ANCHOR
 #ifdef I2C
 /*String range = "";
@@ -134,12 +139,9 @@ void setup()
 {
   Serial.begin(115200); // baud rate
   Serial1.begin(115200);
-// SerialPort.begin(115200, SERIAL_8N1, 16, 17);
 #ifdef I2C // setup the ug2b lib //ug2b class is defined in i2c.cpp//
   _i2c.settings();
 #endif
-// uart_set_wakeup_threshold(UART_NUM_0, 0xFF);
-// esp_sleep_enable_uart_wakeup(ESP_SLEEP_WAKEUP_UART);
 // when wifi is desired uncomment the WIFI_EXTERN_ON in
 #ifdef WIFI_EXTERN_ON
   WiFiSettingsExtern();

@@ -10,7 +10,10 @@
 #ifdef I2C
 static U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
+//bool to reset the screen
 static bool clear;
+
+//variables to set the screen in right position
 static uint8_t x_pos;
 static uint8_t y_pos;
 

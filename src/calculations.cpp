@@ -47,6 +47,7 @@ static void CalibrationDistances()
     }
 }
 
+//function to calculate the x and y values when at least 3 anchor distances are measured
 static void x_y_cal(anchor anchor1, anchor anchor2, anchor anchor3)
 { 
     float A,B,C,D,E,F; 

@@ -1,0 +1,7 @@
+sudo pip install xlsxwriter
+sudo pip install matplotlib
+sudo pip install numpy
+sudo pip install turtle
+sudo pip install requests
+sudo pip install dataclasses
+sudo pip install keyboard

@@ -8,7 +8,7 @@ After VSC is downloaded an important extension has to be installed to flash hard
 
 ![Go to the tab extensions and fill in platformIO](PlatformExtension.png).
 
-Go to the tab extensions and fill in platformIO (like in the pictore above).
+Go to the tab extensions and fill in platformIO (like in the picture above).
 
 Flashing
 -
@@ -26,7 +26,7 @@ The Coordinates of the placement os all the anchors have to be specified in the 
 
 ANCHOR:
 
-To flash the anchors it is important that the right anchor number is undefined in (src/Settings.cpp) (line 94, 101, 108, 115). Check on the back of the 3d-print of the anchor you want to flash which number it contains and uncomment that line.
+To flash the anchors it is important that the right anchor number is uncommented in (src/Settings.cpp) (line 94, 101, 108, 115). Check on the back of the 3d-print of the anchor you want to flash which number it contains and uncomment that line.
 
 Every anchor also has a ANTENNA_DELAY constant. The best test results were with the values those constant have at this moment. 
 
@@ -47,4 +47,28 @@ The menu consists out of 4 options that can be changed. To scroll through those 
 - Press the enter button and check of the screen says Start_send = on.
 
 Now the data will be send over UART and displayed on the small screen. If you do not see any coordinates printed on the small screen one of the previous steps went wrong.
+
+PYTHON
+the code has only been testen on ubuntu (Linux). 
+
+To run the python code you must be root (because of the keyboard interrupts). To do this you have to run this code through the command window.
+
+First you need to get all the necessary libraries that are used in this script (install them in root with sudo pip install <desired library>).
+
+To install all the libraries open the terminal in the map where this README is located.
+
+write in the CMD:	 sudo sh pythonCommands.txt
+
+All the libraries will be downloaded immediatly and the code can be runned.
+
+To run the code co to the /Python-code map in the command window
+
+run the code by the following command:
+
+-	sudo python3 main.py
+
+Make sure all the IP's are filled in correctly and the PC that is running this code is on de same WiFi network.
+
+
+
 
