@@ -48,20 +48,24 @@ The menu consists out of 4 options that can be changed. To scroll through those 
 
 Now the data will be send over UART and displayed on the small screen. If you do not see any coordinates printed on the small screen one of the previous steps went wrong.
 
-PYTHON
-the code has only been testen on ubuntu (Linux). 
+Python-code
+-
+the code has only been tested on ubuntu (Linux). 
 
 To run the python code you must be root (because of the keyboard interrupts). To do this you have to run this code through the command window.
 
-First you need to get all the necessary libraries that are used in this script (install them in root with sudo pip install <desired library>).
+First you need to get all the necessary libraries that are used in this script (install them in root with sudo pip install desired library).
 
 To install all the libraries open the terminal in the map where this README is located.
 
-write in the CMD:	 sudo sh pythonCommands.txt
+write in the CMD:	 
+- sudo sh pythonCommands.txt
 
 All the libraries will be downloaded immediatly and the code can be runned.
 
-To run the code co to the /Python-code map in the command window
+if this does not work open the pythonCommands.txt and write the commandlines in de cmd.
+
+To run the code go to the /Python-code map in the command window
 
 run the code by the following command:
 
