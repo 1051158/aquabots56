@@ -119,8 +119,8 @@ static void WiFiSettingsExtern(void)
   bool wifiTimer = false;
   // Serial.println(ssid);
 
-  const char *ssid = "Choose your Router SSID";
-  const char *psswrd = "Password for this ssid";
+  const char *ssid = "Tesla IoT";
+  const char *psswrd = "fsL6HgjN";
 
   ////////////log in into the router for extern wifi connection//////////////
   WiFi.begin(ssid, psswrd);
@@ -145,7 +145,7 @@ static void WiFiSettingsExtern(void)
 ///////////////////////////////////////////////////All the links for the tag//////////////////////////////////////
 #ifdef TYPE_TAG
     sendDistancesServer.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
+                           {
     if(active_counter < 3 && active_counter > 0)
     {
       request->send(200, "text/plain", "notActive");
@@ -181,32 +181,32 @@ static void WiFiSettingsExtern(void)
 
     // server interrupt function to reset DCM
     DCMserver.on("/resetDCM", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                 {
   request->send(200, "text/plain", "2");
   _resetDCM = true; });
 
     // server interrupt function to add to average counter
     DCMserver.on("/addDCM", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                 {
   request->send(200, "text/plain", "2");
   _addDCM = true; });
 
     startServer.on("/start", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                   {
   request->send(200, "text/plain", "4");
   i2cMenu[START_SEND].status = true; });
 
 #endif
 
     cladisServer.on("/caldis", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                    {
     String send;
     send = makeCaldisPackage().c_str();
     request->send(200, "text/plain", send); });
 
     // to control the python code with the interruptbuttons
     sendMenuServer.on("/sendMenu", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                      {
     //when the button is pressed and the pythoncode has all measurements send the arraynumber of START_SEND
     if(i2cMenu[START_SEND].status)
     {  
@@ -224,13 +224,13 @@ static void WiFiSettingsExtern(void)
 
     request->send(200, "text/plain", "n"); });
     restartServer.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                     {
     request->send(200, "text/plain", "Restart");
     delay(1000);
     esp_restart(); });
-    
+
     anchorADserver.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                      {
   uint16_t AD_2_send = antenna_delay;
   String AD_send = "";
   AD_send = AD_send + AD_2_send;
@@ -239,14 +239,14 @@ static void WiFiSettingsExtern(void)
 
     // resetAD when the excel file has reached its max of the AD_test
     anchorADserver.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                      {
   uint16_t AD_2_send = antenna_delay;
   i2cMenu[START_SEND].status = false;
   request->send(200, "text/plain", "1");
   _resetAD = true; });
 
     anchorADserver.on("/subAD", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                      {
   uint16_t AD_2_send = antenna_delay - 5;
   String AD_send = "";
   AD_send = AD_send + AD_2_send;
@@ -255,18 +255,18 @@ static void WiFiSettingsExtern(void)
 
 #endif
     measureServer.on("/accuracy", HTTP_GET, [](AsyncWebServerRequest *request)
-               { _accuracy = true; 
+                     { _accuracy = true; 
                request->send(200, "text/plain", "accuracy"); });
 
     measureServer.on("/lowpower", HTTP_GET, [](AsyncWebServerRequest *request)
-               { _lowpower = true; 
+                     { _lowpower = true; 
                request->send(200, "text/plain", "lowpower"); });
 
     ///////////////////////////////////////////////////All the links for the anchor//////////////////////////////////////
 
 #ifdef TYPE_ANCHOR
     anchorADserver.on("/addAD", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                      {
   antenna_delay += 5;
   String AD_send = "";
   _addAD = true;
@@ -275,21 +275,21 @@ static void WiFiSettingsExtern(void)
 
     // resetAD when the excel file has reached its max of the AD_test
     anchorADserver.on("/resetAD", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                      {
   antenna_delay = ANTENNA_DELAY;
   String AD_send = "";
   AD_send = AD_send + antenna_delay;
   request->send(200, "text/plain", AD_send); });
 
     anchorADserver.on("/subAD", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                      {
   antenna_delay -= 5;
   String AD_send = "";
   AD_send = AD_send + antenna_delay;
   request->send(200, "text/plain", AD_send); });
 
     anchorADserver.on("/setAD", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
+                      {
   request->send(200, "text/plain", "succes!");
   DW1000.setAntennaDelay(antenna_delay); });
 #endif
@@ -327,7 +327,7 @@ static void WiFiSettingsAP(void)
   IPAddress IP = WiFi.softAPIP();
   Serial.print(IP); // configure the wifi settings when
   sendDistancesServer.on("/anchors", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
+                         {
     String send;
     send = send_total_data_server().c_str();
     i2cprint(send.c_str());
