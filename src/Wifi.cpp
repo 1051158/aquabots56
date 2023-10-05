@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "buttons.cpp"
+#include "Buttons.cpp"
 
 // bools to verify the string in the functions send_total_data_server() and
 static bool rdy2send = false;
